@@ -1,0 +1,247 @@
+---
+alwaysApply: true
+---
+
+analise o projeto @o2obots-new-frontend/ , ele vai ser a nossa nova aplicação web do O2OSPOT.
+Ele foi construído pelo Lovable como uma coisa só, analise bem como ele foi feito e como ele está estruturado.
+Quero refatorar a arquitetura do meu frontend React + Vite + TypeScript + shadcn/ui para um modelo modular por domínio, mantendo o projeto como um único app, mas com separação clara entre módulos de negócio.
+
+Contexto atual
+
+Hoje o projeto tem uma estrutura mais genérica, com pastas como:
+	•	src/components
+	•	src/hooks
+	•	src/lib
+	•	src/pages
+	•	src/test
+
+Quero evoluir isso para uma arquitetura orientada a módulos/features, porque a plataforma terá 3 grandes módulos de negócio:
+
+Módulos de negócio
+	1.	Renegociação de dívidas
+	•	Dashboard
+	•	Lista de dívidas
+	•	Lista de contatos
+	2.	Cobrança
+	•	Dashboard
+	•	Lista de cobranças
+	•	Lista de contatos
+	3.	Vendas
+	•	Dashboard
+	•	Lista/funil de vendas
+	•	Lista de contatos
+
+Objetivo
+
+Quero que você reorganize a arquitetura para que cada módulo tenha sua própria pasta, contendo sua lógica, páginas, componentes específicos, tipos, hooks, serviços e configurações relacionadas.
+
+Os módulos podem compartilhar componentes visuais e utilitários, mas:
+	•	a regra de negócio e a lógica de cada módulo devem ficar isoladas
+	•	evitar acoplamento entre módulos
+	•	evitar “components” e “pages” globais cheios de arquivos de negócio
+	•	priorizar escalabilidade, manutenção e clareza
+
+Requisitos de arquitetura
+
+1. Estrutura desejada
+
+Proponha e implemente uma estrutura parecida com esta, ajustando se necessário com base em boas práticas:
+
+src/
+  app/
+    router/
+    providers/
+    layouts/
+  
+  shared/
+    components/
+    ui/
+    hooks/
+    lib/
+    utils/
+    types/
+    constants/
+
+  modules/
+    debt-negotiation/
+      components/
+      pages/
+      hooks/
+      services/
+      types/
+      utils/
+      routes/
+      index.ts
+
+    billing/
+      components/
+      pages/
+      hooks/
+      services/
+      types/
+      utils/
+      routes/
+      index.ts
+
+    sales/
+      components/
+      pages/
+      hooks/
+      services/
+      types/
+      utils/
+      routes/
+      index.ts
+
+  test/
+
+2. Regras importantes
+
+Quero que você siga estas regras:
+	•	shared/ deve conter apenas itens realmente reutilizáveis entre módulos
+	•	Componentes muito específicos de um módulo não devem ir para shared
+	•	Cada módulo deve ter:
+	•	páginas
+	•	componentes próprios
+	•	hooks próprios
+	•	tipos próprios
+	•	serviços próprios
+	•	definição de rotas do módulo
+	•	O roteamento deve permitir expansão futura
+	•	O layout global pode ser compartilhado, como sidebar/topbar/app shell
+	•	A sidebar deve ser preparada para suportar navegação por módulos
+	•	Os módulos devem ser “plugáveis” dentro do app principal
+	•	Criar barrels (index.ts) quando fizer sentido, sem exagero
+	•	Evitar imports relativos longos demais; se necessário, configurar aliases
+	•	Manter compatibilidade com Vite + TypeScript
+	•	Manter código limpo e fácil de evoluir
+
+3. Organização de rotas
+
+Quero que você proponha uma arquitetura de rotas escalável, por exemplo:
+	•	cada módulo exporta suas próprias rotas
+	•	o app principal compõe as rotas de todos os módulos
+
+Exemplo de ideia:
+	•	modules/debt-negotiation/routes.tsx
+	•	modules/billing/routes.tsx
+	•	modules/sales/routes.tsx
+	•	app/router/index.tsx agrega tudo
+
+Sugira a melhor abordagem e implemente.
+
+4. Convenções
+
+Adote convenções consistentes:
+	•	nomes em inglês para pastas e arquivos
+	•	componentes em PascalCase
+	•	hooks com prefixo use
+	•	tipos bem organizados
+	•	separação entre:
+	•	componente de UI
+	•	página
+	•	regra de negócio
+	•	acesso a dados
+
+5. Migração do código atual
+
+Quero que você:
+	1.	analise a estrutura atual
+	2.	proponha o novo mapeamento
+	3.	mova os arquivos existentes para a nova estrutura quando fizer sentido
+	4.	crie placeholders para o que ainda não existir
+	5.	preserve o funcionamento do projeto
+	6.	minimize quebra de imports
+	7.	atualize os imports automaticamente
+
+6. Entregáveis esperados
+
+Quero que você me entregue:
+
+A. Nova estrutura de pastas
+Mostre a árvore final sugerida
+
+B. Refatoração inicial implementada
+Crie a base da arquitetura já funcional
+
+C. Módulos iniciais criados
+Crie a estrutura inicial de:
+	•	debt-negotiation
+	•	billing
+	•	sales
+
+Cada um com pelo menos:
+	•	pages/DashboardPage.tsx
+	•	pages/ContactsPage.tsx
+	•	a terceira página específica:
+	•	DebtsPage.tsx
+	•	ChargesPage.tsx
+	•	PipelinePage.tsx
+	•	routes/index.tsx
+	•	types/index.ts
+	•	index.ts
+
+D. Shared layer
+Separe corretamente:
+	•	layout principal
+	•	sidebar
+	•	topbar
+	•	componentes visuais reutilizáveis
+	•	utilitários compartilhados
+
+E. Melhorias técnicas
+Se necessário:
+	•	configurar aliases no tsconfig
+	•	ajustar imports
+	•	melhorar a organização do App.tsx
+	•	centralizar router e providers
+
+7. Restrições
+	•	Não usar overengineering
+	•	Não criar arquitetura enterprise exagerada sem necessidade
+	•	Não usar Redux ou outras libs de estado global, a menos que já exista e seja realmente necessário
+	•	Priorizar simplicidade, modularidade e legibilidade
+	•	Não misturar regras de negócio dos módulos
+	•	Não transformar shared em pasta-lixeira
+
+8. Critérios de qualidade
+
+A solução deve:
+	•	ser fácil de entender por outro dev
+	•	facilitar crescimento de novos módulos futuros
+	•	reduzir acoplamento
+	•	melhorar a previsibilidade da base
+	•	seguir boas práticas modernas de React frontend architecture
+
+9. Forma de execução
+
+Quero que você trabalhe em etapas:
+	1.	Primeiro, analise a estrutura atual e explique rapidamente os principais problemas
+	2.	Depois, proponha a nova arquitetura
+	3.	Em seguida, implemente a refatoração
+	4.	Ao final, mostre:
+	•	árvore final
+	•	principais arquivos criados/alterados
+	•	decisões arquiteturais tomadas
+	•	próximos passos recomendados
+
+10. Preferência arquitetural
+
+Se precisar escolher uma abordagem, prefira:
+	•	feature-based / module-based architecture
+	•	com shared enxuto
+	•	e app para composição global
+
+Pode começar analisando a estrutura atual e já executar a refatoração inicial.
+
+⸻
+
+Observação adicional para o Cursor
+
+Se encontrar componentes como AppSidebar, NavLink, TopBar, hooks utilitários e helpers globais, avalie se eles devem ir para:
+	•	app/layouts
+	•	shared/components
+	•	shared/hooks
+	•	shared/lib
+
+Use bom senso arquitetural e explique a decisão.
