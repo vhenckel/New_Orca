@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: o2obots-new-frontend
+  name: o2obots-app-frontend
   namespace: application
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: o2obots-new-frontend
+      app: o2obots-app-frontend
   template:
     metadata:
       labels:
-        app: o2obots-new-frontend
+        app: o2obots-app-frontend
         env: prod
     spec:
       serviceAccountName: o2obots-default-app
       containers:
-        - name: o2obots-new-frontend
-          image: o2obotsteam/o2obots-new-frontend-prod:CHANGE_ME
+        - name: o2obots-app-frontend
+          image: o2obotsteam/o2obots-app-frontend-prod:CHANGE_ME
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
@@ -34,12 +34,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: o2obots-new-frontend
+  name: o2obots-app-frontend
   namespace: application
 spec:
   type: ClusterIP
   selector:
-    app: o2obots-new-frontend
+    app: o2obots-app-frontend
   ports:
     - port: 80
       targetPort: 5000
@@ -47,7 +47,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: o2obots-new-frontend
+  name: o2obots-app-frontend
   namespace: application
   annotations:
     alb.ingress.kubernetes.io/group.name: o2obots-public-prod
@@ -70,20 +70,20 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: o2obots-new-frontend
+                name: o2obots-app-frontend
                 port:
                   number: 80
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: o2obots-new-frontend-hpa
+  name: o2obots-app-frontend-hpa
   namespace: application
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: o2obots-new-frontend
+    name: o2obots-app-frontend
   minReplicas: 2
   maxReplicas: 4
   metrics:
