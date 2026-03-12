@@ -137,6 +137,8 @@ export const enUSMessages = {
   "pages.debtNegotiation.debts.conversationHistory.botLabel": "AI",
   "pages.debtNegotiation.debts.conversationHistory.userLabel": "User",
   "pages.debtNegotiation.debts.conversationHistory.empty": "No messages in history.",
+  "pages.debtNegotiation.pendingBanner.message": "One or more debtors have reported making a payment. We need you to confirm receipt urgently to proceed.",
+  "pages.debtNegotiation.pendingBanner.viewDebts": "View debts",
   "pages.debtNegotiation.debts.detail.title": "Debt details",
   "pages.debtNegotiation.debts.detail.fullName": "Full name",
   "pages.debtNegotiation.debts.detail.cnpj": "CNPJ",

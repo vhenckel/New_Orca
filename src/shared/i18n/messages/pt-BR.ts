@@ -136,6 +136,8 @@ export const ptBRMessages = {
   "pages.debtNegotiation.debts.conversationHistory.botLabel": "IA",
   "pages.debtNegotiation.debts.conversationHistory.userLabel": "Usuário",
   "pages.debtNegotiation.debts.conversationHistory.empty": "Nenhuma mensagem no histórico.",
+  "pages.debtNegotiation.pendingBanner.message": "Um ou mais devedores informaram que realizaram o pagamento. Precisamos que você confirme o recebimento com urgência para prosseguirmos.",
+  "pages.debtNegotiation.pendingBanner.viewDebts": "Ver dívidas",
   "pages.debtNegotiation.debts.detail.title": "Detalhes da dívida",
   "pages.debtNegotiation.debts.detail.fullName": "Nome Completo",
   "pages.debtNegotiation.debts.detail.cnpj": "CNPJ",

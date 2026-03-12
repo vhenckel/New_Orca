@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Eye, MessageCircle, Search, DollarSign, Filter, X } from "lucide-react";
 
 import { AddPaymentFlowDialog } from "@/modules/debt-negotiation/components/AddPaymentFlowDialog";
@@ -78,7 +79,22 @@ export function DebtsPage() {
     setDetailId(null);
   };
 
-  const { data, error, isPending } = useDebtDetails({ page });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statuses = useMemo(
+    () =>
+      searchParams
+        .getAll("statuses")
+        .map((s) => Number(s))
+        .filter((n) => Number.isInteger(n)),
+    [searchParams]
+  );
+  const clearStatusFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("statuses");
+    setSearchParams(next, { replace: true });
+  };
+
+  const { data, error, isPending } = useDebtDetails({ page, statuses: statuses.length > 0 ? statuses : undefined });
 
   const totalDebt = data?.totalDebt.currentValue ?? 0;
   const totalCount = data?.totalDebtCount.currentValue ?? 0;
@@ -110,6 +126,22 @@ export function DebtsPage() {
           <p className="mt-1 text-2xl font-bold text-foreground">{totalCount}</p>
         </div>
       </div>
+
+      {statuses.includes(11) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted px-2.5 py-1 text-sm">
+            {t("pages.debtNegotiation.debts.status.confirmacaoPagamento")}
+            <button
+              type="button"
+              aria-label={t("pages.debtNegotiation.debts.clearFilters")}
+              className="rounded p-0.5 hover:bg-muted-foreground/20"
+              onClick={clearStatusFilter}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">

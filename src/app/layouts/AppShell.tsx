@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
+import { PendingPaymentBanner } from "@/modules/debt-negotiation/components/PendingPaymentBanner";
 import { cn } from "@/shared/lib/utils";
 
 import { AppSidebar } from "./AppSidebar";
@@ -49,6 +50,8 @@ export function AppShell({ children, modules }: AppShellProps) {
         )}
       >
         <TopBar currentModule={currentModule} currentRoute={currentRoute} />
+
+        {currentModule.key === "debt-negotiation" && <PendingPaymentBanner />}
 
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-[1440px] p-6">{children}</div>

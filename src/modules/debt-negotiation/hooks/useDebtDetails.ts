@@ -10,6 +10,7 @@ export function useDebtDetails(params?: {
   companyId?: number;
   orderBy?: string;
   orderByDirection?: "ASC" | "DESC";
+  statuses?: number[];
 }) {
   const { startDate, endDate } = useDateRangeQueryState();
   const page = params?.page ?? 1;
@@ -26,6 +27,7 @@ export function useDebtDetails(params?: {
       page,
       params?.orderBy,
       params?.orderByDirection,
+      params?.statuses,
     ],
     queryFn: () =>
       fetchDebtDetails({
@@ -36,6 +38,7 @@ export function useDebtDetails(params?: {
         companyId,
         orderBy: params?.orderBy ?? "contactName",
         orderByDirection: params?.orderByDirection ?? "DESC",
+        statuses: params?.statuses?.length ? params.statuses : undefined,
       }),
   });
 }

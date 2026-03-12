@@ -41,4 +41,6 @@ export interface DebtDetailsParams {
   companyId: number;
   orderBy?: string;
   orderByDirection?: "ASC" | "DESC";
+  /** Filtro por estágios (ex.: 11 = Confirmação de pagamento). */
+  statuses?: number[];
 }
