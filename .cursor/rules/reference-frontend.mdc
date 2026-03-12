@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+
+Ao trabalhar no projeto **o2obots-app-frontend** (este repositório), use sempre como referência o projeto **o2obots-frontend** (frontend atual/legado).
+
+- Consulte o2obots-frontend para ver como funcionalidades equivalentes estão implementadas (APIs, fluxos, componentes, nomes de rotas, formatadores).
+- Mantenha consistência com o comportamento e a estrutura do front atual quando migrar ou recriar features.
+- APIs e contratos usados no o2obots-frontend devem ser reutilizados no novo frontend (mesmos endpoints, query params e formato de resposta quando aplicável).

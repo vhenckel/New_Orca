@@ -9,6 +9,8 @@ export interface AppRouteDefinition {
   descriptionKey: TranslationKey;
   icon: LucideIcon;
   element: ReactNode;
+  /** Se true, a rota não aparece no menu lateral (ex.: página de detalhe acessada por link). */
+  hideInSidebar?: boolean;
 }
 
 export interface AppModuleDefinition {

@@ -1,3 +1,4 @@
+import { NuqsAdapter } from "nuqs/adapters/react-router/v6";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "@/app/layouts/AppShell";
@@ -8,7 +9,8 @@ import { debtNegotiationModule } from "@/modules/debt-negotiation";
 export function AppRouter() {
   return (
     <BrowserRouter>
-      <Routes>
+      <NuqsAdapter>
+        <Routes>
         <Route path="/" element={<Navigate to={debtNegotiationModule.basePath} replace />} />
         {businessModules.flatMap((module) =>
           module.routes.map((route) => (
@@ -20,7 +22,8 @@ export function AppRouter() {
           )),
         )}
         <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+        </Routes>
+      </NuqsAdapter>
     </BrowserRouter>
   );
 }

@@ -1,101 +1,246 @@
 import { ActivityFeed } from "@/modules/debt-negotiation/components/ActivityFeed";
-import { AIStatusWidget } from "@/modules/debt-negotiation/components/AIStatusWidget";
 import { DailyTable } from "@/modules/debt-negotiation/components/DailyTable";
 import { DonutCard } from "@/modules/debt-negotiation/components/DonutCard";
 import { KPICard } from "@/modules/debt-negotiation/components/KPICard";
 import { MetricCard } from "@/modules/debt-negotiation/components/MetricCard";
 import { NegotiationFunnel } from "@/modules/debt-negotiation/components/NegotiationFunnel";
+import { NpsCard } from "@/modules/debt-negotiation/components/NpsCard";
 import { PerformanceChart } from "@/modules/debt-negotiation/components/PerformanceChart";
+import { useRenegotiationBoxes, useRenegotiationGraphics } from "@/modules/debt-negotiation/hooks";
 import type {
   KpiMetric,
   OperationalMetric,
   PortfolioBreakdownItem,
 } from "@/modules/debt-negotiation/types";
+import type { RenegotiationBoxesResponse } from "@/modules/debt-negotiation/types/renegotiation-boxes";
+import { toDonutSeries } from "@/modules/debt-negotiation/types/renegotiation-graphics";
+import {
+  formatCurrency,
+  formatPercent,
+  formatPercentChange,
+  formatPp,
+} from "@/shared/lib/format";
+import type { TranslationKey } from "@/shared/i18n/config";
 import { useI18n } from "@/shared/i18n/useI18n";
 
-export function DashboardPage() {
-  const { t } = useI18n();
+function trendFromChange(percentageChange: number): "up" | "down" {
+  return percentageChange >= 0 ? "up" : "down";
+}
 
-  const debtAgeData: PortfolioBreakdownItem[] = [
-    { name: t("dashboard.donut.debtAge.upTo90"), value: 70, color: "hsl(var(--chart-1))" },
-    { name: t("dashboard.donut.debtAge.upTo365"), value: 21, color: "hsl(var(--chart-2))" },
-    { name: t("dashboard.donut.debtAge.over365"), value: 9, color: "hsl(var(--chart-3))" },
-  ];
-
-  const debtValueData: PortfolioBreakdownItem[] = [
-    { name: t("dashboard.donut.debtValue.upTo2k"), value: 60, color: "hsl(var(--chart-1))" },
-    { name: t("dashboard.donut.debtValue.2kTo5k"), value: 22, color: "hsl(var(--chart-2))" },
-    { name: t("dashboard.donut.debtValue.5kTo10k"), value: 17, color: "hsl(var(--chart-3))" },
-    { name: t("dashboard.donut.debtValue.over10k"), value: 1, color: "hsl(var(--chart-4))" },
-  ];
-
-  const debtorAgeData: PortfolioBreakdownItem[] = [
-    { name: t("dashboard.donut.debtorAge.31to40"), value: 33, color: "hsl(var(--chart-1))" },
-    { name: t("dashboard.donut.debtorAge.41to50"), value: 35, color: "hsl(var(--chart-2))" },
-    { name: t("dashboard.donut.debtorAge.51to60"), value: 15, color: "hsl(var(--chart-3))" },
-    { name: t("dashboard.donut.debtorAge.other"), value: 17, color: "hsl(var(--chart-4))" },
-  ];
-
-  const kpiMetrics: KpiMetric[] = [
+function mapBoxesToKpiMetrics(
+  data: RenegotiationBoxesResponse,
+  t: (key: string) => string
+): KpiMetric[] {
+  const d = data;
+  return [
     {
       label: t("dashboard.kpis.totalDebts"),
-      value: "R$ 1.266.819",
-      change: t("dashboard.changes.previousMonth"),
-      trend: "up",
+      value: formatCurrency(d.totalDebt.currentValue),
+      change: formatPercentChange(d.totalDebt.percentageChange),
+      trend: trendFromChange(d.totalDebt.percentageChange),
       percentage: "100%",
       delay: 0,
     },
     {
       label: t("dashboard.kpis.totalNegotiated"),
-      value: "R$ 128.141",
-      change: t("dashboard.changes.negotiated"),
-      trend: "up",
-      percentage: "10,12%",
+      value: formatCurrency(d.totalNegotiated.currentValue),
+      change: formatPercentChange(d.totalNegotiated.percentageChange),
+      trend: trendFromChange(d.totalNegotiated.percentageChange),
+      percentage: d.totalNegotiated.percentage != null ? formatPercent(d.totalNegotiated.percentage) : undefined,
       delay: 50,
     },
     {
       label: t("dashboard.kpis.totalRecovered"),
-      value: "R$ 21.503",
-      change: t("dashboard.changes.recovered"),
-      trend: "up",
-      percentage: "16,78%",
+      value: formatCurrency(d.totalRecoveredNegotiated.currentValue),
+      change: formatPercentChange(d.totalRecoveredNegotiated.percentageChange),
+      trend: trendFromChange(d.totalRecoveredNegotiated.percentageChange),
+      percentage: d.totalRecoveredNegotiated.percentage != null ? formatPercent(d.totalRecoveredNegotiated.percentage) : undefined,
       delay: 100,
     },
     {
       label: t("dashboard.kpis.recoveryRate"),
-      value: "1,70%",
-      change: t("dashboard.changes.recoveryRate"),
-      trend: "up",
+      value: formatPercent(d.recoveryRate.currentValue),
+      change: formatPp(d.recoveryRate.percentageChange),
+      trend: trendFromChange(d.recoveryRate.percentageChange),
       delay: 150,
     },
   ];
+}
 
-  const operationalMetrics: OperationalMetric[] = [
-    { label: t("dashboard.kpis.totalDebtors"), value: "381", subtitle: t("dashboard.subtitles.debtorsBase"), delay: 200 },
+function mapBoxesToOperationalMetrics(
+  data: RenegotiationBoxesResponse,
+  t: (key: string) => string
+): OperationalMetric[] {
+  const d = data;
+  const totalDebtors = d.totalDebtCount.currentValue;
+  const totalNegotiated = d.totalNegotiatedCount.currentValue;
+  const totalRecovered = d.totalRecoveredCount.currentValue;
+
+  const pctRecoveredOverNegotiations =
+    totalNegotiated > 0 ? (totalRecovered / totalNegotiated) * 100 : undefined;
+  const recoveryRateQuantity =
+    totalDebtors > 0 ? (totalRecovered / totalDebtors) * 100 : undefined;
+
+  return [
+    {
+      label: t("dashboard.kpis.totalDebtors"),
+      value: String(totalDebtors),
+      subtitle: t("dashboard.subtitles.debtorsBase"),
+      delay: 200,
+    },
     {
       label: t("dashboard.kpis.activeNegotiations"),
-      value: "47",
-      subtitle: t("dashboard.subtitles.activeNegotiations"),
+      value: String(totalNegotiated),
+      subtitle:
+        d.totalNegotiatedCount.percentage != null
+          ? `${formatPercent(d.totalNegotiatedCount.percentage)} ${t("dashboard.subtitles.activeNegotiations")}`
+          : undefined,
       delay: 250,
     },
     {
       label: t("dashboard.kpis.closedAgreements"),
-      value: "14",
-      subtitle: t("dashboard.subtitles.closedAgreements"),
+      value: String(totalRecovered),
+      subtitle:
+        pctRecoveredOverNegotiations != null
+          ? `${formatPercent(pctRecoveredOverNegotiations)} ${t("dashboard.subtitles.closedAgreements")}`
+          : undefined,
       delay: 300,
     },
     {
       label: t("dashboard.kpis.conversionRate"),
-      value: "3,67%",
-      subtitle: t("dashboard.subtitles.conversionRate"),
+      value:
+        recoveryRateQuantity != null
+          ? formatPercent(recoveryRateQuantity)
+          : "-",
+      subtitle: undefined,
       delay: 350,
     },
   ];
+}
+
+const FALLBACK_DEBT_AGE: PortfolioBreakdownItem[] = [
+  { name: "dashboard.donut.debtAge.upTo90", value: 70, color: "hsl(var(--chart-1))" },
+  { name: "dashboard.donut.debtAge.upTo365", value: 21, color: "hsl(var(--chart-2))" },
+  { name: "dashboard.donut.debtAge.over365", value: 9, color: "hsl(var(--chart-3))" },
+];
+const FALLBACK_DEBT_VALUE: PortfolioBreakdownItem[] = [
+  { name: "dashboard.donut.debtValue.upTo2k", value: 60, color: "hsl(var(--chart-1))" },
+  { name: "dashboard.donut.debtValue.2kTo5k", value: 22, color: "hsl(var(--chart-2))" },
+  { name: "dashboard.donut.debtValue.5kTo10k", value: 17, color: "hsl(var(--chart-3))" },
+  { name: "dashboard.donut.debtValue.over10k", value: 1, color: "hsl(var(--chart-4))" },
+];
+const FALLBACK_DEBTOR_AGE: PortfolioBreakdownItem[] = [
+  { name: "dashboard.donut.debtorAge.31to40", value: 33, color: "hsl(var(--chart-1))" },
+  { name: "dashboard.donut.debtorAge.41to50", value: 35, color: "hsl(var(--chart-2))" },
+  { name: "dashboard.donut.debtorAge.51to60", value: 15, color: "hsl(var(--chart-3))" },
+  { name: "dashboard.donut.debtorAge.other", value: 17, color: "hsl(var(--chart-4))" },
+];
+
+export function DashboardPage() {
+  const { t } = useI18n();
+  const { data: boxesData, error } = useRenegotiationBoxes();
+  const { data: graphicsData } = useRenegotiationGraphics();
+
+  const debtAgeLabel = (name: string) =>
+    t(
+      ({
+        lessThan90: "dashboard.donut.debtAge.upTo90",
+        between90And365: "dashboard.donut.debtAge.upTo365",
+        moreThan365: "dashboard.donut.debtAge.over365",
+      }[name] ?? "dashboard.donut.debtAge.upTo90") as TranslationKey
+    );
+  const debtValueLabel = (name: string) =>
+    t(
+      ({
+        upTo2000: "dashboard.donut.debtValue.upTo2k",
+        between2001And5000: "dashboard.donut.debtValue.2kTo5k",
+        between5001And50000: "dashboard.donut.debtValue.5kTo10k",
+        moreThan50000: "dashboard.donut.debtValue.over10k",
+      }[name] ?? "dashboard.donut.debtValue.upTo2k") as TranslationKey
+    );
+  const debtorsAgeLabel = (name: string) =>
+    t(
+      ({
+        between18And20: "dashboard.donut.debtorAge.18to20",
+        between21And25: "dashboard.donut.debtorAge.21to25",
+        between26And30: "dashboard.donut.debtorAge.26to30",
+        between31And40: "dashboard.donut.debtorAge.31to40",
+        between41And50: "dashboard.donut.debtorAge.41to50",
+        between51And60: "dashboard.donut.debtorAge.51to60",
+        between61And70: "dashboard.donut.debtorAge.61to70",
+        between71OrMore: "dashboard.donut.debtorAge.71plus",
+      }[name] ?? "dashboard.donut.debtorAge.other") as TranslationKey
+    );
+
+  const debtAgeData: PortfolioBreakdownItem[] =
+    toDonutSeries(graphicsData?.debtAge, debtAgeLabel).length > 0
+      ? toDonutSeries(graphicsData?.debtAge, debtAgeLabel)
+      : FALLBACK_DEBT_AGE.map((item) => ({ ...item, name: t(item.name as TranslationKey) }));
+
+  const debtValueData: PortfolioBreakdownItem[] =
+    toDonutSeries(graphicsData?.debtValue, debtValueLabel).length > 0
+      ? toDonutSeries(graphicsData?.debtValue, debtValueLabel)
+      : FALLBACK_DEBT_VALUE.map((item) => ({ ...item, name: t(item.name as TranslationKey) }));
+
+  const debtorAgeData: PortfolioBreakdownItem[] =
+    toDonutSeries(graphicsData?.debtorsAge, debtorsAgeLabel).length > 0
+      ? toDonutSeries(graphicsData?.debtorsAge, debtorsAgeLabel)
+      : FALLBACK_DEBTOR_AGE.map((item) => ({ ...item, name: t(item.name as TranslationKey) }));
+
+  const kpiMetrics: KpiMetric[] =
+    boxesData != null
+      ? mapBoxesToKpiMetrics(boxesData, t)
+      : [
+          {
+            label: t("dashboard.kpis.totalDebts"),
+            value: "-",
+            change: "-",
+            trend: "up",
+            percentage: "100%",
+            delay: 0,
+          },
+          {
+            label: t("dashboard.kpis.totalNegotiated"),
+            value: "-",
+            change: "-",
+            trend: "up",
+            percentage: "-",
+            delay: 50,
+          },
+          {
+            label: t("dashboard.kpis.totalRecovered"),
+            value: "-",
+            change: "-",
+            trend: "up",
+            percentage: "-",
+            delay: 100,
+          },
+          {
+            label: t("dashboard.kpis.recoveryRate"),
+            value: "-",
+            change: "-",
+            trend: "up",
+            delay: 150,
+          },
+        ];
+
+  const operationalMetrics: OperationalMetric[] =
+    boxesData != null
+      ? mapBoxesToOperationalMetrics(boxesData, t)
+      : [
+          { label: t("dashboard.kpis.totalDebtors"), value: "-", subtitle: t("dashboard.subtitles.debtorsBase"), delay: 200 },
+          { label: t("dashboard.kpis.activeNegotiations"), value: "-", delay: 250 },
+          { label: t("dashboard.kpis.closedAgreements"), value: "-", delay: 300 },
+          { label: t("dashboard.kpis.conversionRate"), value: "-", subtitle: t("dashboard.subtitles.conversionRate"), delay: 350 },
+        ];
 
   return (
     <div className="space-y-6">
-      <AIStatusWidget />
-
+      {error && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          Erro ao carregar indicadores. Verifique a conexão ou tente mais tarde.
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiMetrics.map((metric) => (
           <KPICard key={metric.label} {...metric} />
@@ -108,12 +253,7 @@ export function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <PerformanceChart />
-        </div>
-        <NegotiationFunnel />
-      </div>
+      <NpsCard />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <DonutCard title={t("dashboard.donut.debtAge")} data={debtAgeData} delay={400} />
@@ -121,10 +261,12 @@ export function DashboardPage() {
         <DonutCard title={t("dashboard.donut.debtorAge")} data={debtorAgeData} delay={500} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <DailyTable />
-        </div>
+      <PerformanceChart />
+
+      <DailyTable />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <NegotiationFunnel />
         <ActivityFeed />
       </div>
     </div>

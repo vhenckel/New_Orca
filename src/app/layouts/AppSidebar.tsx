@@ -29,16 +29,17 @@ export function AppSidebar({
     >
       <div className="flex h-14 items-center justify-between border-b border-border px-4">
         {collapsed ? (
-          <span className="mx-auto text-lg font-bold text-primary">O</span>
+          <img
+            src="https://assets.o2ospot.com/spot/icons/o2ospot.svg"
+            alt="O2OSPOT"
+            className="mx-auto h-8 w-auto object-contain"
+          />
         ) : (
-          <div className="space-y-0.5">
-            <span className="block text-lg font-bold tracking-tight text-foreground">
-              O2O<span className="text-primary">SPOT</span>
-            </span>
-            <span className="block text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              {t("app.brand.modules")}
-            </span>
-          </div>
+          <img
+            src="https://assets.o2ospot.com/spot/icons/o2ospot.svg"
+            alt="O2OSPOT"
+            className="h-9 w-full max-w-[180px] object-contain object-left"
+          />
         )}
       </div>
 
@@ -75,7 +76,7 @@ export function AppSidebar({
               {t(currentModule.titleKey)}
             </p>
           )}
-          {currentModule.routes.map((route) => (
+          {currentModule.routes.filter((route) => !route.hideInSidebar).map((route) => (
             <NavLink
               key={route.path}
               to={route.path}

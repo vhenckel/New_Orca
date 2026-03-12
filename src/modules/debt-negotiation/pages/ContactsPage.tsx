@@ -1,15 +1,191 @@
-import { ModulePlaceholderPage } from "@/shared/components/ModulePlaceholderPage";
+import { useState } from "react";
+import { Check, Clock, Search } from "lucide-react";
+import { Link } from "react-router-dom";
+
+import { useContactList, CONTACT_LIST_PAGE_SIZE } from "@/modules/debt-negotiation/hooks";
+import type { ContactListItem } from "@/modules/debt-negotiation/types/contact-list";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { Input } from "@/shared/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
+import { Button } from "@/shared/ui/button";
+import { cn } from "@/shared/lib/utils";
+
+function formatContactDate(iso: string): string {
+  if (!iso || iso === "-") return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatWhatsApp(raw: string): string {
+  if (!raw) return "-";
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length < 10) return raw;
+  const ddd = digits.slice(-11, -9);
+  const rest = digits.slice(-9);
+  const part1 = rest.slice(0, 5);
+  const part2 = rest.slice(5);
+  return `+55 (${ddd}) ${part1}-${part2}`;
+}
+
+/** optStatus === 1 = usuário de acordo (LGPD/opt-in). */
+function OptStatusIcon({ optStatus }: { optStatus: number }) {
+  const agreed = optStatus === 1;
+  return (
+    <span
+      className={cn(
+        "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+        agreed ? "bg-green-600 text-white" : "bg-destructive text-destructive-foreground",
+      )}
+      title={agreed ? "Opt-in confirmado" : "Aguardando opt-in"}
+    >
+      {agreed ? <Check className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+    </span>
+  );
+}
 
 export function ContactsPage() {
   const { t } = useI18n();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const { data, error, isPending } = useContactList({ page });
+
+  const total = data?.total ?? 0;
+  const list = data?.data ?? [];
+  const totalPages = Math.max(1, Math.ceil(total / CONTACT_LIST_PAGE_SIZE));
 
   return (
-    <ModulePlaceholderPage
-      eyebrow={t("pages.debtNegotiation.contacts.eyebrow")}
-      title={t("pages.debtNegotiation.contacts.title")}
-      description={t("pages.debtNegotiation.contacts.description")}
-      primaryActionLabel={t("pages.debtNegotiation.contacts.action")}
-    />
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl font-semibold text-foreground">
+          {t("pages.debtNegotiation.contacts.title")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t("pages.debtNegotiation.contacts.records").replace("{count}", String(total))}
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder={t("pages.debtNegotiation.contacts.search")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-9"
+          />
+        </div>
+        <button
+          type="button"
+          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+        >
+          {t("pages.debtNegotiation.contacts.allFilters").replace("{count}", "0")}
+        </button>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          Erro ao carregar contatos.
+        </div>
+      )}
+
+      <div className="rounded-md border border-border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("pages.debtNegotiation.contacts.col.name")}</TableHead>
+              <TableHead>{t("pages.debtNegotiation.contacts.col.nps")}</TableHead>
+              <TableHead>{t("pages.debtNegotiation.contacts.col.whatsapp")}</TableHead>
+              <TableHead>{t("pages.debtNegotiation.contacts.col.firstConversation")}</TableHead>
+              <TableHead>{t("pages.debtNegotiation.contacts.col.updatedAt")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isPending ? (
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                  Carregando…
+                </TableCell>
+              </TableRow>
+            ) : list.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                  Nenhum contato encontrado.
+                </TableCell>
+              </TableRow>
+            ) : (
+              list.map((row: ContactListItem) => (
+                <TableRow key={row.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <OptStatusIcon optStatus={row.optStatus} />
+                      <Link
+                        to={`/debt-negotiation/contacts/${row.id}`}
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {row.name}
+                      </Link>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {row.nps != null ? String(row.nps) : "-"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatWhatsApp(row.whatsapp)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatContactDate(row.firstConversation)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatContactDate(row.updatedAt)}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {t("common.pagination.pageOf")
+              .replace("{page}", String(page))
+              .replace("{total}", String(totalPages))}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              {t("common.pagination.previous")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              {t("common.pagination.next")}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

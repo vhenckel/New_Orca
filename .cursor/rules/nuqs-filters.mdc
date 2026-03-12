@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+
+Use **nuqs** (https://nuqs.dev/) para todo estado de filtros que deve refletir na URL.
+
+- Parâmetros de filtro (datas, busca, página, etc.) devem ser **query string**: usar `useQueryState` ou `useQueryStates` do nuqs.
+- Estado type-safe: usar parsers do nuqs (`parseAsString`, `parseAsInteger`, `parseAsIsoDateFormat`, ou parsers customizados).
+- Definir parsers e defaults em um único lugar por contexto (ex.: `shared/lib/nuqs-filters.ts` ou no módulo) e reutilizar nos hooks de dados e na UI.
+- Evitar `useState` para valores que são filtros compartilháveis (link, refresh, voltar); preferir nuqs para que a URL seja a fonte da verdade.
