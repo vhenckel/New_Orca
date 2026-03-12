@@ -29,6 +29,11 @@ export type {
   ContactListResponse,
   ContactListParams,
 } from "./contact-list";
+export type { ContactDetails } from "./contact-detail";
+export type { ContactMetricsResponse } from "./contact-metrics";
+export type { ContactDebtsResponse, ContactDebtItem } from "./contact-debts";
+export type { ContactActivitiesResponse, ContactActivity } from "./contact-activities";
+export type { ContactCampaignsResponse, ContactCampaign } from "./contact-campaigns";
 export type {
   DebtDetailsItem,
   DebtDetailsResponse,

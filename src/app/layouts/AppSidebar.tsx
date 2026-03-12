@@ -27,7 +27,7 @@ export function AppSidebar({
         collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className="flex h-14 items-center justify-between border-b border-border px-4">
+      <div className="flex h-14 items-center justify-center border-b border-border bg-[hsl(var(--sidebar-primary))] text-[hsl(var(--sidebar-primary-foreground))] px-4">
         {collapsed ? (
           <img
             src="https://assets.o2ospot.com/spot/icons/o2ospot.svg"
@@ -38,7 +38,7 @@ export function AppSidebar({
           <img
             src="https://assets.o2ospot.com/spot/icons/o2ospot.svg"
             alt="O2OSPOT"
-            className="h-9 w-full max-w-[180px] object-contain object-left"
+            className="mx-auto h-9 w-full max-w-[180px] object-contain"
           />
         )}
       </div>

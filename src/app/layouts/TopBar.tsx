@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
 import { DashboardDateRangePicker } from "@/shared/components/DashboardDateRangePicker";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { useNotifications } from "@/shared/notifications/useNotifications";
 import { Button } from "@/shared/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 
 interface TopBarProps {
   currentModule: AppModuleDefinition;
@@ -19,6 +21,14 @@ interface TopBarProps {
 
 export function TopBar({ currentModule, currentRoute }: TopBarProps) {
   const { t } = useI18n();
+  const {
+    notifications,
+    unreadCount,
+    isLoading: notificationsLoading,
+    markAsRead,
+    markAllAsRead,
+    isMarkingAll,
+  } = useNotifications();
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-6">
@@ -50,13 +60,69 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
           </span>
         </Button>
 
-        <button
-          type="button"
-          className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label={t("app.notifications.title")}
+            >
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80 p-0">
+            <div className="flex items-center justify-between border-b px-3 py-2">
+              <span className="text-sm font-medium">
+                {t("app.notifications.title")}
+              </span>
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  className="text-xs font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={() => markAllAsRead()}
+                  disabled={isMarkingAll}
+                >
+                  {t("app.notifications.markAllRead")}
+                </button>
+              )}
+            </div>
+            <ScrollArea className="max-h-80">
+              <div className="divide-y">
+                {notificationsLoading && (
+                  <div className="px-3 py-4 text-xs text-muted-foreground">
+                    {t("app.notifications.loading")}
+                  </div>
+                )}
+                {!notificationsLoading && notifications.length === 0 && (
+                  <div className="px-3 py-4 text-xs text-muted-foreground">
+                    {t("app.notifications.empty")}
+                  </div>
+                )}
+                {notifications.map((notification) => (
+                  <button
+                    key={notification.id}
+                    type="button"
+                    className="flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-accent/60"
+                    onClick={() => markAsRead(notification.id)}
+                  >
+                    <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
+                    <div className="flex-1 space-y-1">
+                      <p className="text-xs font-medium text-foreground">
+                        {notification.title}
+                      </p>
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {notification.message}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

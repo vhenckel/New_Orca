@@ -1,25 +1,435 @@
 import { useParams, Link } from "react-router-dom";
+import { useState, useCallback } from "react";
+import {
+  Award,
+  ChevronDown,
+  Copy,
+  DollarSign,
+  FileText,
+  Globe,
+  MapPin,
+  MessageCircle,
+  Pencil,
+  Send,
+  User,
+} from "lucide-react";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
+import { Button } from "@/shared/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/shared/ui/collapsible";
+import {
+  useContactDetails,
+  useContactMetrics,
+  useContactDebts,
+} from "@/modules/debt-negotiation/hooks";
+import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
+import { StatusBadge } from "@/modules/debt-negotiation/utils/statusBadge";
+import type { ContactDetails } from "@/modules/debt-negotiation/types";
 
-/** Placeholder para a tela de detalhe do contato. Substituir quando a tela interna estiver pronta. */
+const ROUTE_CONTACTS = "/debt-negotiation/contacts";
+
+function getInitials(name: string | null | undefined): string {
+  if (!name || !name.trim()) return "-";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase().slice(0, 2);
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** Mapeia status da API de dívidas para o nome de estágio usado pelo StatusBadge. */
+function debtStatusToStageName(apiStatus: string): string {
+  const map: Record<string, string> = {
+    NEGOTIATED_WITHOUT_PAYMENT: "negociado sem pagamento",
+    IN_COLLECTION: "em cobrança",
+  };
+  return map[apiStatus] ?? apiStatus.toLowerCase();
+}
+
+function formatAddress(d: ContactDetails): string {
+  const parts = [
+    d.addressStreet,
+    d.addressNumber,
+    d.addressNeighborhood,
+    d.addressCity,
+    d.addressState,
+    d.addressZipcode,
+  ].filter(Boolean);
+  return parts.length ? parts.join(", ") : "";
+}
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = useCallback(() => {
+    if (!value) return;
+    void navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, [value]);
+  if (!value) return null;
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className="inline-flex items-center gap-1 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+      title={copied ? "Copiado" : "Copiar"}
+    >
+      <Copy className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
 export function ContactDetailPage() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
+  const contactId = id != null ? parseInt(id, 10) : NaN;
+  const validId = Number.isInteger(contactId) && contactId > 0 ? contactId : null;
+
+  const { data: details, isPending: detailsPending } = useContactDetails(validId);
+  const { data: metrics } = useContactMetrics(validId);
+  const { data: debts } = useContactDebts(validId);
+  const [conversationOpen, setConversationOpen] = useState(false);
+
+  const name = details?.name ?? "-";
+  const addressLine = details ? formatAddress(details) : "";
+
+  if (id == null || !validId) {
+    return (
+      <div className="space-y-4">
+        <Link to={ROUTE_CONTACTS} className="text-sm text-primary underline-offset-4 hover:underline">
+          ← {t("pages.debtNegotiation.contactDetail.backToContacts")}
+        </Link>
+        <p className="text-sm text-muted-foreground">ID de contato inválido.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <Link
-        to="/debt-negotiation/contacts"
-        className="text-sm text-primary underline-offset-4 hover:underline"
-      >
-        ← {t("pages.debtNegotiation.contacts.title")}
+    <div className="space-y-6">
+      <Link to={ROUTE_CONTACTS} className="text-sm text-primary underline-offset-4 hover:underline">
+        ← {t("pages.debtNegotiation.contactDetail.backToContacts")}
       </Link>
-      <h1 className="text-xl font-semibold text-foreground">
-        {t("pages.debtNegotiation.contacts.title")} – {id}
-      </h1>
-      <p className="text-sm text-muted-foreground">
-        Tela de detalhe do contato em construção.
-      </p>
+
+      {/* Header do contato */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-12 w-12">
+                <AvatarFallback className="text-base">{getInitials(name)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">{detailsPending ? "…" : name}</h1>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  {details?.lastPipelineStage && (
+                    <StatusBadge stageName={details.lastPipelineStage} />
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {t("pages.debtNegotiation.contactDetail.lifecycleStage")}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Editar">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Documento">
+                <FileText className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Instagram">
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Enviar">
+                <Send className="h-4 w-4" />
+              </Button>
+              <Button onClick={() => setConversationOpen(true)}>
+                {t("pages.debtNegotiation.contactDetail.viewConversation")}
+              </Button>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+            {details?.email && (
+              <span className="flex items-center gap-1">
+                {details.email}
+                <CopyButton value={details.email} />
+              </span>
+            )}
+            {details?.phone && (
+              <span className="flex items-center gap-1">
+                {details.phone}
+                <CopyButton value={details.phone} />
+              </span>
+            )}
+            {details?.cpf && (
+              <span className="flex items-center gap-1">
+                {details.cpf}
+                <CopyButton value={details.cpf} />
+              </span>
+            )}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-6 text-sm text-muted-foreground">
+            <span>
+              {t("pages.debtNegotiation.contactDetail.firstConversation")}:{" "}
+              {formatDateTime(metrics?.dateFirstConversation ?? null)}
+            </span>
+            <span>
+              {t("pages.debtNegotiation.contactDetail.lastConversation")}:{" "}
+              {formatDateTime(metrics?.dateLastConversation ?? null)}
+            </span>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Coluna esquerda: Detalhes do Contato */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.detailsTitle")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-0 pt-0">
+              {/* Informações Gerais */}
+              <Collapsible defaultOpen className="group border-b last:border-b-0">
+                <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
+                  <span className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    {t("pages.debtNegotiation.contactDetail.generalInfo")}
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <dl className="grid grid-cols-1 gap-2 pb-4 text-sm text-muted-foreground sm:grid-cols-2">
+                    <div>
+                      <dt className="font-medium text-foreground">ID</dt>
+                      <dd>{details?.id ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">{t("pages.debtNegotiation.contactDetail.contactOwner")}</dt>
+                      <dd>{details?.ownerUserName ?? details?.createdByUser ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">Persona</dt>
+                      <dd>{details?.persona ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">{t("pages.debtNegotiation.contactDetail.contactOrigin")}</dt>
+                      <dd>{details?.origin ?? "-"}</dd>
+                    </div>
+                  </dl>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Pix */}
+              <Collapsible className="group border-b last:border-b-0">
+                <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
+                  <span className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    {t("pages.debtNegotiation.contactDetail.pix")}
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <p className="pb-4 text-sm text-muted-foreground">
+                    {t("pages.debtNegotiation.contactDetail.pixEmpty")}
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Qualificação do contato */}
+              <Collapsible className="group border-b last:border-b-0">
+                <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
+                  <span className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-muted-foreground" />
+                    {t("pages.debtNegotiation.contactDetail.qualification")}
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <p className="pb-4 text-sm text-muted-foreground">
+                    {t("pages.debtNegotiation.contactDetail.qualificationEmpty")}
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Endereço */}
+              <Collapsible className="group border-b last:border-b-0">
+                <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
+                  <span className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    {t("pages.debtNegotiation.contactDetail.address")}
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <p className="pb-4 text-sm text-muted-foreground">
+                    {addressLine || t("pages.debtNegotiation.contactDetail.addressEmpty")}
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Lista de registros */}
+              <Collapsible className="group border-b last:border-b-0">
+                <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
+                  <span className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    {t("pages.debtNegotiation.contactDetail.recordList")}
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <p className="pb-4 text-sm text-muted-foreground">
+                    {details?.contactListName ?? "-"}
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Coluna direita: Compliance, Métricas, Dívidas */}
+        <div className="space-y-6">
+          {/* Compliance */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.compliance")}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">NPS</dt>
+                  <dd>-</dd>
+                </div>
+                {details?.optin?.map((o) => (
+                  <div key={o.label} className="flex items-center justify-between gap-2">
+                    <dt className="text-muted-foreground">{o.label}</dt>
+                    <dd className="flex items-center gap-1">
+                      {o.validated ? (
+                        <>
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                          {t("pages.debtNegotiation.contactDetail.validated")}
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </dd>
+                  </div>
+                ))}
+                {(!details?.optin || details.optin.length === 0) && (
+                  <dd className="text-muted-foreground">-</dd>
+                )}
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* Métricas */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.metrics")}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.conversations")}</dt>
+                  <dd>{metrics?.metrics.conversations ?? 0}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.simulations")}</dt>
+                  <dd>{metrics?.metrics.simulations ?? 0}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.humanServices")}</dt>
+                  <dd>{metrics?.metrics.services ?? 0}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.contracts")}</dt>
+                  <dd>{metrics?.metrics.contracts ?? 0}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.products")}</dt>
+                  <dd>{metrics?.metrics.products ?? 0}</dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* Dívidas */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                {t("pages.debtNegotiation.contactDetail.debts")}
+                {Array.isArray(debts) && debts.length > 0 ? ` (${debts.length})` : ""}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {!Array.isArray(debts) || debts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">-</p>
+              ) : (
+                <ul className="space-y-4">
+                  {debts.map((debt, i) => (
+                    <li key={i} className="flex flex-col gap-1 text-sm">
+                      <span className="font-semibold">
+                        {new Intl.NumberFormat("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        }).format(debt.totalAmount)}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <StatusBadge stageName={debtStatusToStageName(debt.status)} />
+                      </div>
+                      <span className="text-muted-foreground">
+                        {t("pages.debtNegotiation.contactDetail.renegotiationDate")}: {formatDate(debt.updatedAt)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <ConversationHistoryDialog
+        contactId={validId}
+        contactName={details?.name ?? undefined}
+        open={conversationOpen}
+        onOpenChange={setConversationOpen}
+      />
     </div>
   );
 }
