@@ -21,6 +21,13 @@ export const debtNegotiationModule: AppModuleDefinition = {
       element: <DashboardPage />,
     },
     {
+      path: "/debt-negotiation/debts",
+      labelKey: "modules.debtNegotiation.routes.debts.label",
+      descriptionKey: "modules.debtNegotiation.routes.debts.description",
+      icon: FileText,
+      element: <DebtsPage />,
+    },
+    {
       path: "/debt-negotiation/contacts",
       labelKey: "modules.debtNegotiation.routes.contacts.label",
       descriptionKey: "modules.debtNegotiation.routes.contacts.description",
@@ -34,13 +41,6 @@ export const debtNegotiationModule: AppModuleDefinition = {
       icon: Users,
       element: <ContactDetailPage />,
       hideInSidebar: true,
-    },
-    {
-      path: "/debt-negotiation/debts",
-      labelKey: "modules.debtNegotiation.routes.debts.label",
-      descriptionKey: "modules.debtNegotiation.routes.debts.description",
-      icon: FileText,
-      element: <DebtsPage />,
     },
   ],
 };
