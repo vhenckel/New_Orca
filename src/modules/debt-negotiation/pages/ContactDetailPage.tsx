@@ -281,9 +281,63 @@ export function ContactDetailPage() {
                   <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <p className="pb-4 text-sm text-muted-foreground">
-                    {t("pages.debtNegotiation.contactDetail.qualificationEmpty")}
-                  </p>
+                  <dl className="grid grid-cols-1 gap-2 pb-4 text-sm text-muted-foreground sm:grid-cols-2">
+                    <div>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.qualification.birthDate")}
+                      </dt>
+                      <dd>{formatDate(details?.birthDate ?? null)}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.qualification.gender")}
+                      </dt>
+                      <dd>{details?.genre ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.qualification.maritalStatus")}
+                      </dt>
+                      <dd>{details?.maritalStatus ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.qualification.schooling")}
+                      </dt>
+                      <dd>{details?.schooling ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.qualification.profession")}
+                      </dt>
+                      <dd>{details?.profession ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.qualification.professionalSituation")}
+                      </dt>
+                      <dd>{details?.professionalSituation ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.qualification.companyGroup")}
+                      </dt>
+                      <dd>-</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.qualification.income")}
+                      </dt>
+                      <dd>
+                        {details?.income != null
+                          ? new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(details.income)
+                          : "-"}
+                      </dd>
+                    </div>
+                  </dl>
                 </CollapsibleContent>
               </Collapsible>
 
