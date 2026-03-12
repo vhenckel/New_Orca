@@ -2,12 +2,15 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useCallback } from "react";
 import {
   Award,
+  Bot,
   ChevronDown,
+  Clock,
   Copy,
   DollarSign,
   FileText,
   Globe,
   MapPin,
+  Megaphone,
   MessageCircle,
   Pencil,
   Send,
@@ -31,12 +34,26 @@ import {
   useContactDetails,
   useContactMetrics,
   useContactDebts,
+  useContactActivities,
+  useContactCampaigns,
 } from "@/modules/debt-negotiation/hooks";
 import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
 import { StatusBadge } from "@/modules/debt-negotiation/utils/statusBadge";
-import type { ContactDetails } from "@/modules/debt-negotiation/types";
+import type { ContactDetails, ContactActivity } from "@/modules/debt-negotiation/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { cn } from "@/shared/lib/utils";
 
 const ROUTE_CONTACTS = "/debt-negotiation/contacts";
+
+type ActivityFilter = "all" | "campaigns" | "collection" | "bot";
+
+function getActivityFilter(activity: ContactActivity): ActivityFilter {
+  const name = (activity.eventName ?? "").toLowerCase();
+  if (name.includes("campanha")) return "campaigns";
+  if (name.includes("cobrança")) return "collection";
+  if (name.includes("bot") || name.includes("conversa")) return "bot";
+  return "all";
+}
 
 function getInitials(name: string | null | undefined): string {
   if (!name || !name.trim()) return "-";
@@ -123,7 +140,15 @@ export function ContactDetailPage() {
   const { data: details, isPending: detailsPending } = useContactDetails(validId);
   const { data: metrics } = useContactMetrics(validId);
   const { data: debts } = useContactDebts(validId);
+  const { data: activitiesData } = useContactActivities(validId, 1);
+  const { data: campaignsData } = useContactCampaigns(validId);
   const [conversationOpen, setConversationOpen] = useState(false);
+  const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
+
+  const activities = activitiesData?.data ?? [];
+  const activitiesTotal = activitiesData?.total ?? 0;
+  const dealsCount = Array.isArray(details?.deals) ? details.deals.length : 0;
+  const campaigns = campaignsData?.campaigns ?? [];
 
   const name = details?.name ?? "-";
   const addressLine = details ? formatAddress(details) : "";
@@ -217,8 +242,8 @@ export function ContactDetailPage() {
       </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Coluna esquerda: Detalhes do Contato */}
-        <div className="lg:col-span-2">
+        {/* Coluna esquerda: Detalhes do Contato + Atividades */}
+        <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.detailsTitle")}</CardTitle>
@@ -374,6 +399,84 @@ export function ContactDetailPage() {
               </Collapsible>
             </CardContent>
           </Card>
+
+          {/* Atividades */}
+          <Card>
+            <Tabs value={activityFilter} onValueChange={(v) => setActivityFilter(v as ActivityFilter)}>
+              <CardHeader className="pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="text-base">
+                    {t("pages.debtNegotiation.contactDetail.activities")} ({activitiesTotal})
+                  </CardTitle>
+                  <TabsList className="h-9">
+                    <TabsTrigger value="all" className="px-2 text-xs sm:px-3">
+                      {t("pages.debtNegotiation.contactDetail.activitiesFilterAll")}
+                    </TabsTrigger>
+                    <TabsTrigger value="campaigns" className="px-2 text-xs sm:px-3">
+                      {t("pages.debtNegotiation.contactDetail.activitiesFilterCampaigns")}
+                    </TabsTrigger>
+                    <TabsTrigger value="collection" className="px-2 text-xs sm:px-3">
+                      {t("pages.debtNegotiation.contactDetail.activitiesFilterCollection")}
+                    </TabsTrigger>
+                    <TabsTrigger value="bot" className="px-2 text-xs sm:px-3">
+                      {t("pages.debtNegotiation.contactDetail.activitiesFilterBot")}
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {(["all", "campaigns", "collection", "bot"] as const).map((tab) => {
+                  const list =
+                    tab === "all" ? activities : activities.filter((a) => getActivityFilter(a) === tab);
+                  return (
+                    <TabsContent key={tab} value={tab} className="mt-0">
+                      {list.length === 0 ? (
+                        <p className="py-4 text-sm text-muted-foreground">-</p>
+                      ) : (
+                        <ul className="divide-y">
+                          {list.map((activity, i) => {
+                            const filter = getActivityFilter(activity);
+                            const Icon =
+                              filter === "campaigns"
+                                ? Megaphone
+                                : filter === "collection"
+                                  ? Clock
+                                  : filter === "bot"
+                                    ? Bot
+                                    : FileText;
+                            return (
+                              <li
+                                key={`${activity.eventDate}-${i}`}
+                                className="flex items-start gap-3 py-3 first:pt-0"
+                              >
+                                <span
+                                  className={cn(
+                                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                                    filter === "campaigns" && "bg-primary/15 text-primary",
+                                    filter === "collection" && "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+                                    filter === "bot" && "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+                                    filter === "all" && "bg-muted text-muted-foreground",
+                                  )}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                </span>
+                                <div className="min-w-0 flex-1 space-y-0.5">
+                                  <p className="text-sm text-foreground">{activity.eventName}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDateTime(activity.eventDate)}
+                                  </p>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </TabsContent>
+                  );
+                })}
+              </CardContent>
+            </Tabs>
+          </Card>
         </div>
 
         {/* Coluna direita: Compliance, Métricas, Dívidas */}
@@ -473,6 +576,66 @@ export function ContactDetailPage() {
                   ))}
                 </ul>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Negócios */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                {t("pages.debtNegotiation.contactDetail.deals")}
+                {dealsCount > 0 ? ` (${dealsCount})` : ""}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {dealsCount === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("pages.debtNegotiation.contactDetail.dealsEmpty")}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">-</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Campanhas */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                {t("pages.debtNegotiation.contactDetail.campaigns")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {campaigns.length === 0 ? (
+                <p className="text-sm text-muted-foreground">-</p>
+              ) : (
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  {campaigns.map((c) => (
+                    <li key={c.campaignId}>
+                      {c.campaignName}{" "}
+                      {c.lastConversationDate
+                        ? formatDateTime(c.lastConversationDate)
+                        : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Origem */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                {t("pages.debtNegotiation.contactDetail.origin")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-sm text-muted-foreground">
+                {details?.origin?.trim()
+                  ? details.origin
+                  : t("pages.debtNegotiation.contactDetail.originEmpty")}
+              </p>
             </CardContent>
           </Card>
         </div>

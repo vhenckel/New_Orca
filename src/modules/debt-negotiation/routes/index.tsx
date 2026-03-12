@@ -36,8 +36,8 @@ export const debtNegotiationModule: AppModuleDefinition = {
     },
     {
       path: "/debt-negotiation/contacts/:id",
-      labelKey: "modules.debtNegotiation.routes.contacts.label",
-      descriptionKey: "modules.debtNegotiation.routes.contacts.description",
+      labelKey: "pages.debtNegotiation.contactDetail.detailsTitle",
+      descriptionKey: "pages.debtNegotiation.contactDetail.detailsTitle",
       icon: Users,
       element: <ContactDetailPage />,
       hideInSidebar: true,

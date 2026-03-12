@@ -17,6 +17,16 @@ function getFallbackRoute(module: AppModuleDefinition): AppRouteDefinition {
   return module.routes[0];
 }
 
+/** Verifica se pathname corresponde ao path da rota (suporta segmentos :param). */
+function routePathMatches(routePath: string, pathname: string): boolean {
+  const routeSegments = routePath.split("/").filter(Boolean);
+  const pathSegments = pathname.split("/").filter(Boolean);
+  if (routeSegments.length !== pathSegments.length) return false;
+  return routeSegments.every(
+    (seg, i) => seg.startsWith(":") || seg === pathSegments[i],
+  );
+}
+
 export function AppShell({ children, modules }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
@@ -29,8 +39,10 @@ export function AppShell({ children, modules }: AppShellProps) {
 
   const currentRoute = useMemo(
     () =>
-      currentModule.routes.find((route) => route.path === location.pathname) ??
-      getFallbackRoute(currentModule),
+      currentModule.routes.find(
+        (route) =>
+          route.path === location.pathname || routePathMatches(route.path, location.pathname),
+      ) ?? getFallbackRoute(currentModule),
     [currentModule, location.pathname],
   );
 
