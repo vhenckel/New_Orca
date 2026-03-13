@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getDefaultCompanyId } from "@/shared/config/env";
+import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import {
   fetchNotifications,
   markAllNotificationsRead,
@@ -21,7 +21,7 @@ function updateCacheAfterMarkAll(prev: NotificationsResponse | undefined): Notif
 }
 
 export function useNotifications() {
-  const companyId = getDefaultCompanyId();
+  const companyId = getCurrentCompanyId();
   const queryClient = useQueryClient();
 
   const query = useQuery({

@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AuthProvider } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
+import { ChooseCompanyPage } from "@/app/pages/ChooseCompanyPage";
 import { ForgotPasswordPage } from "@/app/pages/ForgotPasswordPage";
 import { LoginPage } from "@/app/pages/LoginPage";
 import { AppShell } from "@/app/layouts/AppShell";
@@ -18,6 +19,7 @@ export function AppRouter() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/choose-company" element={<ChooseCompanyPage />} />
             <Route path="/" element={<Navigate to={debtNegotiationModule.basePath} replace />} />
             {businessModules.flatMap((module) =>
               module.routes.map((route) => (

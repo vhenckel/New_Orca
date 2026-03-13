@@ -23,6 +23,7 @@ import {
   setStoredToken,
 } from "@/shared/auth/token-store";
 import type { LoginRequest, MeResponse } from "@/shared/auth/types";
+import { fetchUserAccounts } from "@/shared/api/auth-api";
 import { spotJson } from "@/shared/api/http-client";
 
 export interface AuthState {
@@ -130,7 +131,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
         const me = await fetchMe(cid);
         setUser(me);
         const target = options?.callbackUrl && options.callbackUrl.startsWith("/") ? options.callbackUrl : "/";
-        navigate(target, { replace: true });
+        const accounts = await fetchUserAccounts();
+        if (accounts.length > 1) {
+          const url = target === "/" ? "/choose-company" : `/choose-company?callbackUrl=${encodeURIComponent(target)}`;
+          navigate(url, { replace: true });
+        } else {
+          navigate(target, { replace: true });
+        }
       } catch (e) {
         setError(
           e instanceof Error ? e.message : "Login failed"

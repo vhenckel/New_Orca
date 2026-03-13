@@ -1,10 +1,10 @@
-import { getDefaultCompanyId } from "@/shared/config/env";
+import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import { spotJson } from "@/shared/api/http-client";
 import type { ContactCampaignsResponse } from "@/modules/debt-negotiation/types";
 
 export async function fetchContactCampaigns(contactId: number): Promise<ContactCampaignsResponse> {
   const search = new URLSearchParams();
-  search.append("companyIds", String(getDefaultCompanyId()));
+  search.append("companyIds", String(getCurrentCompanyId()));
   return spotJson<ContactCampaignsResponse>(`/contact/${contactId}/campaigns?${search.toString()}`);
 }
 

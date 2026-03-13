@@ -1,4 +1,4 @@
-import { getDefaultCompanyId } from "@/shared/config/env";
+import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import { spotJson } from "@/shared/api/http-client";
 import type { ContactActivitiesResponse } from "@/modules/debt-negotiation/types";
 
@@ -15,7 +15,7 @@ export async function fetchContactActivities(
     take: String(params.take),
     skip: String(params.skip),
   });
-  search.append("companyIds", String(getDefaultCompanyId()));
+  search.append("companyIds", String(getCurrentCompanyId()));
   return spotJson<ContactActivitiesResponse>(`/contact/${contactId}/activities?${search.toString()}`);
 }
 

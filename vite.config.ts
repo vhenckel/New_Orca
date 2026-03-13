@@ -2,6 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
+const spotApiTarget =
+  process.env.VITE_SPOT_API_BASE_URL ?? "https://spot-api-management.dev.o2obots.com";
+
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
   server: {
@@ -11,10 +14,11 @@ export default defineConfig(() => ({
       overlay: false,
     },
     proxy: {
-      "/api/spot": {
-        target: "https://spot-api-management.o2obots.com",
+      "/api": {
+        target: spotApiTarget,
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/spot/, ""),
+        rewrite: (path) => path.replace(/^\/api/, ""),
+        secure: true,
       },
     },
   },

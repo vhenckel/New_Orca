@@ -1,9 +1,11 @@
-import { Bell, ChevronDown, Download, LogOut, Settings2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Bell, Building2, ChevronDown, Download, LogOut, Settings2 } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
 import { DashboardDateRangePicker } from "@/shared/components/DashboardDateRangePicker";
 import { useAuth } from "@/shared/auth/AuthContext";
+import { getCompanyNameFromToken } from "@/shared/auth/jwt";
+import { getStoredToken } from "@/shared/auth/token-store";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useNotifications } from "@/shared/notifications/useNotifications";
 import { Button } from "@/shared/ui/button";
@@ -22,7 +24,14 @@ interface TopBarProps {
 
 export function TopBar({ currentModule, currentRoute }: TopBarProps) {
   const { t } = useI18n();
+  const location = useLocation();
   const { user, logout } = useAuth();
+  const token = getStoredToken();
+  const companyName = token ? getCompanyNameFromToken(token) : null;
+  const chooseCompanyUrl =
+    location.pathname && location.pathname !== "/choose-company"
+      ? `/choose-company?callbackUrl=${encodeURIComponent(location.pathname)}`
+      : "/choose-company";
   const {
     notifications,
     unreadCount,
@@ -139,13 +148,26 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                 {user?.name?.charAt(0)?.toUpperCase() ?? "T"}
               </div>
-              <span className="hidden md:inline truncate max-w-[120px]">
-                {user?.name ?? "—"}
-              </span>
+              <div className="hidden max-w-[160px] flex-col md:flex">
+                <span className="truncate text-sm font-medium text-foreground">
+                  {user?.name ?? "—"}
+                </span>
+                {companyName && (
+                  <span className="truncate text-xs text-muted-foreground">
+                    {companyName}
+                  </span>
+                )}
+              </div>
               <ChevronDown className="hidden h-3 w-3 text-muted-foreground md:block" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem asChild>
+              <Link to={chooseCompanyUrl} className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Mudar empresa
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/settings" className="flex items-center gap-2">
                 <Settings2 className="h-4 w-4" />

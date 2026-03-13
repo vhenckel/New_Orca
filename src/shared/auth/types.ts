@@ -56,9 +56,10 @@ export interface BrandingConfig {
   color: string;
 }
 
-/** Resposta do GET /me (OutputUserTeam). */
+/** Resposta do GET /me (OutputUserTeam). id = company_user.id; userId = user.id (usar para /auth/accounts). */
 export interface MeResponse {
   id: number;
+  userId?: number;
   name: string;
   businessArea: string | unknown;
   profile: MeProfile;
@@ -83,12 +84,20 @@ export interface LoginResponse {
   message?: string;
 }
 
-/** Claims úteis do JWT (decode client-side para companyId, etc.). */
+/** Item retornado por GET /auth/accounts: [companyId, companyName, companyExternalId]. */
+export type UserAccountItem = [number, string, string];
+
+/** Resposta do POST /auth/switch-company. */
+export interface SwitchCompanyResponse {
+  access_token: string;
+}
+
+/** Claims úteis do JWT (decode client-side para companyId, etc.). Alinhado ao payload do spot-api (PayloadAccessToken). */
 export interface TokenClaims {
   sub?: string;
   cmpid?: number;
-  cmpname?: string;
-  cmpexternalid?: string;
+  companyName?: string;
+  companyExternalId?: string;
   exp?: number;
   iat?: number;
   [key: string]: unknown;

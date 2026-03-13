@@ -39,7 +39,7 @@ export interface SpotRequestInit extends RequestInit {
   searchParams?: Record<string, string>;
 }
 
-/** Paths que nunca usam gatekeeper (sempre baseUrl). */
+/** Paths que nunca usam gatekeeper (sempre baseUrl). /auth/accounts e /auth/switch-company usam a partição para encontrar o usuário. */
 const SKIP_GATEKEEPER_PATHS = ["/admin/partition"];
 
 function shouldSkipGatekeeper(pathOrUrl: string): boolean {

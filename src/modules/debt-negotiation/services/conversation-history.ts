@@ -1,4 +1,4 @@
-import { getDefaultCompanyId } from "@/shared/config/env";
+import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import { spotJson } from "@/shared/api/http-client";
 import type { ConversationHistoryResponse } from "@/modules/debt-negotiation/types/conversation-history";
 
@@ -11,7 +11,7 @@ export async function fetchConversationHistory(
   contactId: number,
   params?: { cursor?: string }
 ): Promise<ConversationHistoryResponse> {
-  const companyId = getDefaultCompanyId();
+  const companyId = getCurrentCompanyId();
   const search = new URLSearchParams({
     take: String(TAKE),
     order: ORDER,
