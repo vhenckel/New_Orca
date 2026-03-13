@@ -3,9 +3,11 @@
  * Hoje: companyId vem de VITE_DEFAULT_COMPANY_ID. Depois: virá do token (auth context).
  */
 
-export const spotApiBaseUrl =
-  import.meta.env.VITE_SPOT_API_BASE_URL ??
-  "https://spot-api-management.o2obots.com";
+/** Em dev usa /api/spot (proxy do Vite) para evitar CORS. Em produção usa a URL do .env. */
+export const spotApiBaseUrl = import.meta.env.DEV
+  ? "/api/spot"
+  : (import.meta.env.VITE_SPOT_API_BASE_URL ??
+    "https://spot-api-management.o2obots.com");
 
 /** CompanyId atual. Enquanto não houver auth, usa o valor do .env. Depois será substituído por useAuth().companyId. */
 export function getDefaultCompanyId(): number {

@@ -34,8 +34,14 @@ export function I18nProvider({ children }: PropsWithChildren) {
   }, []);
 
   const t = useCallback(
-    (key: TranslationKey) => {
-      return appMessages[locale][key] ?? appMessages[defaultLocale][key] ?? key;
+    (key: TranslationKey, vars?: Record<string, string | number>) => {
+      const raw =
+        appMessages[locale][key] ?? appMessages[defaultLocale][key] ?? key;
+      if (!vars || typeof raw !== "string") return raw;
+      return Object.entries(vars).reduce(
+        (acc, [k, v]) => acc.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)),
+        raw,
+      );
     },
     [locale],
   );

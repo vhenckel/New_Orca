@@ -1,5 +1,5 @@
 import { Bell, ChevronDown, Download, Settings2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
 import { DashboardDateRangePicker } from "@/shared/components/DashboardDateRangePicker";
@@ -29,6 +29,7 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
     markAllAsRead,
     isMarkingAll,
   } = useNotifications();
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-6">
@@ -50,7 +51,12 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
           (currentRoute.path === "/debt-negotiation" || currentRoute.path === "/debt-negotiation/debts") && (
           <>
             <DashboardDateRangePicker />
-            <Button size="sm" className="gap-1.5">
+            <Button
+              size="sm"
+              className="gap-1.5"
+              type="button"
+              onClick={() => navigate("/debt-negotiation/debts/import")}
+            >
               <Download className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{t("app.topbar.importDebts")}</span>
             </Button>

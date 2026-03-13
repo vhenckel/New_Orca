@@ -26,6 +26,9 @@ export const enUSMessages = {
   "app.notifications.empty": "No notifications at the moment.",
   "app.notifications.loading": "Loading notifications...",
   "common.comingSoon": "Coming soon",
+  "common.actions.cancel": "Cancel",
+  "common.actions.previous": "Previous",
+  "common.actions.next": "Next",
   "common.pagination.pageOf": "Page {page} of {total}",
   "common.pagination.previous": "Previous",
   "common.pagination.next": "Next",
@@ -322,4 +325,42 @@ export const enUSMessages = {
   "dashboard.nps.detractor": "Detractor",
   "dashboard.nps.neutral": "Neutral",
   "dashboard.nps.promoter": "Promoter",
+  "pages.debtNegotiation.importDebts.breadcrumb": "Debt Renegotiation / Import Debts",
+  "pages.debtNegotiation.importDebts.title": "Import Debts",
+  "pages.debtNegotiation.importDebts.subtitle":
+    "Upload and configure the data for importing debts.",
+  "pages.debtNegotiation.importDebts.uploadTitle": "Upload",
+  "pages.debtNegotiation.importDebts.uploadDescription":
+    "Select the CSV file with the debt base and follow the steps to review, fix and import.",
+  "pages.debtNegotiation.importDebts.uploadDropHint":
+    "Click to select a file or drag and drop into the area below.",
+  "pages.debtNegotiation.importDebts.uploadLimitHint":
+    "Supports CSV files with up to 1,000 rows per import.",
+  "pages.debtNegotiation.importDebts.selectFile": "Select file",
+  "pages.debtNegotiation.importDebts.downloadTemplate": "Download sample file",
+  "pages.debtNegotiation.importDebts.selectedFile": "Selected file: {name}",
+  "pages.debtNegotiation.importDebts.mappingTitle": "Column Mapping",
+  "pages.debtNegotiation.importDebts.loadingFields": "Loading mapping fields…",
+  "pages.debtNegotiation.importDebts.errorFields": "Error loading mapping fields. Please try again.",
+  "pages.debtNegotiation.importDebts.autoMappingHint":
+    "Automatic mapping applied: {mapped} of {total} fields mapped. Review before continuing.",
+  "pages.debtNegotiation.importDebts.systemField": "System field",
+  "pages.debtNegotiation.importDebts.fileColumn": "File column",
+  "pages.debtNegotiation.importDebts.notMapped": "Do not map",
+  "pages.debtNegotiation.importDebts.example": "Example: {example}",
+  "pages.debtNegotiation.importDebts.validationTitle": "Validation",
+  "pages.debtNegotiation.importDebts.validationHasErrors":
+    "We found issues in the file. Review the rows highlighted in red before proceeding.",
+  "pages.debtNegotiation.importDebts.validationAllGood":
+    "Great! All data was validated. You can proceed with the import.",
+  "pages.debtNegotiation.importDebts.showOnlyInvalid": "Show only rows with issues",
+  "pages.debtNegotiation.importDebts.noRowsToShow": "No rows to display.",
+  "pages.debtNegotiation.importDebts.importAction": "Import",
+  "pages.debtNegotiation.importDebts.resultTitle": "Result",
+  "pages.debtNegotiation.importDebts.resultSuccess":
+    "Processing completed. See how your data was processed.",
+  "pages.debtNegotiation.importDebts.resultImported": "Imported debts",
+  "pages.debtNegotiation.importDebts.resultIgnored": "Ignored debts",
+  "pages.debtNegotiation.importDebts.backToDashboard": "Back to Debts",
+  "pages.debtNegotiation.importDebts.stepLabel": "Step {step} of {total} · {label}",
 } as const;

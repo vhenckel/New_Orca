@@ -10,6 +10,13 @@ export default defineConfig(() => ({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      "/api/spot": {
+        target: "https://spot-api-management.o2obots.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/spot/, ""),
+      },
+    },
   },
   plugins: [react()],
   resolve: {

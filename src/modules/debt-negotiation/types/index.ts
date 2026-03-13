@@ -39,3 +39,10 @@ export type {
   DebtDetailsResponse,
   DebtDetailsParams,
 } from "./debt-details";
+export type {
+  DebtImportFieldDefinition,
+  DebtImportParseResponse,
+  DebtImportValidateResponse,
+  DebtImportResult,
+  DebtImportValidationRow,
+} from "./debt-import";

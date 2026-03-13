@@ -5,6 +5,7 @@ import { ContactDetailPage } from "@/modules/debt-negotiation/pages/ContactDetai
 import { ContactsPage } from "@/modules/debt-negotiation/pages/ContactsPage";
 import { DashboardPage } from "@/modules/debt-negotiation/pages/DashboardPage";
 import { DebtsPage } from "@/modules/debt-negotiation/pages/DebtsPage";
+import { ImportDebtsWizardPage } from "@/modules/debt-negotiation/pages/ImportDebtsWizardPage";
 
 export const debtNegotiationModule: AppModuleDefinition = {
   key: "debt-negotiation",
@@ -26,6 +27,14 @@ export const debtNegotiationModule: AppModuleDefinition = {
       descriptionKey: "modules.debtNegotiation.routes.debts.description",
       icon: FileText,
       element: <DebtsPage />,
+    },
+    {
+      path: "/debt-negotiation/debts/import",
+      labelKey: "pages.debtNegotiation.importDebts.title",
+      descriptionKey: "pages.debtNegotiation.importDebts.subtitle",
+      icon: FileText,
+      element: <ImportDebtsWizardPage />,
+      hideInSidebar: true,
     },
     {
       path: "/debt-negotiation/contacts",

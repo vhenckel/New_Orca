@@ -26,6 +26,9 @@ export const ptBRMessages = {
   "app.notifications.empty": "Nenhuma notificação no momento.",
   "app.notifications.loading": "Carregando notificações...",
   "common.comingSoon": "Em breve",
+  "common.actions.cancel": "Cancelar",
+  "common.actions.previous": "Anterior",
+  "common.actions.next": "Próximo",
   "common.pagination.pageOf": "Página {page} de {total}",
   "common.pagination.previous": "Anterior",
   "common.pagination.next": "Próxima",
@@ -321,4 +324,42 @@ export const ptBRMessages = {
   "dashboard.nps.detractor": "Detrator",
   "dashboard.nps.neutral": "Neutro",
   "dashboard.nps.promoter": "Promotor",
+  "pages.debtNegotiation.importDebts.breadcrumb": "Renegociação de Dívidas / Importar Dívidas",
+  "pages.debtNegotiation.importDebts.title": "Importar Dívidas",
+  "pages.debtNegotiation.importDebts.subtitle":
+    "Faça upload e configure os dados para importação de dívidas.",
+  "pages.debtNegotiation.importDebts.uploadTitle": "Upload",
+  "pages.debtNegotiation.importDebts.uploadDescription":
+    "Selecione o arquivo CSV com a base de dívidas e siga os passos para revisar, corrigir e importar.",
+  "pages.debtNegotiation.importDebts.uploadDropHint":
+    "Clique para selecionar um arquivo ou arraste e solte na área abaixo.",
+  "pages.debtNegotiation.importDebts.uploadLimitHint":
+    "Suporta arquivos CSV com até 1.000 linhas por importação.",
+  "pages.debtNegotiation.importDebts.selectFile": "Selecionar arquivo",
+  "pages.debtNegotiation.importDebts.downloadTemplate": "Baixar arquivo de exemplo",
+  "pages.debtNegotiation.importDebts.selectedFile": "Arquivo selecionado: {name}",
+  "pages.debtNegotiation.importDebts.mappingTitle": "Mapeamento de Colunas",
+  "pages.debtNegotiation.importDebts.loadingFields": "Carregando campos de mapeamento…",
+  "pages.debtNegotiation.importDebts.errorFields": "Erro ao carregar campos de mapeamento. Tente novamente.",
+  "pages.debtNegotiation.importDebts.autoMappingHint":
+    "Mapeamento automático aplicado: {mapped} de {total} campos mapeados. Revise antes de continuar.",
+  "pages.debtNegotiation.importDebts.systemField": "Campo do Sistema",
+  "pages.debtNegotiation.importDebts.fileColumn": "Coluna do seu arquivo",
+  "pages.debtNegotiation.importDebts.notMapped": "Não mapear",
+  "pages.debtNegotiation.importDebts.example": "Exemplo: {example}",
+  "pages.debtNegotiation.importDebts.validationTitle": "Validação",
+  "pages.debtNegotiation.importDebts.validationHasErrors":
+    "Encontramos problemas no arquivo. Revise as linhas destacadas em vermelho antes de continuar.",
+  "pages.debtNegotiation.importDebts.validationAllGood":
+    "Parabéns! Todos os dados foram validados. Você pode prosseguir com a importação.",
+  "pages.debtNegotiation.importDebts.showOnlyInvalid": "Exibir apenas linhas com problemas",
+  "pages.debtNegotiation.importDebts.noRowsToShow": "Nenhuma linha para exibir.",
+  "pages.debtNegotiation.importDebts.importAction": "Importar",
+  "pages.debtNegotiation.importDebts.resultTitle": "Resultado",
+  "pages.debtNegotiation.importDebts.resultSuccess":
+    "Processamento concluído. Veja como os dados foram processados.",
+  "pages.debtNegotiation.importDebts.resultImported": "Dívidas importadas",
+  "pages.debtNegotiation.importDebts.resultIgnored": "Dívidas ignoradas",
+  "pages.debtNegotiation.importDebts.backToDashboard": "Voltar para Dívidas",
+  "pages.debtNegotiation.importDebts.stepLabel": "Etapa {step} de {total} · {label}",
 } as const;
