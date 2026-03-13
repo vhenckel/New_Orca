@@ -293,7 +293,7 @@ export function ImportDebtsWizardPage() {
   );
 
   const renderStepValidation = () => (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>{t("pages.debtNegotiation.importDebts.validationTitle")}</CardTitle>
       </CardHeader>
@@ -323,7 +323,7 @@ export function ImportDebtsWizardPage() {
           </div>
         </div>
 
-        <div className="rounded-md border">
+        <div className="min-w-0 max-w-full overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -414,7 +414,7 @@ export function ImportDebtsWizardPage() {
     importMutation.isPending;
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">

@@ -57,7 +57,7 @@ export function AppShell({ children, modules }: AppShellProps) {
 
       <div
         className={cn(
-          "flex min-h-screen flex-1 flex-col transition-all duration-300",
+          "flex min-h-screen min-w-0 flex-1 flex-col transition-all duration-300",
           sidebarCollapsed ? "ml-16" : "ml-64",
         )}
       >
@@ -65,7 +65,7 @@ export function AppShell({ children, modules }: AppShellProps) {
 
         {currentModule.key === "debt-negotiation" && <PendingPaymentBanner />}
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="mx-auto max-w-[1440px] p-6">{children}</div>
         </main>
       </div>
