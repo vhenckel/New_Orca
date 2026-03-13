@@ -1,4 +1,5 @@
-import { getDefaultCompanyId, getSpotApiHeaders, spotApiBaseUrl } from "@/shared/config/env";
+import { getDefaultCompanyId } from "@/shared/config/env";
+import { spotJson } from "@/shared/api/http-client";
 import type { ContactActivitiesResponse } from "@/modules/debt-negotiation/types";
 
 export interface ContactActivitiesParams {
@@ -15,11 +16,6 @@ export async function fetchContactActivities(
     skip: String(params.skip),
   });
   search.append("companyIds", String(getDefaultCompanyId()));
-  const url = `${spotApiBaseUrl}/trinity/contact/${contactId}/activities?${search.toString()}`;
-  const res = await fetch(url, { credentials: "omit", headers: getSpotApiHeaders() });
-  if (!res.ok) {
-    throw new Error(`Contact activities API error: ${res.status}`);
-  }
-  return res.json();
+  return spotJson<ContactActivitiesResponse>(`/contact/${contactId}/activities?${search.toString()}`);
 }
 

@@ -1,6 +1,6 @@
-import { getSpotApiHeaders, spotApiBaseUrl } from "@/shared/config/env";
+import { spotJson } from "@/shared/api/http-client";
 
-const RENEGOTIATION_PATH = "/trinity/renegotiation";
+const RENEGOTIATION_PATH = "/renegotiation";
 
 export interface ConfirmDealPayload {
   confirmed: boolean;
@@ -16,18 +16,9 @@ export async function confirmDeal(
   renegotiationId: string,
   payload: ConfirmDealPayload
 ): Promise<ConfirmDealResult> {
-  const url = `${spotApiBaseUrl}${RENEGOTIATION_PATH}/${renegotiationId}/deal`;
-  const res = await fetch(url, {
+  return spotJson<ConfirmDealResult>(`${RENEGOTIATION_PATH}/${renegotiationId}/deal`, {
     method: "POST",
-    credentials: "omit",
-    headers: {
-      ...getSpotApiHeaders(),
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) {
-    throw new Error(`Deal API error: ${res.status}`);
-  }
-  return res.json();
 }

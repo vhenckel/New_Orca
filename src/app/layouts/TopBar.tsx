@@ -1,8 +1,9 @@
-import { Bell, ChevronDown, Download, Settings2 } from "lucide-react";
+import { Bell, ChevronDown, Download, LogOut, Settings2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
 import { DashboardDateRangePicker } from "@/shared/components/DashboardDateRangePicker";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useNotifications } from "@/shared/notifications/useNotifications";
 import { Button } from "@/shared/ui/button";
@@ -21,6 +22,7 @@ interface TopBarProps {
 
 export function TopBar({ currentModule, currentRoute }: TopBarProps) {
   const { t } = useI18n();
+  const { user, logout } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -135,9 +137,11 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
               className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                T
+                {user?.name?.charAt(0)?.toUpperCase() ?? "T"}
               </div>
-              <span className="hidden md:inline">Trademaster</span>
+              <span className="hidden md:inline truncate max-w-[120px]">
+                {user?.name ?? "—"}
+              </span>
               <ChevronDown className="hidden h-3 w-3 text-muted-foreground md:block" />
             </button>
           </DropdownMenuTrigger>
@@ -147,6 +151,10 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
                 <Settings2 className="h-4 w-4" />
                 {t("app.topbar.preferences")}
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => logout()} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

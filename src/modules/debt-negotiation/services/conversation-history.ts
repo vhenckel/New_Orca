@@ -1,7 +1,8 @@
-import { getSpotApiHeaders, spotApiBaseUrl, getDefaultCompanyId } from "@/shared/config/env";
+import { getDefaultCompanyId } from "@/shared/config/env";
+import { spotJson } from "@/shared/api/http-client";
 import type { ConversationHistoryResponse } from "@/modules/debt-negotiation/types/conversation-history";
 
-const CONVERSATION_HISTORY_PATH = "/trinity/contact";
+const CONVERSATION_HISTORY_PATH = "/contact";
 
 const TAKE = 10;
 const ORDER = "ASC";
@@ -18,10 +19,7 @@ export async function fetchConversationHistory(
   });
   if (params?.cursor) search.set("cursor", params.cursor);
 
-  const url = `${spotApiBaseUrl}${CONVERSATION_HISTORY_PATH}/${contactId}/conversation-history?${search.toString()}`;
-  const res = await fetch(url, { credentials: "omit", headers: getSpotApiHeaders() });
-  if (!res.ok) {
-    throw new Error(`Conversation history API error: ${res.status}`);
-  }
-  return res.json();
+  return spotJson<ConversationHistoryResponse>(
+    `${CONVERSATION_HISTORY_PATH}/${contactId}/conversation-history?${search.toString()}`
+  );
 }
