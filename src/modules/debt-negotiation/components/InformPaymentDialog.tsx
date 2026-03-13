@@ -61,7 +61,7 @@ export function InformPaymentDialog({
   onOpenChange,
 }: InformPaymentDialogProps) {
   const { t } = useI18n();
-  const items = debtData.deal?.items ?? [];
+  const items = useMemo(() => debtData.deal?.items ?? [], [debtData.deal?.items]);
   const unpaidIds = useMemo(() => items.filter((i) => !i.paidAt).map((i) => i.id), [items]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 

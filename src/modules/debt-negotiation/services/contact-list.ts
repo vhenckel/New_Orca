@@ -1,10 +1,10 @@
-import { getSpotApiHeaders, spotApiBaseUrl } from "@/shared/config/env";
+import { spotJson } from "@/shared/api/http-client";
 import type {
   ContactListParams,
   ContactListResponse,
 } from "@/modules/debt-negotiation/types/contact-list";
 
-const CONTACT_QUERY_PATH = "/trinity/contact/query";
+const CONTACT_QUERY_PATH = "/contact/query";
 
 const DEFAULT_WHERE = {
   contractDate: {},
@@ -12,7 +12,7 @@ const DEFAULT_WHERE = {
   isInBlackList: false,
 };
 
-function buildUrl(params: ContactListParams): string {
+function buildPath(params: ContactListParams): string {
   const search = new URLSearchParams({
     take: String(params.take),
     skip: String(params.skip),
@@ -22,16 +22,11 @@ function buildUrl(params: ContactListParams): string {
   });
   search.append("companyIds[]", String(params.companyId));
   search.set("where", JSON.stringify(params.where ?? DEFAULT_WHERE));
-  return `${spotApiBaseUrl}${CONTACT_QUERY_PATH}?${search.toString()}`;
+  return `${CONTACT_QUERY_PATH}?${search.toString()}`;
 }
 
 export async function fetchContactList(
   params: ContactListParams
 ): Promise<ContactListResponse> {
-  const url = buildUrl(params);
-  const res = await fetch(url, { credentials: "omit", headers: getSpotApiHeaders() });
-  if (!res.ok) {
-    throw new Error(`Contact list API error: ${res.status}`);
-  }
-  return res.json();
+  return spotJson<ContactListResponse>(buildPath(params));
 }

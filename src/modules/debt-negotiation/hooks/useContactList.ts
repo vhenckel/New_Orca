@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchContactList } from "@/modules/debt-negotiation/services/contact-list";
-import { getDefaultCompanyId } from "@/shared/config/env";
+import { getCurrentCompanyId } from "@/shared/auth/current-company";
 
 const PAGE_SIZE = 15;
 
@@ -13,7 +13,7 @@ interface UseContactListParams {
 
 export function useContactList(params?: UseContactListParams) {
   const page = params?.page ?? 1;
-  const companyId = params?.companyId ?? getDefaultCompanyId();
+  const companyId = params?.companyId ?? getCurrentCompanyId();
   const skip = (page - 1) * PAGE_SIZE;
   const rawSearch = params?.search?.trim() ?? "";
   const hasSearch = rawSearch.length > 0;

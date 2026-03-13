@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchRenegotiationBoxes } from "@/modules/debt-negotiation/services/renegotiation-boxes";
-import { getDefaultCompanyId } from "@/shared/config/env";
+import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import { useDateRangeQueryState } from "@/shared/lib/nuqs-filters";
 
 export function useRenegotiationBoxes(params?: {
-  /** Multi-tenant: quando houver auth, passar companyId do token. Hoje usa getDefaultCompanyId(). */
+  /** Multi-tenant: companyId do token (troca de empresa) ou params. */
   companyId?: number;
 }) {
   const { startDate, endDate } = useDateRangeQueryState();
-  const companyId = params?.companyId ?? getDefaultCompanyId();
+  const companyId = params?.companyId ?? getCurrentCompanyId();
 
   return useQuery({
     queryKey: ["renegotiation", "boxes", startDate, endDate, companyId],

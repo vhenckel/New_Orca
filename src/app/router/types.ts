@@ -11,6 +11,10 @@ export interface AppRouteDefinition {
   element: ReactNode;
   /** Se true, a rota não aparece no menu lateral (ex.: página de detalhe acessada por link). */
   hideInSidebar?: boolean;
+  /** Exige autenticação (default true para rotas de negócio). */
+  requiresAuth?: boolean;
+  /** Nomes de permissão (qualquer uma habilitada). Se vazio/undefined, não checa permissão. */
+  requiredPermissions?: string[];
 }
 
 export interface AppModuleDefinition {

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchDebtDetails } from "@/modules/debt-negotiation/services/debt-details";
-import { getDefaultCompanyId } from "@/shared/config/env";
+import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import { useDateRangeQueryState } from "@/shared/lib/nuqs-filters";
 
 const PAGE_SIZE = 20;
@@ -18,7 +18,7 @@ interface UseDebtDetailsParams {
 export function useDebtDetails(params?: UseDebtDetailsParams) {
   const { startDate, endDate } = useDateRangeQueryState();
   const page = params?.page ?? 1;
-  const companyId = params?.companyId ?? getDefaultCompanyId();
+  const companyId = params?.companyId ?? getCurrentCompanyId();
   const skip = (page - 1) * PAGE_SIZE;
   const rawSearch = params?.search?.trim() ?? "";
   const hasSearch = rawSearch.length > 0;
