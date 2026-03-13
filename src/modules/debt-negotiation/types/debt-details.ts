@@ -43,4 +43,8 @@ export interface DebtDetailsParams {
   orderByDirection?: "ASC" | "DESC";
   /** Filtro por estágios (ex.: 11 = Confirmação de pagamento). */
   statuses?: number[];
+  /** Filtro por nome do contato (campo `name` da API). */
+  name?: string;
+  /** Filtro por documento (campo `document` da API). */
+  document?: string;
 }

@@ -17,6 +17,8 @@ function buildUrl(params: DebtDetailsParams): string {
   if (params.orderBy) search.set("orderBy", params.orderBy);
   if (params.orderByDirection) search.set("orderByDirection", params.orderByDirection);
   params.statuses?.forEach((s) => search.append("statuses[]", String(s)));
+   if (params.name) search.set("name", params.name);
+   if (params.document) search.set("document", params.document);
   return `${spotApiBaseUrl}${DEBT_DETAILS_PATH}?${search.toString()}`;
 }
 

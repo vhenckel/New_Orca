@@ -94,7 +94,11 @@ export function DebtsPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const { data, error, isPending } = useDebtDetails({ page, statuses: statuses.length > 0 ? statuses : undefined });
+  const { data, error, isPending } = useDebtDetails({
+    page,
+    statuses: statuses.length > 0 ? statuses : undefined,
+    search,
+  });
 
   const totalDebt = data?.totalDebt.currentValue ?? 0;
   const totalCount = data?.totalDebtCount.currentValue ?? 0;

@@ -4,18 +4,33 @@ import { getDefaultCompanyId } from "@/shared/config/env";
 
 const PAGE_SIZE = 15;
 
-export function useContactList(params?: { page?: number; companyId?: number }) {
+interface UseContactListParams {
+  page?: number;
+  companyId?: number;
+  /** Texto digitado no campo de busca (keyword da API). */
+  search?: string;
+}
+
+export function useContactList(params?: UseContactListParams) {
   const page = params?.page ?? 1;
   const companyId = params?.companyId ?? getDefaultCompanyId();
   const skip = (page - 1) * PAGE_SIZE;
+  const rawSearch = params?.search?.trim() ?? "";
+  const hasSearch = rawSearch.length > 0;
 
   return useQuery({
-    queryKey: ["contacts", "list", companyId, page],
+    queryKey: ["contacts", "list", companyId, page, hasSearch ? rawSearch : undefined],
     queryFn: () =>
       fetchContactList({
         take: PAGE_SIZE,
         skip,
         companyId,
+        where: {
+          contractDate: {},
+          conversationDate: {},
+          isInBlackList: false,
+          ...(hasSearch ? { keyword: rawSearch } : {}),
+        },
       }),
   });
 }

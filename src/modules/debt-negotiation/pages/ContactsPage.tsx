@@ -60,7 +60,7 @@ export function ContactsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
-  const { data, error, isPending } = useContactList({ page });
+  const { data, error, isPending } = useContactList({ page, search });
 
   const total = data?.total ?? 0;
   const list = data?.data ?? [];
