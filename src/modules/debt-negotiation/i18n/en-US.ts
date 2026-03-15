@@ -68,7 +68,7 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.contactDetail.activitiesFilterAll": "All",
   "pages.debtNegotiation.contactDetail.activitiesFilterCampaigns": "Campaigns",
   "pages.debtNegotiation.contactDetail.activitiesFilterCollection": "Collection",
-  "pages.debtNegotiation.contactDetail.activitiesFilterBot": "Bot",
+  "pages.debtNegotiation.contactDetail.activitiesFilterBot": "AI Agent",
   "pages.debtNegotiation.debts.eyebrow": "Debt negotiation",
   "pages.debtNegotiation.debts.title": "Debts",
   "pages.debtNegotiation.debts.description":
@@ -96,7 +96,7 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.conversationHistory.title": "Conversation history",
   "pages.debtNegotiation.debts.conversationHistory.loading": "Loading…",
   "pages.debtNegotiation.debts.conversationHistory.error": "Error loading history.",
-  "pages.debtNegotiation.debts.conversationHistory.botLabel": "AI",
+  "pages.debtNegotiation.debts.conversationHistory.botLabel": "AI Agent",
   "pages.debtNegotiation.debts.conversationHistory.userLabel": "User",
   "pages.debtNegotiation.debts.conversationHistory.empty": "No messages in history.",
   "pages.debtNegotiation.pendingBanner.message":

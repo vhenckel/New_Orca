@@ -68,7 +68,7 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.contactDetail.activitiesFilterAll": "Todos",
   "pages.debtNegotiation.contactDetail.activitiesFilterCampaigns": "Campanhas",
   "pages.debtNegotiation.contactDetail.activitiesFilterCollection": "Cobrança",
-  "pages.debtNegotiation.contactDetail.activitiesFilterBot": "Bot",
+  "pages.debtNegotiation.contactDetail.activitiesFilterBot": "Agente de IA",
   "pages.debtNegotiation.debts.eyebrow": "Renegociação",
   "pages.debtNegotiation.debts.title": "Dívidas",
   "pages.debtNegotiation.debts.description":
@@ -96,7 +96,7 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.conversationHistory.title": "Histórico de conversa",
   "pages.debtNegotiation.debts.conversationHistory.loading": "Carregando…",
   "pages.debtNegotiation.debts.conversationHistory.error": "Erro ao carregar o histórico.",
-  "pages.debtNegotiation.debts.conversationHistory.botLabel": "IA",
+  "pages.debtNegotiation.debts.conversationHistory.botLabel": "Agente de IA",
   "pages.debtNegotiation.debts.conversationHistory.userLabel": "Usuário",
   "pages.debtNegotiation.debts.conversationHistory.empty": "Nenhuma mensagem no histórico.",
   "pages.debtNegotiation.pendingBanner.message":
