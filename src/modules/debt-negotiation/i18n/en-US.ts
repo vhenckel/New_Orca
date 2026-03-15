@@ -1,39 +1,5 @@
-export const enUSMessages = {
-  "app.brand.modules": "Business modules",
-  "app.sidebar.modules": "Modules",
-  "app.topbar.importData": "Import data",
-  "app.topbar.importDebts": "Import debts",
-  "app.topbar.preferences": "Preferences",
-  "app.topbar.userMenu": "Open user menu",
-  "app.preferences.title": "Preferences",
-  "app.preferences.description":
-    "Choose how the application should look for you. Your choices are saved in this browser.",
-  "app.preferences.theme.title": "Theme",
-  "app.preferences.theme.description": "Choose between dark or light mode.",
-  "app.preferences.theme.dark": "Dark",
-  "app.preferences.theme.light": "Light",
-  "app.preferences.language.title": "Language",
-  "app.preferences.language.description": "Select the default language for the interface.",
-  "app.preferences.language.pt-BR": "Portuguese (BR)",
-  "app.preferences.language.en-US": "English (US)",
-  "app.preferences.color.title": "Primary color",
-  "app.preferences.color.description":
-    "Choose the base interface color. It will be applied to buttons, highlights, and charts.",
-  "app.preferences.color.current": "Current color",
-  "app.preferences.savedHint": "Preferences are applied immediately and remembered automatically.",
-  "app.notifications.title": "Notifications",
-  "app.notifications.markAllRead": "Mark all as read",
-  "app.notifications.empty": "No notifications at the moment.",
-  "app.notifications.loading": "Loading notifications...",
-  "common.comingSoon": "Coming soon",
-  "common.actions.cancel": "Cancel",
-  "common.actions.previous": "Previous",
-  "common.actions.next": "Next",
-  "common.pagination.pageOf": "Page {page} of {total}",
-  "common.pagination.previous": "Previous",
-  "common.pagination.next": "Next",
-  "common.placeholder.description":
-    "This page is already prepared inside the module, but still without specific data integrations and business rules.",
+/** Debt negotiation module messages (pages, modules, dashboard). */
+export const debtNegotiationEnUS = {
   "modules.debtNegotiation.title": "Debt negotiation",
   "modules.debtNegotiation.description":
     "Track negotiations, contacts, and the debt portfolio.",
@@ -46,60 +12,6 @@ export const enUSMessages = {
   "modules.debtNegotiation.routes.debts.label": "Debts",
   "modules.debtNegotiation.routes.debts.description":
     "Debt portfolio, filters, and next actions.",
-  "modules.collections.title": "Collections",
-  "modules.collections.description":
-    "Operational collection of monthly fees, installments, and automated communications.",
-  "modules.collections.routes.dashboard.label": "Dashboard",
-  "modules.collections.routes.dashboard.description":
-    "Executive dashboard for collections operations.",
-  "modules.collections.routes.contacts.label": "Contacts",
-  "modules.collections.routes.contacts.description":
-    "People contacted by the collections agent.",
-  "modules.collections.routes.charges.label": "Charges",
-  "modules.collections.routes.charges.description":
-    "Installments and monthly fees to collect, with status and next actions.",
-  "modules.sales.title": "Sales",
-  "modules.sales.description": "Sales management, contacts, and opportunity pipeline.",
-  "modules.sales.routes.dashboard.label": "Dashboard",
-  "modules.sales.routes.dashboard.description": "Initial dashboard for the sales module.",
-  "modules.sales.routes.contacts.label": "Contacts",
-  "modules.sales.routes.contacts.description": "Contact and lead base for the sales module.",
-  "modules.sales.routes.pipeline.label": "Pipeline",
-  "modules.sales.routes.pipeline.description": "Sales funnel, opportunities, and forecast.",
-  "modules.settings.title": "Settings",
-  "modules.settings.description": "Global language and theme preferences.",
-  "modules.settings.routes.preferences.label": "Preferences",
-  "modules.settings.routes.preferences.description":
-    "Interface theme, language, and global preferences.",
-  "pages.collections.dashboard.eyebrow": "Collections",
-  "pages.collections.dashboard.title": "Dashboard",
-  "pages.collections.dashboard.description":
-    "Initial panel to track sends, contacted people, and automated collections performance.",
-  "pages.collections.dashboard.action": "Set up campaigns",
-  "pages.collections.contacts.eyebrow": "Collections",
-  "pages.collections.contacts.title": "Contacts",
-  "pages.collections.contacts.description":
-    "People base that will be contacted by the agent for overdue monthly fees and installments.",
-  "pages.collections.contacts.action": "Import contacts",
-  "pages.collections.charges.eyebrow": "Collections",
-  "pages.collections.charges.title": "Charges",
-  "pages.collections.charges.description":
-    "Operational list of charges with due dates, sent messages, and payment code.",
-  "pages.collections.charges.action": "New import",
-  "pages.sales.dashboard.eyebrow": "Sales",
-  "pages.sales.dashboard.title": "Dashboard",
-  "pages.sales.dashboard.description":
-    "Base dashboard for sales KPIs and funnel overview.",
-  "pages.sales.dashboard.action": "Set goals",
-  "pages.sales.contacts.eyebrow": "Sales",
-  "pages.sales.contacts.title": "Contacts",
-  "pages.sales.contacts.description": "Initial structure for contacts and commercial relationship.",
-  "pages.sales.contacts.action": "Add lead",
-  "pages.sales.pipeline.eyebrow": "Sales",
-  "pages.sales.pipeline.title": "Pipeline",
-  "pages.sales.pipeline.description":
-    "Base for the commercial funnel, stages, opportunities, and forecast.",
-  "pages.sales.pipeline.action": "Create stage",
   "pages.debtNegotiation.contacts.eyebrow": "Debt negotiation",
   "pages.debtNegotiation.contacts.title": "Contacts",
   "pages.debtNegotiation.contacts.description":
@@ -187,7 +99,8 @@ export const enUSMessages = {
   "pages.debtNegotiation.debts.conversationHistory.botLabel": "AI",
   "pages.debtNegotiation.debts.conversationHistory.userLabel": "User",
   "pages.debtNegotiation.debts.conversationHistory.empty": "No messages in history.",
-  "pages.debtNegotiation.pendingBanner.message": "One or more debtors have reported making a payment. We need you to confirm receipt urgently to proceed.",
+  "pages.debtNegotiation.pendingBanner.message":
+    "One or more debtors have reported making a payment. We need you to confirm receipt urgently to proceed.",
   "pages.debtNegotiation.pendingBanner.viewDebts": "View debts",
   "pages.debtNegotiation.debts.detail.title": "Debt details",
   "pages.debtNegotiation.debts.detail.fullName": "Full name",
@@ -210,7 +123,8 @@ export const enUSMessages = {
   "pages.debtNegotiation.debts.addPayment.observationsPlaceholder": "Enter observations",
   "pages.debtNegotiation.debts.addPayment.confirm": "Confirm",
   "pages.debtNegotiation.debts.informPayment.title": "Inform payment",
-  "pages.debtNegotiation.debts.informPayment.instruction": "Mark the debt as paid after client settlement",
+  "pages.debtNegotiation.debts.informPayment.instruction":
+    "Mark the debt as paid after client settlement",
   "pages.debtNegotiation.debts.informPayment.selectedCount": "{count} installments selected",
   "pages.debtNegotiation.debts.informPayment.selectAll": "Select all installments",
   "pages.debtNegotiation.debts.informPayment.clearSelection": "Clear selection",
@@ -239,6 +153,44 @@ export const enUSMessages = {
   "pages.debtNegotiation.debts.status.promessaPagamento": "Payment promise",
   "pages.debtNegotiation.debts.status.atrasado": "Overdue",
   "pages.debtNegotiation.debts.status.outros": "Other",
+  "pages.debtNegotiation.importDebts.breadcrumb": "Debt Renegotiation / Import Debts",
+  "pages.debtNegotiation.importDebts.title": "Import Debts",
+  "pages.debtNegotiation.importDebts.subtitle":
+    "Upload and configure the data for importing debts.",
+  "pages.debtNegotiation.importDebts.uploadTitle": "Upload",
+  "pages.debtNegotiation.importDebts.uploadDescription":
+    "Select the CSV file with the debt base and follow the steps to review, fix and import.",
+  "pages.debtNegotiation.importDebts.uploadDropHint":
+    "Click to select a file or drag and drop into the area below.",
+  "pages.debtNegotiation.importDebts.uploadLimitHint":
+    "Supports CSV files with up to 1,000 rows per import.",
+  "pages.debtNegotiation.importDebts.selectFile": "Select file",
+  "pages.debtNegotiation.importDebts.downloadTemplate": "Download sample file",
+  "pages.debtNegotiation.importDebts.selectedFile": "Selected file: {name}",
+  "pages.debtNegotiation.importDebts.mappingTitle": "Column Mapping",
+  "pages.debtNegotiation.importDebts.loadingFields": "Loading mapping fields…",
+  "pages.debtNegotiation.importDebts.errorFields": "Error loading mapping fields. Please try again.",
+  "pages.debtNegotiation.importDebts.autoMappingHint":
+    "Automatic mapping applied: {mapped} of {total} fields mapped. Review before continuing.",
+  "pages.debtNegotiation.importDebts.systemField": "System field",
+  "pages.debtNegotiation.importDebts.fileColumn": "File column",
+  "pages.debtNegotiation.importDebts.notMapped": "Do not map",
+  "pages.debtNegotiation.importDebts.example": "Example: {example}",
+  "pages.debtNegotiation.importDebts.validationTitle": "Validation",
+  "pages.debtNegotiation.importDebts.validationHasErrors":
+    "We found issues in the file. Review the rows highlighted in red before proceeding.",
+  "pages.debtNegotiation.importDebts.validationAllGood":
+    "Great! All data was validated. You can proceed with the import.",
+  "pages.debtNegotiation.importDebts.showOnlyInvalid": "Show only rows with issues",
+  "pages.debtNegotiation.importDebts.noRowsToShow": "No rows to display.",
+  "pages.debtNegotiation.importDebts.importAction": "Import",
+  "pages.debtNegotiation.importDebts.resultTitle": "Result",
+  "pages.debtNegotiation.importDebts.resultSuccess":
+    "Processing completed. See how your data was processed.",
+  "pages.debtNegotiation.importDebts.resultImported": "Imported debts",
+  "pages.debtNegotiation.importDebts.resultIgnored": "Ignored debts",
+  "pages.debtNegotiation.importDebts.backToDashboard": "Back to Debts",
+  "pages.debtNegotiation.importDebts.stepLabel": "Step {step} of {total} · {label}",
   "dashboard.kpis.totalDebts": "Total debts",
   "dashboard.kpis.totalNegotiated": "Total negotiated",
   "dashboard.kpis.totalRecovered": "Total recovered",
@@ -325,42 +277,4 @@ export const enUSMessages = {
   "dashboard.nps.detractor": "Detractor",
   "dashboard.nps.neutral": "Neutral",
   "dashboard.nps.promoter": "Promoter",
-  "pages.debtNegotiation.importDebts.breadcrumb": "Debt Renegotiation / Import Debts",
-  "pages.debtNegotiation.importDebts.title": "Import Debts",
-  "pages.debtNegotiation.importDebts.subtitle":
-    "Upload and configure the data for importing debts.",
-  "pages.debtNegotiation.importDebts.uploadTitle": "Upload",
-  "pages.debtNegotiation.importDebts.uploadDescription":
-    "Select the CSV file with the debt base and follow the steps to review, fix and import.",
-  "pages.debtNegotiation.importDebts.uploadDropHint":
-    "Click to select a file or drag and drop into the area below.",
-  "pages.debtNegotiation.importDebts.uploadLimitHint":
-    "Supports CSV files with up to 1,000 rows per import.",
-  "pages.debtNegotiation.importDebts.selectFile": "Select file",
-  "pages.debtNegotiation.importDebts.downloadTemplate": "Download sample file",
-  "pages.debtNegotiation.importDebts.selectedFile": "Selected file: {name}",
-  "pages.debtNegotiation.importDebts.mappingTitle": "Column Mapping",
-  "pages.debtNegotiation.importDebts.loadingFields": "Loading mapping fields…",
-  "pages.debtNegotiation.importDebts.errorFields": "Error loading mapping fields. Please try again.",
-  "pages.debtNegotiation.importDebts.autoMappingHint":
-    "Automatic mapping applied: {mapped} of {total} fields mapped. Review before continuing.",
-  "pages.debtNegotiation.importDebts.systemField": "System field",
-  "pages.debtNegotiation.importDebts.fileColumn": "File column",
-  "pages.debtNegotiation.importDebts.notMapped": "Do not map",
-  "pages.debtNegotiation.importDebts.example": "Example: {example}",
-  "pages.debtNegotiation.importDebts.validationTitle": "Validation",
-  "pages.debtNegotiation.importDebts.validationHasErrors":
-    "We found issues in the file. Review the rows highlighted in red before proceeding.",
-  "pages.debtNegotiation.importDebts.validationAllGood":
-    "Great! All data was validated. You can proceed with the import.",
-  "pages.debtNegotiation.importDebts.showOnlyInvalid": "Show only rows with issues",
-  "pages.debtNegotiation.importDebts.noRowsToShow": "No rows to display.",
-  "pages.debtNegotiation.importDebts.importAction": "Import",
-  "pages.debtNegotiation.importDebts.resultTitle": "Result",
-  "pages.debtNegotiation.importDebts.resultSuccess":
-    "Processing completed. See how your data was processed.",
-  "pages.debtNegotiation.importDebts.resultImported": "Imported debts",
-  "pages.debtNegotiation.importDebts.resultIgnored": "Ignored debts",
-  "pages.debtNegotiation.importDebts.backToDashboard": "Back to Debts",
-  "pages.debtNegotiation.importDebts.stepLabel": "Step {step} of {total} · {label}",
 } as const;

@@ -1,0 +1,38 @@
+/** Mensagens globais: app (topbar, sidebar, preferences, notifications) e common. */
+export const basePtBR = {
+  "app.brand.modules": "Módulos de negócio",
+  "app.sidebar.modules": "Módulos",
+  "app.topbar.importData": "Importar dados",
+  "app.topbar.importDebts": "Importar dívidas",
+  "app.topbar.preferences": "Preferências",
+  "app.topbar.userMenu": "Abrir menu do usuário",
+  "app.preferences.title": "Preferências",
+  "app.preferences.description":
+    "Defina como a aplicação deve aparecer para você. As escolhas ficam salvas neste navegador.",
+  "app.preferences.theme.title": "Tema",
+  "app.preferences.theme.description": "Escolha entre modo dark ou light.",
+  "app.preferences.theme.dark": "Escuro",
+  "app.preferences.theme.light": "Claro",
+  "app.preferences.language.title": "Idioma",
+  "app.preferences.language.description": "Selecione o idioma padrão da interface.",
+  "app.preferences.language.pt-BR": "Português (BR)",
+  "app.preferences.language.en-US": "Inglês (US)",
+  "app.preferences.color.title": "Cor principal",
+  "app.preferences.color.description":
+    "Escolha a cor base da interface. Ela será aplicada em botões, destaques e gráficos.",
+  "app.preferences.color.current": "Cor atual",
+  "app.preferences.savedHint": "As preferências são aplicadas imediatamente e lembradas automaticamente.",
+  "app.notifications.title": "Notificações",
+  "app.notifications.markAllRead": "Marcar todas como lidas",
+  "app.notifications.empty": "Nenhuma notificação no momento.",
+  "app.notifications.loading": "Carregando notificações...",
+  "common.comingSoon": "Em breve",
+  "common.actions.cancel": "Cancelar",
+  "common.actions.previous": "Anterior",
+  "common.actions.next": "Próximo",
+  "common.pagination.pageOf": "Página {page} de {total}",
+  "common.pagination.previous": "Anterior",
+  "common.pagination.next": "Próxima",
+  "common.placeholder.description":
+    "Esta tela já está preparada dentro do módulo, mas ainda sem integração com dados e regras específicas.",
+} as const;

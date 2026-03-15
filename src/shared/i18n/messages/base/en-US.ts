@@ -1,0 +1,38 @@
+/** Global messages: app (topbar, sidebar, preferences, notifications) and common. */
+export const baseEnUS = {
+  "app.brand.modules": "Business modules",
+  "app.sidebar.modules": "Modules",
+  "app.topbar.importData": "Import data",
+  "app.topbar.importDebts": "Import debts",
+  "app.topbar.preferences": "Preferences",
+  "app.topbar.userMenu": "Open user menu",
+  "app.preferences.title": "Preferences",
+  "app.preferences.description":
+    "Choose how the application should look for you. Your choices are saved in this browser.",
+  "app.preferences.theme.title": "Theme",
+  "app.preferences.theme.description": "Choose between dark or light mode.",
+  "app.preferences.theme.dark": "Dark",
+  "app.preferences.theme.light": "Light",
+  "app.preferences.language.title": "Language",
+  "app.preferences.language.description": "Select the default language for the interface.",
+  "app.preferences.language.pt-BR": "Portuguese (BR)",
+  "app.preferences.language.en-US": "English (US)",
+  "app.preferences.color.title": "Primary color",
+  "app.preferences.color.description":
+    "Choose the base interface color. It will be applied to buttons, highlights, and charts.",
+  "app.preferences.color.current": "Current color",
+  "app.preferences.savedHint": "Preferences are applied immediately and remembered automatically.",
+  "app.notifications.title": "Notifications",
+  "app.notifications.markAllRead": "Mark all as read",
+  "app.notifications.empty": "No notifications at the moment.",
+  "app.notifications.loading": "Loading notifications...",
+  "common.comingSoon": "Coming soon",
+  "common.actions.cancel": "Cancel",
+  "common.actions.previous": "Previous",
+  "common.actions.next": "Next",
+  "common.pagination.pageOf": "Page {page} of {total}",
+  "common.pagination.previous": "Previous",
+  "common.pagination.next": "Next",
+  "common.placeholder.description":
+    "This page is already prepared inside the module, but still without specific data integrations and business rules.",
+} as const;
