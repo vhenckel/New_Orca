@@ -7,9 +7,8 @@ import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components
 import { DebtDetailDialog } from "@/modules/debt-negotiation/components/DebtDetailDialog";
 import { useDebtDetails, DEBT_DETAILS_PAGE_SIZE } from "@/modules/debt-negotiation/hooks";
 import type { DebtDetailsItem } from "@/modules/debt-negotiation/types/debt-details";
-import { getStageI18nKey, statusBadgeClass } from "@/modules/debt-negotiation/utils/statusBadgeClass";
+import { StatusBadge } from "@/modules/debt-negotiation/utils/StatusBadge";
 import { useI18n } from "@/shared/i18n/useI18n";
-import { cn } from "@/shared/lib/utils";
 import { formatCurrency } from "@/shared/lib/format";
 import { Input } from "@/shared/ui/input";
 import {
@@ -274,14 +273,11 @@ export function DebtsPage() {
                   </TableCell>
                   <TableCell className="font-mono text-muted-foreground">{row.contractId}</TableCell>
                   <TableCell>
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
-                        statusBadgeClass(row.pipelineStageName),
-                      )}
-                    >
-                      {t(getStageI18nKey(row.pipelineStageName))}
-                    </span>
+                    <StatusBadge
+                      stageName={row.pipelineStageName}
+                      showAlert={row.isOverdue}
+                      alertMessage={t("pages.debtNegotiation.debts.detail.partialPaidOverdueAlert")}
+                    />
                   </TableCell>
                   <TableCell className="text-muted-foreground">{debtAgeLabel(row.debtAge)}</TableCell>
                   <TableCell className="text-right font-medium tabular-nums">

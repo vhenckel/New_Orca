@@ -4,6 +4,7 @@ import { Info } from "lucide-react";
 
 import { confirmDeal } from "@/modules/debt-negotiation/services/deal";
 import type { DebtDetailResponse } from "@/modules/debt-negotiation/types/debt-detail";
+import { hasPartialPaidOverdueInstallments } from "@/modules/debt-negotiation/utils/debtInstallmentAlert";
 import { StatusBadge } from "@/modules/debt-negotiation/utils/StatusBadge";
 import { useI18n } from "@/shared/i18n/useI18n";
 import {
@@ -105,6 +106,7 @@ export function AddPaymentDialog({
   const queryClient = useQueryClient();
   const [settled, setSettled] = useState<DebtSettledValue>("no");
   const [observation, setObservation] = useState("");
+  const showPartialPaidOverdueAlert = hasPartialPaidOverdueInstallments(debtData.deal?.items);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -154,7 +156,13 @@ export function AddPaymentDialog({
           />
           <Row
             label={t("pages.debtNegotiation.debts.detail.currentStatus")}
-            value={<StatusBadge stageName={debtData.pipelineStageName} />}
+            value={
+              <StatusBadge
+                stageName={debtData.pipelineStageName}
+                showAlert={showPartialPaidOverdueAlert}
+                alertMessage={t("pages.debtNegotiation.debts.detail.partialPaidOverdueAlert")}
+              />
+            }
           />
           <Row
             label={t("pages.debtNegotiation.debts.detail.originalDebtDate")}

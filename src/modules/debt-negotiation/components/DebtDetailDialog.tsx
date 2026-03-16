@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Info } from "lucide-react";
 
 import { AddPaymentDialog } from "@/modules/debt-negotiation/components/AddPaymentDialog";
+import type { DealItem } from "@/modules/debt-negotiation/types/debt-detail";
 import { useDebtDetail } from "@/modules/debt-negotiation/hooks";
+import { hasPartialPaidOverdueInstallments } from "@/modules/debt-negotiation/utils/debtInstallmentAlert";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { StatusBadge } from "@/modules/debt-negotiation/utils/StatusBadge";
 import {
@@ -14,6 +16,15 @@ import {
 } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
+import { cn } from "@/shared/lib/utils";
 
 function formatCnpj(cnpj: string): string {
   if (!cnpj || cnpj === "0") return "-";
@@ -41,6 +52,13 @@ function formatAmount(value: number | null): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function getInstallmentStatus(item: DealItem): "paid" | "onTime" | "overdue" {
+  if (item.paidAt) return "paid";
+  const due = new Date(item.dueAt).getTime();
+  const now = Date.now();
+  return due < now ? "overdue" : "onTime";
 }
 
 function Row({
@@ -84,11 +102,20 @@ export function DebtDetailDialog({ renegotiationId, open, onOpenChange }: DebtDe
   const { t } = useI18n();
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
   const { data, isPending, error } = useDebtDetail(open ? renegotiationId : null);
+  const showPartialPaidOverdueAlert = hasPartialPaidOverdueInstallments(data?.deal?.items);
+  const items = data?.deal?.items ?? [];
+  const hasInstallments = items.length > 0;
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          className={
+            hasInstallments
+              ? "max-w-4xl min-w-[28rem] sm:min-w-[32rem] max-h-[90vh] overflow-y-auto"
+              : "max-w-md"
+          }
+        >
           <DialogHeader>
             <DialogTitle className="text-left">
               {t("pages.debtNegotiation.debts.detail.title")}
@@ -112,7 +139,13 @@ export function DebtDetailDialog({ renegotiationId, open, onOpenChange }: DebtDe
               />
               <Row
                 label={t("pages.debtNegotiation.debts.detail.currentStatus")}
-                value={<StatusBadge stageName={data.pipelineStageName} />}
+                value={
+                  <StatusBadge
+                    stageName={data.pipelineStageName}
+                    showAlert={showPartialPaidOverdueAlert}
+                    alertMessage={t("pages.debtNegotiation.debts.detail.partialPaidOverdueAlert")}
+                  />
+                }
               />
               <Row
                 label={t("pages.debtNegotiation.debts.detail.originalDebtDate")}
@@ -145,6 +178,62 @@ export function DebtDetailDialog({ renegotiationId, open, onOpenChange }: DebtDe
                 label={t("pages.debtNegotiation.debts.detail.recoveredValue")}
                 value={formatAmount(data.recoveredValue)}
               />
+              {hasInstallments && (
+                <div className="mt-6 space-y-3">
+                  <h3 className="text-sm font-medium text-foreground">
+                    {t("pages.debtNegotiation.debts.detail.negotiationSummary")}
+                  </h3>
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.installment")}</TableHead>
+                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.dueDate")}</TableHead>
+                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.paymentDate")}</TableHead>
+                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.amount")}</TableHead>
+                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.status")}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {items.map((item) => {
+                          const status = getInstallmentStatus(item);
+                          const isPaid = status === "paid";
+                          const statusKey =
+                            status === "paid"
+                              ? "pages.debtNegotiation.debts.informPayment.status.paid"
+                              : status === "overdue"
+                                ? "pages.debtNegotiation.debts.informPayment.status.overdue"
+                                : "pages.debtNegotiation.debts.informPayment.status.onTime";
+                          const statusClass =
+                            status === "paid"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                              : status === "overdue"
+                                ? "bg-destructive/15 text-destructive"
+                                : "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300";
+                          return (
+                            <TableRow key={item.id} className={isPaid ? "opacity-90" : undefined}>
+                              <TableCell>{item.installment}</TableCell>
+                              <TableCell>{formatDate(item.dueAt)}</TableCell>
+                              <TableCell>{item.paidAt ? formatDate(item.paidAt) : "-"}</TableCell>
+                              <TableCell>{formatAmount(item.amount)}</TableCell>
+                              <TableCell>
+                                <span
+                                  className={cn(
+                                    "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                                    statusClass
+                                  )}
+                                >
+                                  {t(statusKey)}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
