@@ -109,7 +109,7 @@ function NpsGauge({
           textAnchor="middle"
           className="fill-foreground text-2xl font-bold tabular-nums"
         >
-          {score}
+          {Math.round(score)}
         </text>
       </svg>
       <div className="mt-3 flex flex-col gap-1.5 text-xs">
