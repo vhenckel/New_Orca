@@ -28,11 +28,12 @@ export function useConversationHistory(contactId: number | null, open: boolean) 
       setError(null);
       try {
         const res = await fetchConversationHistory(contactId, cursorParam ? { cursor: cursorParam } : undefined);
+        const pageChats = res.chats.filter((chat) => chat.sender === 1 || chat.sender === 2);
         if (isFirst) {
-          setChats(res.chats);
+          setChats(pageChats);
           setMediasAtt(res.mediasAtt ?? []);
         } else {
-          setChats((prev) => [...prev, ...res.chats]);
+          setChats((prev) => [...prev, ...pageChats]);
           setMediasAtt((prev) => mergeMediasAtt(prev, res.mediasAtt ?? []));
         }
         setHasNextPage(res.chats.length === TAKE);
