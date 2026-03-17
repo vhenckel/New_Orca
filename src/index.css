@@ -149,3 +149,17 @@
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
   }
 }
+
+/* Login/choose-company background: WebP when supported, PNG fallback */
+.login-bg-layer {
+  background-image: url('/images/login-bg.png');
+  background-position: center bottom;
+}
+@supports (background-image: image-set(url('/images/login-bg.webp') type('image/webp'))) {
+  .login-bg-layer {
+    background-image: image-set(
+      url('/images/login-bg.webp') type('image/webp'),
+      url('/images/login-bg.png') type('image/png')
+    );
+  }
+}

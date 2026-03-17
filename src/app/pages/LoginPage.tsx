@@ -38,11 +38,7 @@ export function LoginPage() {
     <div className="fixed inset-0 min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-[#0a4a8a] to-[#0a1a3e]">
       {/* Background image layer – same as management (center bottom, cover, 60% opacity) */}
       <div
-        className="fixed inset-0 z-0 bg-cover bg-no-repeat opacity-60"
-        style={{
-          backgroundImage: "url('/images/login-bg.png')",
-          backgroundPosition: "center bottom",
-        }}
+        className="login-bg-layer fixed inset-0 z-0 bg-cover bg-no-repeat opacity-60"
         aria-hidden
       />
       <div className="relative z-10 flex min-h-screen w-full flex-col lg:flex-row lg:items-stretch">
