@@ -81,7 +81,7 @@ export function LoginPage() {
                   Usuário
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-black/50" />
+                  <User className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-500" />
                   <Input
                     id="login-username"
                     type="text"
@@ -92,7 +92,7 @@ export function LoginPage() {
                     placeholder="Digite seu usuário"
                     required
                     disabled={loading}
-                    className="h-12 border-white/50 bg-white/90 pl-10 text-[15px] text-foreground placeholder:text-black/40 focus-visible:border-primary focus-visible:ring-primary/20"
+                    className="h-12 border-white/50 bg-white/90 pl-10 text-[15px] text-neutral-900 placeholder:text-neutral-500 focus-visible:border-primary focus-visible:ring-primary/20"
                   />
                 </div>
               </div>
@@ -105,7 +105,7 @@ export function LoginPage() {
                   Senha
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-black/50" />
+                  <Lock className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-500" />
                   <Input
                     id="login-password"
                     type="password"
@@ -116,7 +116,7 @@ export function LoginPage() {
                     placeholder="Digite sua senha"
                     required
                     disabled={loading}
-                    className="h-12 border-white/50 bg-white/90 pl-10 pr-10 text-[15px] text-foreground placeholder:text-black/40 focus-visible:border-primary focus-visible:ring-primary/20"
+                    className="h-12 border-white/50 bg-white/90 pl-10 pr-10 text-[15px] text-neutral-900 placeholder:text-neutral-500 focus-visible:border-primary focus-visible:ring-primary/20"
                   />
                 </div>
               </div>
