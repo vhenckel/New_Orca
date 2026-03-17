@@ -64,7 +64,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - host: app.dev.o2ospot.com
+    - host: app.o2obots-management.dev.o2obots.com
       http:
         paths:
           - path: /
