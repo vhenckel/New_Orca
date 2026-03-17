@@ -15,8 +15,10 @@ jobs:
       actions: read
     uses: O2OBOTS/o2obots-devops/.github/workflows/deploy.yml@master
     with:
-      image_name: o2obotsteam/o2obots-app-frontend-prod
+      image_name: ${{ github.ref == 'refs/heads/master' && 'o2obotsteam/o2obots-app-frontend-prod' || 'o2obotsteam/o2obots-app-frontend-dev' }}
       environment: ${{ github.ref == 'refs/heads/master' && 'prod' || 'dev' }}
       k8s_context: ${{ github.ref == 'refs/heads/master' && vars.K8S_CONTEXT_PROD || vars.K8S_CONTEXT_DEV }}
       k8s_manifest: ${{ github.ref == 'refs/heads/master' && 'k8s/app.prod.yml' || 'k8s/app.dev.yml' }}
+      # Build args para Vite (bake-time). Definir vars no repo/org: VITE_SPOT_API_BASE_URL_DEV e VITE_SPOT_API_BASE_URL_PROD
+      vite_spot_api_base_url: ${{ github.ref == 'refs/heads/master' && vars.VITE_SPOT_API_BASE_URL_PROD || vars.VITE_SPOT_API_BASE_URL_DEV }}
     secrets: inherit

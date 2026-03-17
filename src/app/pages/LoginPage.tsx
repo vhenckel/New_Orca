@@ -38,11 +38,7 @@ export function LoginPage() {
     <div className="fixed inset-0 min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-[#0a4a8a] to-[#0a1a3e]">
       {/* Background image layer – same as management (center bottom, cover, 60% opacity) */}
       <div
-        className="fixed inset-0 z-0 bg-cover bg-no-repeat opacity-60"
-        style={{
-          backgroundImage: "url('/images/login-bg.png')",
-          backgroundPosition: "center bottom",
-        }}
+        className="login-bg-layer fixed inset-0 z-0 bg-cover bg-no-repeat opacity-60"
         aria-hidden
       />
       <div className="relative z-10 flex min-h-screen w-full flex-col lg:flex-row lg:items-stretch">
@@ -81,7 +77,7 @@ export function LoginPage() {
                   Usuário
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-black/50" />
+                  <User className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-500" />
                   <Input
                     id="login-username"
                     type="text"
@@ -92,7 +88,7 @@ export function LoginPage() {
                     placeholder="Digite seu usuário"
                     required
                     disabled={loading}
-                    className="h-12 border-white/50 bg-white/90 pl-10 text-[15px] text-foreground placeholder:text-black/40 focus-visible:border-primary focus-visible:ring-primary/20"
+                    className="h-12 border-white/50 bg-white/90 pl-10 text-[15px] text-neutral-900 placeholder:text-neutral-500 focus-visible:border-primary focus-visible:ring-primary/20"
                   />
                 </div>
               </div>
@@ -105,7 +101,7 @@ export function LoginPage() {
                   Senha
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-black/50" />
+                  <Lock className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-500" />
                   <Input
                     id="login-password"
                     type="password"
@@ -116,7 +112,7 @@ export function LoginPage() {
                     placeholder="Digite sua senha"
                     required
                     disabled={loading}
-                    className="h-12 border-white/50 bg-white/90 pl-10 pr-10 text-[15px] text-foreground placeholder:text-black/40 focus-visible:border-primary focus-visible:ring-primary/20"
+                    className="h-12 border-white/50 bg-white/90 pl-10 pr-10 text-[15px] text-neutral-900 placeholder:text-neutral-500 focus-visible:border-primary focus-visible:ring-primary/20"
                   />
                 </div>
               </div>
