@@ -1,0 +1,9 @@
+# Compose loads .env from this dir → build args get VITE_* for the image build
+services:
+  app:
+    build:
+      context: .
+      args:
+        VITE_SPOT_API_BASE_URL: https://spot-api-management.dev.o2obots.com
+    ports:
+      - "8081:80"
