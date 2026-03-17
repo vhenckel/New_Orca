@@ -275,7 +275,7 @@ export function ImportDebtsWizardPage() {
                 total: fieldDefinitions.length,
               })}
             </div>
-            <div className="rounded-md border">
+            <div className="card-surface overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -323,7 +323,7 @@ export function ImportDebtsWizardPage() {
           </div>
         </div>
 
-        <div className="min-w-0 max-w-full overflow-x-auto rounded-md border">
+        <div className="card-surface overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>

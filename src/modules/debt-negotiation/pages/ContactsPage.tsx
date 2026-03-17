@@ -102,7 +102,7 @@ export function ContactsPage() {
         </div>
       )}
 
-      <div className="rounded-md border border-border">
+      <div className="card-surface overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
