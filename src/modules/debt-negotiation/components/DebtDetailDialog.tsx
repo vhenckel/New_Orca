@@ -183,7 +183,7 @@ export function DebtDetailDialog({ renegotiationId, open, onOpenChange }: DebtDe
                   <h3 className="text-sm font-medium text-foreground">
                     {t("pages.debtNegotiation.debts.detail.negotiationSummary")}
                   </h3>
-                  <div className="rounded-md border overflow-x-auto">
+                  <div className="card-surface overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow>

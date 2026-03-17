@@ -111,7 +111,7 @@ export function InformPaymentDialog({
               ? t("pages.debtNegotiation.debts.informPayment.clearSelection")
               : t("pages.debtNegotiation.debts.informPayment.selectAll")}
           </button>
-          <div className="rounded-md border overflow-x-auto">
+          <div className="card-surface overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
