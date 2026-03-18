@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { Check, Clock, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { parseAsString, throttle, useQueryState } from "nuqs";
 
-import { useContactList, CONTACT_LIST_PAGE_SIZE } from "@/modules/debt-negotiation/hooks";
+import {
+  useContactList,
+  CONTACT_LIST_PAGE_SIZE,
+} from "@/modules/debt-negotiation/hooks";
 import type { ContactListItem } from "@/modules/debt-negotiation/types/contact-list";
+import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
 import { useI18n } from "@/shared/i18n/useI18n";
-import { Input } from "@/shared/ui/input";
 import {
   Table,
   TableBody,
@@ -16,6 +20,11 @@ import {
 } from "@/shared/ui/table";
 import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/lib/utils";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import type {
+  AppliedFilter,
+  FilterConfig,
+} from "@/shared/components/dynamic-filters/types";
 
 function formatContactDate(iso: string): string {
   if (!iso || iso === "-") return "-";
@@ -46,7 +55,9 @@ function OptStatusIcon({ optStatus }: { optStatus: number }) {
     <span
       className={cn(
         "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-        agreed ? "bg-green-600 text-white" : "bg-destructive text-destructive-foreground",
+        agreed
+          ? "bg-green-600 text-white"
+          : "bg-destructive text-destructive-foreground",
       )}
       title={agreed ? "Opt-in confirmado" : "Aguardando opt-in"}
     >
@@ -58,9 +69,23 @@ function OptStatusIcon({ optStatus }: { optStatus: number }) {
 export function ContactsPage() {
   const { t } = useI18n();
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useQueryState(
+    "q",
+    parseAsString.withDefault("").withOptions({
+      history: "replace",
+      scroll: false,
+      limitUrlUpdates: throttle(200),
+    }),
+  );
+  const debouncedSearch = useDebouncedValue(search, 400);
 
-  const { data, error, isPending } = useContactList({ page, search });
+  const { data, error, isPending } = useContactList({
+    page,
+    search: debouncedSearch,
+  });
+
+  const filters = useMemo<FilterConfig[]>(() => [], []);
+  const appliedFilters = useMemo<AppliedFilter[]>(() => [], []);
 
   const total = data?.total ?? 0;
   const list = data?.data ?? [];
@@ -73,28 +98,24 @@ export function ContactsPage() {
           {t("pages.debtNegotiation.contacts.title")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {t("pages.debtNegotiation.contacts.records").replace("{count}", String(total))}
+          {t("pages.debtNegotiation.contacts.records").replace(
+            "{count}",
+            String(total),
+          )}
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder={t("pages.debtNegotiation.contacts.search")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pr-9"
-          />
-        </div>
-        <button
-          type="button"
-          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-        >
-          {t("pages.debtNegotiation.contacts.allFilters").replace("{count}", "0")}
-        </button>
-      </div>
+      <FilterPanel
+        showSearch
+        searchValue={search}
+        onSearchChange={(value) => void setSearch(value)}
+        searchPlaceholder={t("pages.debtNegotiation.contacts.search")}
+        filters={filters}
+        appliedFilters={appliedFilters}
+        onFiltersApply={async (_next) => {}}
+        onFiltersClear={async () => {}}
+        isLoading={isPending}
+      />
 
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -106,23 +127,39 @@ export function ContactsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("pages.debtNegotiation.contacts.col.name")}</TableHead>
-              <TableHead>{t("pages.debtNegotiation.contacts.col.nps")}</TableHead>
-              <TableHead>{t("pages.debtNegotiation.contacts.col.whatsapp")}</TableHead>
-              <TableHead>{t("pages.debtNegotiation.contacts.col.firstConversation")}</TableHead>
-              <TableHead>{t("pages.debtNegotiation.contacts.col.updatedAt")}</TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.contacts.col.name")}
+              </TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.contacts.col.nps")}
+              </TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.contacts.col.whatsapp")}
+              </TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.contacts.col.firstConversation")}
+              </TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.contacts.col.updatedAt")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isPending ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={5}
+                  className="py-8 text-center text-muted-foreground"
+                >
                   Carregando…
                 </TableCell>
               </TableRow>
             ) : list.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={5}
+                  className="py-8 text-center text-muted-foreground"
+                >
                   Nenhum contato encontrado.
                 </TableCell>
               </TableRow>

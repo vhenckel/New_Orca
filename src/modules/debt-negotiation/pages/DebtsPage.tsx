@@ -1,16 +1,30 @@
-import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Eye, MessageCircle, Search, DollarSign, Filter, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Eye, MessageCircle, DollarSign, X } from "lucide-react";
+import {
+  throttle,
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  useQueryState,
+} from "nuqs";
 
 import { AddPaymentFlowDialog } from "@/modules/debt-negotiation/components/AddPaymentFlowDialog";
 import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
 import { DebtDetailDialog } from "@/modules/debt-negotiation/components/DebtDetailDialog";
-import { useDebtDetails, DEBT_DETAILS_PAGE_SIZE } from "@/modules/debt-negotiation/hooks";
+import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
+import {
+  useDebtDetails,
+  DEBT_DETAILS_PAGE_SIZE,
+} from "@/modules/debt-negotiation/hooks";
+import { FilterType } from "@/shared/components/dynamic-filters/types";
+import type {
+  AppliedFilter,
+  FilterConfig,
+} from "@/shared/components/dynamic-filters/types";
 import type { DebtDetailsItem } from "@/modules/debt-negotiation/types/debt-details";
 import { StatusBadge } from "@/modules/debt-negotiation/utils/StatusBadge";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { formatCurrency } from "@/shared/lib/format";
-import { Input } from "@/shared/ui/input";
 import {
   Table,
   TableBody,
@@ -19,8 +33,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
-import { Button } from "@/shared/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { Button } from "@/shared/ui/button";
+import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 
 function formatDebtAmount(value: string | null): string {
   if (value == null || value === "") return "-";
@@ -51,13 +66,25 @@ function debtAgeLabel(age: string): string {
 export function DebtsPage() {
   const { t } = useI18n();
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useQueryState(
+    "q",
+    parseAsString.withDefault("").withOptions({
+      history: "replace",
+      scroll: false,
+      limitUrlUpdates: throttle(200),
+    }),
+  );
+  const debouncedSearch = useDebouncedValue(search, 400);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [addPaymentFlowId, setAddPaymentFlowId] = useState<string | null>(null);
   const [addPaymentFlowOpen, setAddPaymentFlowOpen] = useState(false);
-  const [conversationContactId, setConversationContactId] = useState<number | null>(null);
-  const [conversationContactName, setConversationContactName] = useState<string | null>(null);
+  const [conversationContactId, setConversationContactId] = useState<
+    number | null
+  >(null);
+  const [conversationContactName, setConversationContactName] = useState<
+    string | null
+  >(null);
   const [conversationOpen, setConversationOpen] = useState(false);
 
   const openDetail = (renegotiationId: string) => {
@@ -78,31 +105,81 @@ export function DebtsPage() {
     setDetailId(null);
   };
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const statuses = useMemo(
-    () =>
-      searchParams
-        .getAll("statuses")
-        .map((s) => Number(s))
-        .filter((n) => Number.isInteger(n)),
-    [searchParams]
+  const [statuses, setStatuses] = useQueryState(
+    "statuses",
+    parseAsArrayOf(parseAsInteger).withDefault([]),
   );
-  const clearStatusFilter = () => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("statuses");
-    setSearchParams(next, { replace: true });
-  };
 
   const { data, error, isPending } = useDebtDetails({
     page,
     statuses: statuses.length > 0 ? statuses : undefined,
-    search,
+    search: debouncedSearch,
   });
+
+  const statusOptions = useMemo(() => {
+    const fromApi = data?.availableFilters?.find(
+      (f) => f.id === "statuses" || f.id === "status",
+    );
+    if (fromApi?.options?.length) return fromApi.options;
+    // Fallback: keep UX working if API doesn't return availableFilters yet
+    return [
+      {
+        value: 11,
+        label: t("pages.debtNegotiation.debts.status.confirmacaoPagamento"),
+      },
+    ];
+  }, [data?.availableFilters, t]);
+
+  const statusLabelByValue = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const opt of statusOptions) map.set(Number(opt.value), opt.label);
+    return map;
+  }, [statusOptions]);
+
+  const advancedFilters = useMemo<FilterConfig[]>(
+    () => [
+      {
+        id: "statuses",
+        type: FilterType.MULTISELECT,
+        label: t("pages.debtNegotiation.debts.col.status"),
+        searchable: true,
+        options: statusOptions,
+      },
+      {
+        id: "debtAmount",
+        type: FilterType.RANGE_CURRENCY,
+        label: t("pages.debtNegotiation.debts.col.debtAmount"),
+      },
+    ],
+    [statusOptions, t],
+  );
+
+  const appliedAdvancedFilters = useMemo<AppliedFilter[]>(
+    () => (statuses.length > 0 ? [{ id: "statuses", values: statuses }] : []),
+    [statuses],
+  );
+
+  const applyAdvancedFilters = (filters: AppliedFilter[]) => {
+    const statusesFilter = filters.find((f) => f.id === "statuses");
+    const nextStatuses = Array.isArray(statusesFilter?.values)
+      ? statusesFilter!.values
+          .map((v) => Number(v))
+          .filter((n) => Number.isInteger(n))
+      : [];
+    void setStatuses(nextStatuses);
+  };
+
+  const clearAdvancedFilters = () => {
+    void setStatuses([]);
+  };
 
   const totalDebt = data?.totalDebt.currentValue ?? 0;
   const totalCount = data?.totalDebtCount.currentValue ?? 0;
   const list = data?.data ?? [];
-  const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / DEBT_DETAILS_PAGE_SIZE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil((data?.total ?? 0) / DEBT_DETAILS_PAGE_SIZE),
+  );
 
   return (
     <div className="space-y-6">
@@ -120,54 +197,31 @@ export function DebtsPage() {
           <p className="text-xs font-medium text-muted-foreground">
             {t("pages.debtNegotiation.debts.totalDebt")}
           </p>
-          <p className="mt-1 text-2xl font-bold text-primary">{formatCurrency(totalDebt)}</p>
+          <p className="mt-1 text-2xl font-bold text-primary">
+            {formatCurrency(totalDebt)}
+          </p>
         </div>
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-xs font-medium text-muted-foreground">
             {t("pages.debtNegotiation.debts.debtCount")}
           </p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{totalCount}</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">
+            {totalCount}
+          </p>
         </div>
       </div>
 
-      {statuses.includes(11) && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted px-2.5 py-1 text-sm">
-            {t("pages.debtNegotiation.debts.status.confirmacaoPagamento")}
-            <button
-              type="button"
-              aria-label={t("pages.debtNegotiation.debts.clearFilters")}
-              className="rounded p-0.5 hover:bg-muted-foreground/20"
-              onClick={clearStatusFilter}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </span>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder={t("pages.debtNegotiation.debts.searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pr-9"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Filter className="h-3.5 w-3.5" />
-            {t("pages.debtNegotiation.debts.advancedFilters")}
-          </Button>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
-            <X className="h-3.5 w-3.5" />
-            {t("pages.debtNegotiation.debts.clearFilters")}
-          </Button>
-        </div>
-      </div>
+      <FilterPanel
+        showSearch
+        searchValue={search}
+        onSearchChange={(value) => void setSearch(value)}
+        searchPlaceholder={t("pages.debtNegotiation.debts.searchPlaceholder")}
+        filters={advancedFilters}
+        appliedFilters={appliedAdvancedFilters}
+        onFiltersApply={applyAdvancedFilters}
+        onFiltersClear={clearAdvancedFilters}
+        isLoading={isPending}
+      />
 
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -179,26 +233,48 @@ export function DebtsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">{t("pages.debtNegotiation.debts.col.actions")}</TableHead>
-              <TableHead>{t("pages.debtNegotiation.debts.col.nameCpf")}</TableHead>
-              <TableHead>{t("pages.debtNegotiation.debts.col.contractNumber")}</TableHead>
-              <TableHead>{t("pages.debtNegotiation.debts.col.status")}</TableHead>
-              <TableHead>{t("pages.debtNegotiation.debts.col.debtAge")}</TableHead>
-              <TableHead className="text-right">{t("pages.debtNegotiation.debts.col.debtAmount")}</TableHead>
-              <TableHead className="text-right">{t("pages.debtNegotiation.debts.col.negotiatedValue")}</TableHead>
-              <TableHead className="text-right">{t("pages.debtNegotiation.debts.col.recoveredValue")}</TableHead>
+              <TableHead className="w-[100px]">
+                {t("pages.debtNegotiation.debts.col.actions")}
+              </TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.debts.col.nameCpf")}
+              </TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.debts.col.contractNumber")}
+              </TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.debts.col.status")}
+              </TableHead>
+              <TableHead>
+                {t("pages.debtNegotiation.debts.col.debtAge")}
+              </TableHead>
+              <TableHead className="text-right">
+                {t("pages.debtNegotiation.debts.col.debtAmount")}
+              </TableHead>
+              <TableHead className="text-right">
+                {t("pages.debtNegotiation.debts.col.negotiatedValue")}
+              </TableHead>
+              <TableHead className="text-right">
+                {t("pages.debtNegotiation.debts.col.recoveredValue")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isPending ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={8}
+                  className="py-8 text-center text-muted-foreground"
+                >
                   Carregando…
                 </TableCell>
               </TableRow>
             ) : list.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={8}
+                  className="py-8 text-center text-muted-foreground"
+                >
                   Nenhuma dívida encontrada.
                 </TableCell>
               </TableRow>
@@ -212,13 +288,17 @@ export function DebtsPage() {
                           <button
                             type="button"
                             className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                            aria-label={t("pages.debtNegotiation.debts.action.details")}
+                            aria-label={t(
+                              "pages.debtNegotiation.debts.action.details",
+                            )}
                             onClick={() => openDetail(row.renegotiationId)}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent>{t("pages.debtNegotiation.debts.action.details")}</TooltipContent>
+                        <TooltipContent>
+                          {t("pages.debtNegotiation.debts.action.details")}
+                        </TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -226,30 +306,45 @@ export function DebtsPage() {
                             <button
                               type="button"
                               className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
-                              aria-label={t("pages.debtNegotiation.debts.action.addPayment")}
+                              aria-label={t(
+                                "pages.debtNegotiation.debts.action.addPayment",
+                              )}
                               disabled={
-                                row.pipelineStageName.toLowerCase().trim() === "recuperado"
+                                row.pipelineStageName.toLowerCase().trim() ===
+                                "recuperado"
                               }
-                              onClick={() => openAddPaymentFlow(row.renegotiationId)}
+                              onClick={() =>
+                                openAddPaymentFlow(row.renegotiationId)
+                              }
                             >
                               <DollarSign className="h-4 w-4" />
                             </button>
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent>{t("pages.debtNegotiation.debts.action.addPayment")}</TooltipContent>
+                        <TooltipContent>
+                          {t("pages.debtNegotiation.debts.action.addPayment")}
+                        </TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
                             type="button"
                             className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                            aria-label={t("pages.debtNegotiation.debts.action.viewConversation")}
-                            onClick={() => openConversation(row.contactId, row.contactName)}
+                            aria-label={t(
+                              "pages.debtNegotiation.debts.action.viewConversation",
+                            )}
+                            onClick={() =>
+                              openConversation(row.contactId, row.contactName)
+                            }
                           >
                             <MessageCircle className="h-4 w-4" />
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent>{t("pages.debtNegotiation.debts.action.viewConversation")}</TooltipContent>
+                        <TooltipContent>
+                          {t(
+                            "pages.debtNegotiation.debts.action.viewConversation",
+                          )}
+                        </TooltipContent>
                       </Tooltip>
                     </div>
                   </TableCell>
@@ -271,15 +366,21 @@ export function DebtsPage() {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-muted-foreground">{row.contractId}</TableCell>
+                  <TableCell className="font-mono text-muted-foreground">
+                    {row.contractId}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge
                       stageName={row.pipelineStageName}
                       showAlert={row.isOverdue}
-                      alertMessage={t("pages.debtNegotiation.debts.detail.partialPaidOverdueAlert")}
+                      alertMessage={t(
+                        "pages.debtNegotiation.debts.detail.partialPaidOverdueAlert",
+                      )}
                     />
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{debtAgeLabel(row.debtAge)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {debtAgeLabel(row.debtAge)}
+                  </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
                     {formatDebtAmount(row.debtAmount)}
                   </TableCell>
