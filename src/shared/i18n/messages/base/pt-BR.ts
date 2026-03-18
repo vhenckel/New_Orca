@@ -35,4 +35,16 @@ export const basePtBR = {
   "common.pagination.next": "Próxima",
   "common.placeholder.description":
     "Esta tela já está preparada dentro do módulo, mas ainda sem integração com dados e regras específicas.",
+  /** Faixa busca + filtros: título = ação principal (POLA: alinha com o campo de busca). */
+  "components.filterPanel.sectionTitle": "Buscar",
+  "components.filterPanel.searchPlaceholder": "Buscar…",
+  "components.filterPanel.clearAll": "Limpar",
+  "components.filterPanel.removeFilterAria": "Remover filtro",
+  "components.filterPanel.searchClearAria": "Limpar busca",
+  /** Botão abre painel de critérios; rótulo curto e esperado em listagens. */
+  "components.dynamicFilters.button": "Filtros",
+  "components.dynamicFilters.headingSr": "Filtros avançados",
+  "components.dynamicFilters.close": "Fechar",
+  "components.dynamicFilters.apply": "Aplicar filtros",
+  "components.dynamicFilters.selectCategory": "Selecione uma categoria",
 } as const;

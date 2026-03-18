@@ -35,4 +35,14 @@ export const baseEnUS = {
   "common.pagination.next": "Next",
   "common.placeholder.description":
     "This page is already prepared inside the module, but still without specific data integrations and business rules.",
+  "components.filterPanel.sectionTitle": "Search",
+  "components.filterPanel.searchPlaceholder": "Search…",
+  "components.filterPanel.clearAll": "Clear",
+  "components.filterPanel.removeFilterAria": "Remove filter",
+  "components.filterPanel.searchClearAria": "Clear search",
+  "components.dynamicFilters.button": "Filters",
+  "components.dynamicFilters.headingSr": "Advanced filters",
+  "components.dynamicFilters.close": "Close",
+  "components.dynamicFilters.apply": "Apply filters",
+  "components.dynamicFilters.selectCategory": "Select a category",
 } as const;
