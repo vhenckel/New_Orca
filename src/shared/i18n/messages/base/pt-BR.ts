@@ -31,6 +31,7 @@ export const basePtBR = {
   "common.back": "Voltar",
   "common.comingSoon": "Em breve",
   "common.actions.cancel": "Cancelar",
+  "common.actions.back": "Voltar",
   "common.actions.previous": "Anterior",
   "common.actions.next": "Próximo",
   "common.pagination.pageOf": "Página {page} de {total}",

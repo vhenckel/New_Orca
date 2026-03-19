@@ -31,6 +31,7 @@ export const baseEnUS = {
   "common.back": "Back",
   "common.comingSoon": "Coming soon",
   "common.actions.cancel": "Cancel",
+  "common.actions.back": "Back",
   "common.actions.previous": "Previous",
   "common.actions.next": "Next",
   "common.pagination.pageOf": "Page {page} of {total}",

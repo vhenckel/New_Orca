@@ -4,6 +4,8 @@ import { collectionsEnUS } from "@/modules/collections/i18n/en-US";
 import { collectionsPtBR } from "@/modules/collections/i18n/pt-BR";
 import { debtNegotiationEnUS } from "@/modules/debt-negotiation/i18n/en-US";
 import { debtNegotiationPtBR } from "@/modules/debt-negotiation/i18n/pt-BR";
+import { financeEnUS } from "@/modules/finance/i18n/en-US";
+import { financePtBR } from "@/modules/finance/i18n/pt-BR";
 import { salesEnUS } from "@/modules/sales/i18n/en-US";
 import { salesPtBR } from "@/modules/sales/i18n/pt-BR";
 import { settingsEnUS } from "@/modules/settings/i18n/en-US";
@@ -15,6 +17,7 @@ export const defaultLocale = "pt-BR";
 const ptBRMessages = {
   ...basePtBR,
   ...debtNegotiationPtBR,
+  ...financePtBR,
   ...collectionsPtBR,
   ...salesPtBR,
   ...settingsPtBR,
@@ -23,6 +26,7 @@ const ptBRMessages = {
 const enUSMessages = {
   ...baseEnUS,
   ...debtNegotiationEnUS,
+  ...financeEnUS,
   ...collectionsEnUS,
   ...salesEnUS,
   ...settingsEnUS,

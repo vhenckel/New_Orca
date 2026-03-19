@@ -66,7 +66,7 @@ export function AppShell({ children, modules }: AppShellProps) {
         {currentModule.key === "debt-negotiation" && <PendingPaymentBanner />}
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="mx-auto max-w-[1440px] p-6">{children}</div>
+          <div className="mx-auto max-w-[2046px] p-6">{children}</div>
         </main>
       </div>
     </div>
