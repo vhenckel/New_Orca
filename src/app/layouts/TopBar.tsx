@@ -42,6 +42,9 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
   } = useNotifications();
   const navigate = useNavigate();
 
+  const showDebtDateRange = currentRoute.showDebtNegotiationDateRangeInTopBar === true;
+  const showImportDebts = currentRoute.showImportDebtsInTopBar === true;
+
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-6">
       <div className="min-w-0">
@@ -58,20 +61,17 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        {currentModule.key === "debt-negotiation" &&
-          (currentRoute.path === "/debt-negotiation" || currentRoute.path === "/debt-negotiation/debts") && (
-          <>
-            <DashboardDateRangePicker />
-            <Button
-              size="sm"
-              className="gap-1.5"
-              type="button"
-              onClick={() => navigate("/debt-negotiation/debts/import")}
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{t("app.topbar.importDebts")}</span>
-            </Button>
-          </>
+        {showDebtDateRange && <DashboardDateRangePicker />}
+        {showImportDebts && (
+          <Button
+            size="sm"
+            className="gap-1.5"
+            type="button"
+            onClick={() => navigate("/debt-negotiation/debts/import")}
+          >
+            <Download className="size-3.5" />
+            <span className="hidden sm:inline">{t("app.topbar.importDebts")}</span>
+          </Button>
         )}
 
         <DropdownMenu>
@@ -81,9 +81,9 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
               className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               aria-label={t("app.notifications.title")}
             >
-              <Bell className="h-4 w-4" />
+              <Bell className="size-4" />
               {unreadCount > 0 && (
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
+                <span className="absolute right-1 top-1 size-2 rounded-full bg-primary" />
               )}
             </button>
           </DropdownMenuTrigger>
@@ -122,8 +122,8 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
                     className="flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-accent/60"
                     onClick={() => markAsRead(notification.id)}
                   >
-                    <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
-                    <div className="flex-1 space-y-1">
+                    <span className="mt-1 size-2 rounded-full bg-primary" />
+                    <div className="flex flex-1 flex-col gap-1">
                       <p className="text-xs font-medium text-foreground">
                         {notification.title}
                       </p>
@@ -145,7 +145,7 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
               aria-label={t("app.topbar.userMenu")}
               className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+              <div className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                 {user?.name?.charAt(0)?.toUpperCase() ?? "T"}
               </div>
               <div className="hidden max-w-[160px] flex-col md:flex">
@@ -158,25 +158,25 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
                   </span>
                 )}
               </div>
-              <ChevronDown className="hidden h-3 w-3 text-muted-foreground md:block" />
+              <ChevronDown className="hidden size-3 text-muted-foreground md:block" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem asChild>
               <Link to={chooseCompanyUrl} className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Mudar empresa
+                <Building2 className="size-4" />
+                {t("app.topbar.changeCompany")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/settings" className="flex items-center gap-2">
-                <Settings2 className="h-4 w-4" />
+                <Settings2 className="size-4" />
                 {t("app.topbar.preferences")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => logout()} className="gap-2">
-              <LogOut className="h-4 w-4" />
-              Sair
+              <LogOut className="size-4" />
+              {t("app.topbar.logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

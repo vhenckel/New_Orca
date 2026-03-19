@@ -1,49 +1,65 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import {
-  throttle,
-  parseAsArrayOf,
-  parseAsInteger,
-  parseAsString,
-  useQueryState,
-} from "nuqs";
+import { useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
 
 import { AddPaymentFlowDialog } from "@/modules/debt-negotiation/components/AddPaymentFlowDialog";
 import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
 import { DebtDetailDialog } from "@/modules/debt-negotiation/components/DebtDetailDialog";
-import { useDebtDetails } from "@/modules/debt-negotiation/hooks";
+import { useRenegotiationBoxes } from "@/modules/debt-negotiation/hooks";
 import { useDebtDetailsTableColumns } from "@/modules/debt-negotiation/hooks/useDebtDetailsTableColumns";
 import { useDebtListDialogs } from "@/modules/debt-negotiation/hooks/useDebtListDialogs";
 import { useDebtStatusFilterOptions } from "@/modules/debt-negotiation/hooks/useDebtStatusFilterOptions";
+import { useRenegotiationDrilldownList } from "@/modules/debt-negotiation/hooks/useRenegotiationDrilldownList";
+import type { RenegotiationViewListVariant } from "@/modules/debt-negotiation/services/renegotiation-view-list";
+import { mapBoxesToDrilldownKpiItems } from "@/modules/debt-negotiation/utils/map-drilldown-kpis";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { DataTable } from "@/shared/components/data-table";
-import { FilterType } from "@/shared/components/dynamic-filters/types";
 import type { AppliedFilter, FilterConfig } from "@/shared/components/dynamic-filters/types";
+import { FilterType } from "@/shared/components/dynamic-filters/types";
 import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
 import { useResetPaginationOnDateRangeChange } from "@/shared/hooks/useResetPaginationOnDateRangeChange";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useI18n } from "@/shared/i18n/useI18n";
-import { formatCurrency } from "@/shared/lib/format";
 import {
-  useDebtsPaginationQueryState,
+  debtNegotiationPathWithDateRange,
   useDebtNegotiationDateRangeQueryState,
 } from "@/shared/lib/nuqs-filters";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { AlertCircle } from "lucide-react";
 
-export function DebtsPage() {
+export type DebtNegotiationDetailVariant = RenegotiationViewListVariant;
+
+const TITLE_KEYS: Record<DebtNegotiationDetailVariant, string> = {
+  renegotiation: "pages.debtNegotiation.detail.renegotiation.title",
+  negotiated: "pages.debtNegotiation.detail.negotiated.title",
+  recovered: "pages.debtNegotiation.detail.recovered.title",
+};
+
+const SUBTITLE_KEYS: Record<DebtNegotiationDetailVariant, string> = {
+  renegotiation: "pages.debtNegotiation.detail.renegotiation.subtitle",
+  negotiated: "pages.debtNegotiation.detail.negotiated.subtitle",
+  recovered: "pages.debtNegotiation.detail.recovered.subtitle",
+};
+
+export interface DebtNegotiationDetailListState {
+  page: number;
+  pageSize: number;
+  setPagination: (u: { page?: number; pageSize?: number }) => void;
+  search: string;
+  setSearch: (value: string | null) => void;
+  statuses: number[];
+  setStatuses: (value: number[] | null) => void;
+}
+
+export function DebtNegotiationDetailDrilldown({
+  variant,
+  listState,
+}: {
+  variant: DebtNegotiationDetailVariant;
+  listState: DebtNegotiationDetailListState;
+}) {
   const { t } = useI18n();
-  const { page, pageSize, setPagination } = useDebtsPaginationQueryState();
-  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
-  useResetPaginationOnDateRangeChange(startDate, endDate, setPagination);
-
-  const [search, setSearch] = useQueryState(
-    "q",
-    parseAsString.withDefault("").withOptions({
-      history: "replace",
-      scroll: false,
-      limitUrlUpdates: throttle(200),
-    }),
-  );
+  const navigate = useNavigate();
+  const { page, pageSize, setPagination, search, setSearch, statuses, setStatuses } = listState;
   const debouncedSearch = useDebouncedValue(search, 400);
   const prevSearchRef = useRef(debouncedSearch);
   useEffect(() => {
@@ -53,14 +69,11 @@ export function DebtsPage() {
     }
   }, [debouncedSearch, setPagination]);
 
-  const dialogs = useDebtListDialogs();
+  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
+  useResetPaginationOnDateRangeChange(startDate, endDate, setPagination);
 
-  const [statuses, setStatuses] = useQueryState(
-    "statuses",
-    parseAsArrayOf(parseAsInteger).withDefault([]),
-  );
-
-  const { data, error, isPending } = useDebtDetails({
+  const { data: boxesData, isPending: boxesPending } = useRenegotiationBoxes();
+  const { data, error, isPending } = useRenegotiationDrilldownList(variant, {
     startDate,
     endDate,
     page,
@@ -68,6 +81,8 @@ export function DebtsPage() {
     statuses: statuses.length > 0 ? statuses : undefined,
     search: debouncedSearch,
   });
+
+  const dialogs = useDebtListDialogs();
 
   const statusOptions = useDebtStatusFilterOptions(data?.availableFilters, t);
 
@@ -110,6 +125,11 @@ export function DebtsPage() {
     setPagination({ page: 1 });
   };
 
+  const kpiItems = useMemo(
+    () => mapBoxesToDrilldownKpiItems(boxesData, variant, t),
+    [boxesData, variant, t],
+  );
+
   const formatDebtAge = useCallback(
     (age: string) => {
       if (!age) return "-";
@@ -130,27 +150,19 @@ export function DebtsPage() {
     onConversation: dialogs.openConversation,
   });
 
-  const totalDebt = data?.totalDebt.currentValue ?? 0;
-  const totalCount = data?.totalDebtCount.currentValue ?? 0;
   const totalRows = data?.total ?? 0;
 
   return (
     <DashboardPageLayout
-      title={t("pages.debtNegotiation.debts.pageTitle")}
-      subtitle={t("pages.debtNegotiation.debts.subtitle")}
-      kpiItems={[
-        {
-          title: t("pages.debtNegotiation.debts.totalDebt"),
-          value: formatCurrency(totalDebt),
-          valueVariant: "primary",
-        },
-        {
-          title: t("pages.debtNegotiation.debts.debtCount"),
-          value: totalCount,
-          isQuantity: true,
-        },
-      ]}
-      isLoadingKpis={isPending}
+      title={t(TITLE_KEYS[variant])}
+      subtitle={t(SUBTITLE_KEYS[variant])}
+      onBack={() =>
+        void navigate(
+          debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate }),
+        )
+      }
+      kpiItems={kpiItems}
+      isLoadingKpis={boxesPending}
     >
       <FilterPanel
         showSearch

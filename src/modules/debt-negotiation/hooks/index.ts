@@ -9,6 +9,7 @@ export { useContactDebts } from "./useContactDebts";
 export { useContactActivities, CONTACT_ACTIVITIES_PAGE_SIZE } from "./useContactActivities";
 export { useContactCampaigns } from "./useContactCampaigns";
 export { useDebtDetails, DEBT_DETAILS_PAGE_SIZE } from "./useDebtDetails";
+export { useRenegotiationDrilldownList } from "./useRenegotiationDrilldownList";
 export { useDebtDetail } from "./useDebtDetail";
 export { usePendingPaymentConfirmations } from "./usePendingPaymentConfirmations";
 export {

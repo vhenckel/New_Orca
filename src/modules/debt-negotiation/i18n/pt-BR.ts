@@ -69,6 +69,15 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.contactDetail.activitiesFilterCampaigns": "Campanhas",
   "pages.debtNegotiation.contactDetail.activitiesFilterCollection": "Cobrança",
   "pages.debtNegotiation.contactDetail.activitiesFilterBot": "Agente de IA",
+  "pages.debtNegotiation.detail.renegotiation.title": "Total de dívidas",
+  "pages.debtNegotiation.detail.renegotiation.subtitle":
+    "Detalhamento da carteira no período selecionado.",
+  "pages.debtNegotiation.detail.negotiated.title": "Total negociado",
+  "pages.debtNegotiation.detail.negotiated.subtitle":
+    "Dívidas com valor negociado no período.",
+  "pages.debtNegotiation.detail.recovered.title": "Total recuperado",
+  "pages.debtNegotiation.detail.recovered.subtitle":
+    "Valores e quantidade recuperados no período.",
   "pages.debtNegotiation.debts.eyebrow": "Renegociação",
   "pages.debtNegotiation.debts.title": "Dívidas",
   "pages.debtNegotiation.debts.description":
@@ -80,6 +89,12 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.debtCount": "Quantidade de Dívidas",
   "pages.debtNegotiation.debts.search": "Pesquisar",
   "pages.debtNegotiation.debts.searchPlaceholder": "Pesquise por nome, CPF, CNPJ ou Contrato...",
+  "pages.debtNegotiation.debts.errors.loadList": "Erro ao carregar dívidas.",
+  "pages.debtNegotiation.debts.errors.loadDashboard":
+    "Erro ao carregar indicadores. Verifique a conexão ou tente mais tarde.",
+  "pages.debtNegotiation.debts.emptyList": "Nenhuma dívida encontrada.",
+  "pages.debtNegotiation.debts.debtAge.oneDay": "1 dia",
+  "pages.debtNegotiation.debts.debtAge.days": "{count} dias",
   "pages.debtNegotiation.debts.advancedFilters": "Filtros avançados",
   "pages.debtNegotiation.debts.clearFilters": "Limpar filtros",
   "pages.debtNegotiation.debts.col.actions": "Ações",

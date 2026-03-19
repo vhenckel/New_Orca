@@ -6,6 +6,8 @@ export const basePtBR = {
   "app.topbar.importDebts": "Importar dívidas",
   "app.topbar.preferences": "Preferências",
   "app.topbar.userMenu": "Abrir menu do usuário",
+  "app.topbar.changeCompany": "Mudar empresa",
+  "app.topbar.logout": "Sair",
   "app.preferences.title": "Preferências",
   "app.preferences.description":
     "Defina como a aplicação deve aparecer para você. As escolhas ficam salvas neste navegador.",
@@ -26,6 +28,7 @@ export const basePtBR = {
   "app.notifications.markAllRead": "Marcar todas como lidas",
   "app.notifications.empty": "Nenhuma notificação no momento.",
   "app.notifications.loading": "Carregando notificações...",
+  "common.back": "Voltar",
   "common.comingSoon": "Em breve",
   "common.actions.cancel": "Cancelar",
   "common.actions.previous": "Anterior",

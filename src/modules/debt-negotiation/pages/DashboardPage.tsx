@@ -1,4 +1,6 @@
 import { ActivityFeed } from "@/modules/debt-negotiation/components/ActivityFeed";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { DailyTable } from "@/modules/debt-negotiation/components/DailyTable";
 import { DonutCard } from "@/modules/debt-negotiation/components/DonutCard";
 import { KPICard } from "@/modules/debt-negotiation/components/KPICard";
@@ -22,6 +24,12 @@ import {
 } from "@/shared/lib/format";
 import type { TranslationKey } from "@/shared/i18n/config";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { useNavigate } from "react-router-dom";
+
+import {
+  debtNegotiationPathWithDateRange,
+  useDebtNegotiationDateRangeQueryState,
+} from "@/shared/lib/nuqs-filters";
 
 function trendFromChange(percentageChange: number): "up" | "down" {
   return percentageChange >= 0 ? "up" : "down";
@@ -29,7 +37,7 @@ function trendFromChange(percentageChange: number): "up" | "down" {
 
 function mapBoxesToKpiMetrics(
   data: RenegotiationBoxesResponse,
-  t: (key: string) => string
+  t: (key: string) => string,
 ): KpiMetric[] {
   const d = data;
   return [
@@ -40,6 +48,7 @@ function mapBoxesToKpiMetrics(
       trend: trendFromChange(d.totalDebt.percentageChange),
       percentage: "100%",
       delay: 0,
+      drilldownPath: "/debt-negotiation/renegotiation-details",
     },
     {
       label: t("dashboard.kpis.totalNegotiated"),
@@ -48,6 +57,7 @@ function mapBoxesToKpiMetrics(
       trend: trendFromChange(d.totalNegotiated.percentageChange),
       percentage: d.totalNegotiated.percentage != null ? formatPercent(d.totalNegotiated.percentage) : undefined,
       delay: 50,
+      drilldownPath: "/debt-negotiation/negotiated-details",
     },
     {
       label: t("dashboard.kpis.totalRecovered"),
@@ -56,6 +66,7 @@ function mapBoxesToKpiMetrics(
       trend: trendFromChange(d.totalRecoveredNegotiated.percentageChange),
       percentage: d.totalRecoveredNegotiated.percentage != null ? formatPercent(d.totalRecoveredNegotiated.percentage) : undefined,
       delay: 100,
+      drilldownPath: "/debt-negotiation/recovered-details",
     },
     {
       label: t("dashboard.kpis.recoveryRate"),
@@ -69,7 +80,7 @@ function mapBoxesToKpiMetrics(
 
 function mapBoxesToOperationalMetrics(
   data: RenegotiationBoxesResponse,
-  t: (key: string) => string
+  t: (key: string) => string,
 ): OperationalMetric[] {
   const d = data;
   const totalDebtors = d.totalDebtCount.currentValue;
@@ -138,6 +149,9 @@ const FALLBACK_DEBTOR_AGE: PortfolioBreakdownItem[] = [
 
 export function DashboardPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
+  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
+  const dateRange = { startDate, endDate };
   const { data: boxesData, error } = useRenegotiationBoxes();
   const { data: graphicsData } = useRenegotiationGraphics();
 
@@ -172,19 +186,22 @@ export function DashboardPage() {
       }[name] ?? "dashboard.donut.debtorAge.other") as TranslationKey
     );
 
+  const debtAgeSeries = toDonutSeries(graphicsData?.debtAge, debtAgeLabel);
   const debtAgeData: PortfolioBreakdownItem[] =
-    toDonutSeries(graphicsData?.debtAge, debtAgeLabel).length > 0
-      ? toDonutSeries(graphicsData?.debtAge, debtAgeLabel)
+    debtAgeSeries.length > 0
+      ? debtAgeSeries
       : FALLBACK_DEBT_AGE.map((item) => ({ ...item, name: t(item.name as TranslationKey) }));
 
+  const debtValueSeries = toDonutSeries(graphicsData?.debtValue, debtValueLabel);
   const debtValueData: PortfolioBreakdownItem[] =
-    toDonutSeries(graphicsData?.debtValue, debtValueLabel).length > 0
-      ? toDonutSeries(graphicsData?.debtValue, debtValueLabel)
+    debtValueSeries.length > 0
+      ? debtValueSeries
       : FALLBACK_DEBT_VALUE.map((item) => ({ ...item, name: t(item.name as TranslationKey) }));
 
+  const debtorAgeSeries = toDonutSeries(graphicsData?.debtorsAge, debtorsAgeLabel);
   const debtorAgeData: PortfolioBreakdownItem[] =
-    toDonutSeries(graphicsData?.debtorsAge, debtorsAgeLabel).length > 0
-      ? toDonutSeries(graphicsData?.debtorsAge, debtorsAgeLabel)
+    debtorAgeSeries.length > 0
+      ? debtorAgeSeries
       : FALLBACK_DEBTOR_AGE.map((item) => ({ ...item, name: t(item.name as TranslationKey) }));
 
   const kpiMetrics: KpiMetric[] =
@@ -198,6 +215,7 @@ export function DashboardPage() {
             trend: "up",
             percentage: "100%",
             delay: 0,
+            drilldownPath: "/debt-negotiation/renegotiation-details",
           },
           {
             label: t("dashboard.kpis.totalNegotiated"),
@@ -206,6 +224,7 @@ export function DashboardPage() {
             trend: "up",
             percentage: "-",
             delay: 50,
+            drilldownPath: "/debt-negotiation/negotiated-details",
           },
           {
             label: t("dashboard.kpis.totalRecovered"),
@@ -214,6 +233,7 @@ export function DashboardPage() {
             trend: "up",
             percentage: "-",
             delay: 100,
+            drilldownPath: "/debt-negotiation/recovered-details",
           },
           {
             label: t("dashboard.kpis.recoveryRate"),
@@ -235,15 +255,34 @@ export function DashboardPage() {
         ];
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {error && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Erro ao carregar indicadores. Verifique a conexão ou tente mais tarde.
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="size-4" />
+          <AlertDescription>
+            {t("pages.debtNegotiation.debts.errors.loadDashboard")}
+          </AlertDescription>
+        </Alert>
       )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiMetrics.map((metric) => (
-          <KPICard key={metric.label} {...metric} />
+          <KPICard
+            key={metric.label}
+            label={metric.label}
+            value={metric.value}
+            change={metric.change}
+            trend={metric.trend}
+            percentage={metric.percentage}
+            delay={metric.delay}
+            onClick={
+              metric.drilldownPath
+                ? () =>
+                    void navigate(
+                      debtNegotiationPathWithDateRange(metric.drilldownPath!, dateRange),
+                    )
+                : undefined
+            }
+          />
         ))}
       </div>
 

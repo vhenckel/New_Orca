@@ -11,6 +11,8 @@ export interface KpiMetric {
   trend: "up" | "down";
   percentage?: string;
   delay?: number;
+  /** Drill-down da listagem (primeiros 3 KPIs do dashboard). */
+  drilldownPath?: string;
 }
 
 export interface OperationalMetric {

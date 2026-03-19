@@ -6,7 +6,7 @@ import type { DealItem } from "@/modules/debt-negotiation/types/debt-detail";
 import { useDebtDetail } from "@/modules/debt-negotiation/hooks";
 import { hasPartialPaidOverdueInstallments } from "@/modules/debt-negotiation/utils/debtInstallmentAlert";
 import { useI18n } from "@/shared/i18n/useI18n";
-import { StatusBadge } from "@/modules/debt-negotiation/utils/StatusBadge";
+import { StatusBadge } from "@/modules/debt-negotiation/components/StatusBadge";
 import {
   Dialog,
   DialogContent,

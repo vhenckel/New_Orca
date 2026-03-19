@@ -4,7 +4,10 @@ import { ptBR } from "date-fns/locale";
 import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
-import { getDefaultDateRange, useDateRangeQueryState } from "@/shared/lib/nuqs-filters";
+import {
+  getDefaultDateRange,
+  useDebtNegotiationDateRangeQueryState,
+} from "@/shared/lib/nuqs-filters";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
 import { Calendar } from "@/shared/ui/calendar";
@@ -26,7 +29,7 @@ function capEndToToday(end: Date, today: Date): Date {
 
 export function DashboardDateRangePicker() {
   const { t } = useI18n();
-  const { startDate, endDate, setDateRange } = useDateRangeQueryState();
+  const { startDate, endDate, setDateRange } = useDebtNegotiationDateRangeQueryState();
   const [open, setOpen] = useState(false);
 
   const range: DateRange | undefined =
