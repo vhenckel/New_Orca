@@ -69,6 +69,15 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.contactDetail.activitiesFilterCampaigns": "Campaigns",
   "pages.debtNegotiation.contactDetail.activitiesFilterCollection": "Collection",
   "pages.debtNegotiation.contactDetail.activitiesFilterBot": "AI Agent",
+  "pages.debtNegotiation.detail.renegotiation.title": "Total debt",
+  "pages.debtNegotiation.detail.renegotiation.subtitle":
+    "Portfolio breakdown for the selected period.",
+  "pages.debtNegotiation.detail.negotiated.title": "Total negotiated",
+  "pages.debtNegotiation.detail.negotiated.subtitle":
+    "Debts with negotiated value in the period.",
+  "pages.debtNegotiation.detail.recovered.title": "Total recovered",
+  "pages.debtNegotiation.detail.recovered.subtitle":
+    "Recovered amounts and counts in the period.",
   "pages.debtNegotiation.debts.eyebrow": "Debt negotiation",
   "pages.debtNegotiation.debts.title": "Debts",
   "pages.debtNegotiation.debts.description":
@@ -80,6 +89,12 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.debtCount": "Quantity of Debts",
   "pages.debtNegotiation.debts.search": "Search",
   "pages.debtNegotiation.debts.searchPlaceholder": "Search by name, CPF, CNPJ or Contract...",
+  "pages.debtNegotiation.debts.errors.loadList": "Failed to load debts.",
+  "pages.debtNegotiation.debts.errors.loadDashboard":
+    "Failed to load indicators. Check your connection or try again later.",
+  "pages.debtNegotiation.debts.emptyList": "No debts found.",
+  "pages.debtNegotiation.debts.debtAge.oneDay": "1 day",
+  "pages.debtNegotiation.debts.debtAge.days": "{count} days",
   "pages.debtNegotiation.debts.advancedFilters": "Advanced filters",
   "pages.debtNegotiation.debts.clearFilters": "Clear filters",
   "pages.debtNegotiation.debts.col.actions": "Actions",

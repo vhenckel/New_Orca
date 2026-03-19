@@ -5,7 +5,7 @@ import { Info } from "lucide-react";
 import { confirmDeal } from "@/modules/debt-negotiation/services/deal";
 import type { DebtDetailResponse } from "@/modules/debt-negotiation/types/debt-detail";
 import { hasPartialPaidOverdueInstallments } from "@/modules/debt-negotiation/utils/debtInstallmentAlert";
-import { StatusBadge } from "@/modules/debt-negotiation/utils/StatusBadge";
+import { StatusBadge } from "@/modules/debt-negotiation/components/StatusBadge";
 import { useI18n } from "@/shared/i18n/useI18n";
 import {
   Dialog,
