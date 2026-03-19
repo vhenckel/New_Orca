@@ -3,8 +3,10 @@
  * Padrão: todos os filtros que afetam listagens/dashboards vão para a query string.
  */
 import {
+  parseAsArrayOf,
   parseAsInteger,
   parseAsString,
+  throttle,
   useQueryState,
   useQueryStates,
 } from "nuqs";
@@ -27,11 +29,17 @@ export function getDefaultDateRange(): { startDate: string; endDate: string } {
   };
 }
 
-/** Parsers para período (dashboard renegociação, etc.). */
+/**
+ * Período na query string (`?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`).
+ * Usado no módulo Renegociação: dashboard, Dívidas, drill-downs (renegotiation / negotiated / recovered).
+ */
 export const dateRangeParsers = {
   startDate: parseAsString.withDefault(""),
   endDate: parseAsString.withDefault(""),
 } as const;
+
+/** Alias semântico — mesmos parsers que `dateRangeParsers`. */
+export const debtNegotiationDateRangeParsers = dateRangeParsers;
 
 /** Hook: startDate e endDate na URL. Retorna valores da URL se válidos (YYYY-MM-DD), senão o default do mês. */
 export function useDateRangeQueryState() {
@@ -49,11 +57,27 @@ export function useDateRangeQueryState() {
   };
 }
 
+/** Mesmo comportamento que `useDateRangeQueryState` — nome explícito para telas de renegociação. */
+export function useDebtNegotiationDateRangeQueryState() {
+  return useDateRangeQueryState();
+}
+
+/** Monta path com `startDate` e `endDate` na query (navegação dashboard ↔ drill-down). */
+export function debtNegotiationPathWithDateRange(
+  pathname: string,
+  range: { startDate: string; endDate: string },
+): string {
+  const q = new URLSearchParams({
+    startDate: range.startDate,
+    endDate: range.endDate,
+  });
+  return `${pathname}?${q.toString()}`;
+}
+
 /** Parser para página (listagens). */
 export const pageParser = parseAsInteger.withDefault(1);
 
-/** Parser para companyId quando vier da URL (ex.: debug). Multi-tenant: normalmente vem do auth. */
-export const companyIdParser = parseAsInteger.withDefault(0);
+export { companyIdParser } from "@/shared/lib/company-id-parser";
 
 /** Valores aceitos para exibição dos dados diários e do gráfico de performance (mesma API). */
 export type DetailsShowValues = "quantity" | "value";
@@ -69,3 +93,197 @@ export function useDetailsShowValues(): [
   const showValues: DetailsShowValues = raw === "value" ? "value" : "quantity";
   return [showValues, setRaw as (value: DetailsShowValues) => void];
 }
+
+const ALLOWED_PAGE_SIZES = [10, 20, 50, 100] as const;
+
+/** Parsers para paginação de tabelas na URL. */
+export const paginationParsers = {
+  page: parseAsInteger.withDefault(1),
+  pageSize: parseAsInteger.withDefault(10),
+} as const;
+
+function normalizePageSize(value: number): (typeof ALLOWED_PAGE_SIZES)[number] {
+  if (ALLOWED_PAGE_SIZES.includes(value as (typeof ALLOWED_PAGE_SIZES)[number])) {
+    return value as (typeof ALLOWED_PAGE_SIZES)[number];
+  }
+  return 10;
+}
+
+function normalizePage(page: number): number {
+  return Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+}
+
+/**
+ * Hook: página e tamanho da página na query string (DataTable).
+ * pageSize só aceita 10, 20, 50 ou 100; valores inválidos viram 10.
+ */
+export function usePaginationQueryState() {
+  const [params, setParams] = useQueryStates(paginationParsers);
+  const pageSize = normalizePageSize(params.pageSize);
+  const page = normalizePage(params.page);
+
+  const setPage = (next: number) => {
+    setParams({ page: normalizePage(next) });
+  };
+
+  const setPageSize = (next: number) => {
+    const size = normalizePageSize(next);
+    setParams({ pageSize: size, page: 1 });
+  };
+
+  /** skip/take para APIs estilo management (O2OTable). */
+  const skip = (page - 1) * pageSize;
+  const take = pageSize;
+
+  return {
+    page,
+    pageSize,
+    skip,
+    take,
+    setPage,
+    setPageSize,
+    setPagination: (u: { page?: number; pageSize?: number }) => {
+      const nextSize = u.pageSize !== undefined ? normalizePageSize(u.pageSize) : pageSize;
+      const nextPage =
+        u.page !== undefined
+          ? normalizePage(u.page)
+          : u.pageSize !== undefined
+            ? 1
+            : page;
+      setParams({
+        page: nextPage,
+        pageSize: nextSize,
+      });
+    },
+    raw: params,
+  };
+}
+
+const debtsPaginationParsers = {
+  debtsPage: parseAsInteger.withDefault(1),
+  debtsPageSize: parseAsInteger.withDefault(10),
+} as const;
+
+/** Paginação na URL para listagem de dívidas (`debtsPage`, `debtsPageSize`). */
+export function useDebtsPaginationQueryState() {
+  const [params, setParams] = useQueryStates(debtsPaginationParsers);
+  const pageSize = normalizePageSize(params.debtsPageSize);
+  const page = normalizePage(params.debtsPage);
+
+  return {
+    page,
+    pageSize,
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    setPagination: (u: { page?: number; pageSize?: number }) => {
+      const nextSize =
+        u.pageSize !== undefined ? normalizePageSize(u.pageSize) : pageSize;
+      const nextPage =
+        u.page !== undefined
+          ? normalizePage(u.page)
+          : u.pageSize !== undefined
+            ? 1
+            : page;
+      setParams({ debtsPage: nextPage, debtsPageSize: nextSize });
+    },
+    raw: params,
+  };
+}
+
+const searchOptions = {
+  history: "replace" as const,
+  scroll: false,
+  limitUrlUpdates: throttle(200),
+};
+
+function createDrilldownListQueryState<
+  const PK extends string,
+  const PSK extends string,
+>(
+  paginationParsers: Record<PK, ReturnType<typeof parseAsInteger.withDefault>> &
+    Record<PSK, ReturnType<typeof parseAsInteger.withDefault>>,
+  pageKey: PK,
+  pageSizeKey: PSK,
+  searchKey: string,
+  statusesKey: string,
+) {
+  return function useDrilldownListQueryState() {
+    const [params, setParams] = useQueryStates(paginationParsers);
+    const p = params as Record<string, number>;
+    const pageSize = normalizePageSize(p[pageSizeKey]);
+    const page = normalizePage(p[pageKey]);
+    const [search, setSearch] = useQueryState(
+      searchKey,
+      parseAsString.withDefault("").withOptions(searchOptions),
+    );
+    const [statuses, setStatuses] = useQueryState(
+      statusesKey,
+      parseAsArrayOf(parseAsInteger).withDefault([]),
+    );
+
+    const setPagination = (u: { page?: number; pageSize?: number }) => {
+      const nextSize =
+        u.pageSize !== undefined ? normalizePageSize(u.pageSize) : pageSize;
+      const nextPage =
+        u.page !== undefined
+          ? normalizePage(u.page)
+          : u.pageSize !== undefined
+            ? 1
+            : page;
+      setParams({ [pageKey]: nextPage, [pageSizeKey]: nextSize } as Record<PK | PSK, number>);
+    };
+
+    return {
+      page,
+      pageSize,
+      search,
+      setSearch,
+      statuses,
+      setStatuses,
+      setPagination,
+      raw: params,
+    };
+  };
+}
+
+const renegotiationDetailsPaginationParsers = {
+  rdPage: parseAsInteger.withDefault(1),
+  rdPageSize: parseAsInteger.withDefault(10),
+} as const;
+
+/** Paginação + busca + status na URL para `/debt-negotiation/renegotiation-details`. */
+export const useRenegotiationDetailsListQueryState = createDrilldownListQueryState(
+  renegotiationDetailsPaginationParsers,
+  "rdPage",
+  "rdPageSize",
+  "rdQ",
+  "rdStatuses",
+);
+
+const negotiatedDetailsPaginationParsers = {
+  ndPage: parseAsInteger.withDefault(1),
+  ndPageSize: parseAsInteger.withDefault(10),
+} as const;
+
+/** Paginação + busca + status para `/debt-negotiation/negotiated-details`. */
+export const useNegotiatedDetailsListQueryState = createDrilldownListQueryState(
+  negotiatedDetailsPaginationParsers,
+  "ndPage",
+  "ndPageSize",
+  "ndQ",
+  "ndStatuses",
+);
+
+const recoveredDetailsPaginationParsers = {
+  rcdPage: parseAsInteger.withDefault(1),
+  rcdPageSize: parseAsInteger.withDefault(10),
+} as const;
+
+/** Paginação + busca + status para `/debt-negotiation/recovered-details`. */
+export const useRecoveredDetailsListQueryState = createDrilldownListQueryState(
+  recoveredDetailsPaginationParsers,
+  "rcdPage",
+  "rcdPageSize",
+  "rcdQ",
+  "rcdStatuses",
+);

@@ -6,6 +6,8 @@ export const baseEnUS = {
   "app.topbar.importDebts": "Import debts",
   "app.topbar.preferences": "Preferences",
   "app.topbar.userMenu": "Open user menu",
+  "app.topbar.changeCompany": "Switch company",
+  "app.topbar.logout": "Log out",
   "app.preferences.title": "Preferences",
   "app.preferences.description":
     "Choose how the application should look for you. Your choices are saved in this browser.",
@@ -26,6 +28,7 @@ export const baseEnUS = {
   "app.notifications.markAllRead": "Mark all as read",
   "app.notifications.empty": "No notifications at the moment.",
   "app.notifications.loading": "Loading notifications...",
+  "common.back": "Back",
   "common.comingSoon": "Coming soon",
   "common.actions.cancel": "Cancel",
   "common.actions.previous": "Previous",

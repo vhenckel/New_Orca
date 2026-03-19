@@ -56,6 +56,32 @@
     --chart-3: 239 60% 90%;
     --chart-4: 239 40% 95%;
     --chart-5: 239 30% 98%;
+
+    /* Pipeline status badges (light) — tokens para substituir hex fixos */
+    --stage-green-fg: 100 49% 35%;
+    --stage-green-bg: 100 60% 97%;
+    --stage-green-border: 100 45% 78%;
+    --stage-red-fg: 0 72% 51%;
+    --stage-red-bg: 0 86% 97%;
+    --stage-red-border: 0 70% 88%;
+    --stage-blue-fg: 210 100% 45%;
+    --stage-blue-bg: 210 100% 97%;
+    --stage-blue-border: 210 90% 82%;
+    --stage-orange-fg: 28 100% 45%;
+    --stage-orange-bg: 35 100% 97%;
+    --stage-orange-border: 35 95% 82%;
+    --stage-purple-fg: 270 60% 45%;
+    --stage-purple-bg: 270 60% 97%;
+    --stage-purple-border: 270 50% 82%;
+    --stage-payment-confirm-fg: 0 70% 35%;
+    --stage-payment-confirm-bg: 0 90% 95%;
+    --stage-payment-confirm-border: 0 75% 82%;
+    --stage-prescribed-fg: 0 0% 46%;
+    --stage-prescribed-bg: 0 0% 96%;
+    --stage-prescribed-border: 0 0% 70%;
+    --stage-default-fg: 0 0% 38%;
+    --stage-default-bg: 0 0% 98%;
+    --stage-default-border: 0 0% 88%;
   }
 
   .dark {
@@ -91,6 +117,31 @@
     --chart-3: 239 60% 90%;
     --chart-4: 239 40% 95%;
     --chart-5: 239 30% 98%;
+
+    --stage-green-fg: 100 45% 65%;
+    --stage-green-bg: 100 25% 12%;
+    --stage-green-border: 100 30% 28%;
+    --stage-red-fg: 0 75% 65%;
+    --stage-red-bg: 0 35% 12%;
+    --stage-red-border: 0 40% 30%;
+    --stage-blue-fg: 210 90% 70%;
+    --stage-blue-bg: 210 40% 14%;
+    --stage-blue-border: 210 45% 32%;
+    --stage-orange-fg: 35 95% 60%;
+    --stage-orange-bg: 35 40% 12%;
+    --stage-orange-border: 35 45% 28%;
+    --stage-purple-fg: 270 55% 72%;
+    --stage-purple-bg: 270 35% 14%;
+    --stage-purple-border: 270 40% 30%;
+    --stage-payment-confirm-fg: 0 70% 65%;
+    --stage-payment-confirm-bg: 0 35% 14%;
+    --stage-payment-confirm-border: 0 40% 32%;
+    --stage-prescribed-fg: 0 0% 65%;
+    --stage-prescribed-bg: 0 0% 18%;
+    --stage-prescribed-border: 0 0% 35%;
+    --stage-default-fg: 0 0% 75%;
+    --stage-default-bg: 0 0% 16%;
+    --stage-default-border: 0 0% 30%;
   }
 }
 
