@@ -30,14 +30,20 @@ type StageTranslationKey = Extract<
 >;
 
 const COLOR_CLASSES: Record<StageColor, string> = {
-  green: "text-[#52c41a] bg-[#f6ffed] border border-[#b7eb8f]",
-  red: "text-[#ff4d4f] bg-[#fff2f0] border border-[#ffccc7]",
-  blue: "text-[#1890ff] bg-[#e6f7ff] border border-[#91d5ff]",
-  orange: "text-[#fa8c16] bg-[#fff7e6] border border-[#ffd591]",
-  purple: "text-[#722ed1] bg-[#f0e6ff] border border-[#d3adf7]",
-  "payment-confirm": "text-[#A8071A] bg-[#FDDCDC] border border-[#F5A5A5]",
-  prescribed: "text-[#9E9E9E] bg-[#9E9E9E1A] border border-[#9E9E9E]",
-  default: "text-[#666666] bg-[#fafafa] border border-[#d9d9d9]",
+  green:
+    "text-[hsl(var(--stage-green-fg))] bg-[hsl(var(--stage-green-bg))] border border-[hsl(var(--stage-green-border))]",
+  red: "text-[hsl(var(--stage-red-fg))] bg-[hsl(var(--stage-red-bg))] border border-[hsl(var(--stage-red-border))]",
+  blue: "text-[hsl(var(--stage-blue-fg))] bg-[hsl(var(--stage-blue-bg))] border border-[hsl(var(--stage-blue-border))]",
+  orange:
+    "text-[hsl(var(--stage-orange-fg))] bg-[hsl(var(--stage-orange-bg))] border border-[hsl(var(--stage-orange-border))]",
+  purple:
+    "text-[hsl(var(--stage-purple-fg))] bg-[hsl(var(--stage-purple-bg))] border border-[hsl(var(--stage-purple-border))]",
+  "payment-confirm":
+    "text-[hsl(var(--stage-payment-confirm-fg))] bg-[hsl(var(--stage-payment-confirm-bg))] border border-[hsl(var(--stage-payment-confirm-border))]",
+  prescribed:
+    "text-[hsl(var(--stage-prescribed-fg))] bg-[hsl(var(--stage-prescribed-bg))] border border-[hsl(var(--stage-prescribed-border))]",
+  default:
+    "text-[hsl(var(--stage-default-fg))] bg-[hsl(var(--stage-default-bg))] border border-[hsl(var(--stage-default-border))]",
 };
 
 const STAGE_MAP: Array<{ names: string[]; slug: StageSlug; color: StageColor }> = [

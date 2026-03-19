@@ -15,6 +15,10 @@ export interface AppRouteDefinition {
   requiresAuth?: boolean;
   /** Nomes de permissão (qualquer uma habilitada). Se vazio/undefined, não checa permissão. */
   requiredPermissions?: string[];
+  /** TopBar: período (datas) na URL para o módulo. */
+  showDebtNegotiationDateRangeInTopBar?: boolean;
+  /** TopBar: atalho importar dívidas. */
+  showImportDebtsInTopBar?: boolean;
 }
 
 export interface AppModuleDefinition {

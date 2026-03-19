@@ -6,6 +6,9 @@ import { ContactsPage } from "@/modules/debt-negotiation/pages/ContactsPage";
 import { DashboardPage } from "@/modules/debt-negotiation/pages/DashboardPage";
 import { DebtsPage } from "@/modules/debt-negotiation/pages/DebtsPage";
 import { ImportDebtsWizardPage } from "@/modules/debt-negotiation/pages/ImportDebtsWizardPage";
+import { NegotiatedDetailsPage } from "@/modules/debt-negotiation/pages/NegotiatedDetailsPage";
+import { RecoveredDetailsPage } from "@/modules/debt-negotiation/pages/RecoveredDetailsPage";
+import { RenegotiationDetailsPage } from "@/modules/debt-negotiation/pages/RenegotiationDetailsPage";
 
 export const debtNegotiationModule: AppModuleDefinition = {
   key: "debt-negotiation",
@@ -20,6 +23,8 @@ export const debtNegotiationModule: AppModuleDefinition = {
       descriptionKey: "modules.debtNegotiation.routes.dashboard.description",
       icon: LayoutDashboard,
       element: <DashboardPage />,
+      showDebtNegotiationDateRangeInTopBar: true,
+      showImportDebtsInTopBar: true,
     },
     {
       path: "/debt-negotiation/debts",
@@ -27,6 +32,8 @@ export const debtNegotiationModule: AppModuleDefinition = {
       descriptionKey: "modules.debtNegotiation.routes.debts.description",
       icon: FileText,
       element: <DebtsPage />,
+      showDebtNegotiationDateRangeInTopBar: true,
+      showImportDebtsInTopBar: true,
     },
     {
       path: "/debt-negotiation/debts/import",
@@ -50,6 +57,33 @@ export const debtNegotiationModule: AppModuleDefinition = {
       icon: Users,
       element: <ContactDetailPage />,
       hideInSidebar: true,
+    },
+    {
+      path: "/debt-negotiation/renegotiation-details",
+      labelKey: "pages.debtNegotiation.detail.renegotiation.title",
+      descriptionKey: "pages.debtNegotiation.detail.renegotiation.subtitle",
+      icon: FileText,
+      element: <RenegotiationDetailsPage />,
+      hideInSidebar: true,
+      showDebtNegotiationDateRangeInTopBar: true,
+    },
+    {
+      path: "/debt-negotiation/negotiated-details",
+      labelKey: "pages.debtNegotiation.detail.negotiated.title",
+      descriptionKey: "pages.debtNegotiation.detail.negotiated.subtitle",
+      icon: FileText,
+      element: <NegotiatedDetailsPage />,
+      hideInSidebar: true,
+      showDebtNegotiationDateRangeInTopBar: true,
+    },
+    {
+      path: "/debt-negotiation/recovered-details",
+      labelKey: "pages.debtNegotiation.detail.recovered.title",
+      descriptionKey: "pages.debtNegotiation.detail.recovered.subtitle",
+      icon: FileText,
+      element: <RecoveredDetailsPage />,
+      hideInSidebar: true,
+      showDebtNegotiationDateRangeInTopBar: true,
     },
   ],
 };

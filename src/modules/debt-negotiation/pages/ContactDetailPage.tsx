@@ -38,7 +38,7 @@ import {
   useContactCampaigns,
 } from "@/modules/debt-negotiation/hooks";
 import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
-import { StatusBadge } from "@/modules/debt-negotiation/utils/StatusBadge";
+import { StatusBadge } from "@/modules/debt-negotiation/components/StatusBadge";
 import type { ContactDetails, ContactActivity } from "@/modules/debt-negotiation/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { cn } from "@/shared/lib/utils";

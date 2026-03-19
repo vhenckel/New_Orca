@@ -1,28 +1,30 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchDebtDetails } from "@/modules/debt-negotiation/services/debt-details";
+import { fetchRenegotiationViewList } from "@/modules/debt-negotiation/services/renegotiation-view-list";
+import type { RenegotiationViewListVariant } from "@/modules/debt-negotiation/services/renegotiation-view-list";
 import { getCurrentCompanyId } from "@/shared/auth/current-company";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-export interface UseDebtDetailsParams {
+export interface UseRenegotiationDrilldownListParams {
   startDate: string;
   endDate: string;
   page?: number;
-  /** Linhas por página (API take). Default 10. */
   pageSize?: number;
   companyId?: number;
   orderBy?: string;
   orderByDirection?: "ASC" | "DESC";
   statuses?: number[];
-  /** Texto digitado no campo de busca (nome / documento). */
   search?: string;
 }
 
-export function useDebtDetails(params: UseDebtDetailsParams) {
+export function useRenegotiationDrilldownList(
+  variant: RenegotiationViewListVariant,
+  params: UseRenegotiationDrilldownListParams,
+) {
   const { startDate, endDate } = params;
   const page = params.page ?? 1;
-  const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE;
-  const companyId = params?.companyId ?? getCurrentCompanyId();
+  const pageSize = params.pageSize ?? DEFAULT_PAGE_SIZE;
+  const companyId = params.companyId ?? getCurrentCompanyId();
   const skip = (page - 1) * pageSize;
   const rawSearch = params?.search?.trim() ?? "";
   const hasSearch = rawSearch.length > 0;
@@ -30,7 +32,8 @@ export function useDebtDetails(params: UseDebtDetailsParams) {
   return useQuery({
     queryKey: [
       "renegotiation",
-      "debt-details",
+      "view-list",
+      variant,
       startDate,
       endDate,
       companyId,
@@ -42,19 +45,18 @@ export function useDebtDetails(params: UseDebtDetailsParams) {
       hasSearch ? rawSearch : undefined,
     ],
     queryFn: () =>
-      fetchDebtDetails({
+      fetchRenegotiationViewList(variant, {
         take: pageSize,
         skip,
         startDate,
         endDate,
         companyId,
-        orderBy: params?.orderBy ?? "contactName",
-        orderByDirection: params?.orderByDirection ?? "DESC",
-        statuses: params?.statuses?.length ? params.statuses : undefined,
+        orderBy: params.orderBy ?? "contactName",
+        orderByDirection: params.orderByDirection ?? "DESC",
+        statuses: params.statuses?.length ? params.statuses : undefined,
+        /** API aceita nome ou documento no mesmo termo de busca. */
         name: hasSearch ? rawSearch : undefined,
         document: hasSearch ? rawSearch : undefined,
       }),
   });
 }
-
-export { DEFAULT_PAGE_SIZE as DEBT_DETAILS_PAGE_SIZE };
