@@ -111,6 +111,20 @@ export function PayoutDetailPage() {
       totalNet: currencyFormatter.format(totalNet),
     };
   }, [currencyFormatter, data?.filteredItemsSummary?.netAmount, data?.filteredItemsSummary?.totalAmount, data?.netAmount, data?.totalAmount]);
+  const paginationLabels = useMemo(
+    () => ({
+      previous: t("common.pagination.previous"),
+      next: t("common.pagination.next"),
+      rowsPerPage: locale === "pt-BR" ? "Linhas por página" : "Rows per page",
+      range: (from: number, to: number, total: number) => {
+        if (locale === "pt-BR") {
+          return `${from}–${to} de ${total} ${total === 1 ? "item" : "itens"}`;
+        }
+        return `${from}-${to} of ${total} ${total === 1 ? "item" : "items"}`;
+      },
+    }),
+    [locale, t],
+  );
   const backToListUrl = useMemo(() => {
     const searchParams = new URLSearchParams({
       payoutMonth: String(month),
@@ -265,6 +279,7 @@ export function PayoutDetailPage() {
           emptyMessage={t("pages.finance.payoutDetail.emptyList")}
           hidePagination={(data?.itemsMeta.total ?? 0) === 0 && !isPending}
           tableContainerClassName="border-0 rounded-none shadow-none"
+          paginationLabels={paginationLabels}
         />
       </div>
 

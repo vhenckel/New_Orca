@@ -36,6 +36,8 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.contactDetail.pixEmpty": "No Pix key registered.",
   "pages.debtNegotiation.contactDetail.qualification": "Contact qualification",
   "pages.debtNegotiation.contactDetail.qualification.birthDate": "Birth date",
+  "pages.debtNegotiation.contactDetail.whatsapps": "WhatsApp(s)",
+  "pages.debtNegotiation.contactDetail.blocklist": "Blocklist",
   "pages.debtNegotiation.contactDetail.qualification.gender": "Gender",
   "pages.debtNegotiation.contactDetail.qualification.maritalStatus": "Marital status",
   "pages.debtNegotiation.contactDetail.qualification.schooling": "Schooling",
@@ -128,6 +130,9 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.detail.updatedDebtAmount": "Updated debt amount",
   "pages.debtNegotiation.debts.detail.negotiatedValue": "Negotiated value",
   "pages.debtNegotiation.debts.detail.recoveredValue": "Recovered value",
+  "pages.debtNegotiation.debts.detail.additionalInfo": "Additional info",
+  "pages.debtNegotiation.debts.detail.recoveredProgress": "{percent}% recovered",
+  "pages.debtNegotiation.debts.detail.installmentsPaid": "{paid}/{total} paid",
   "pages.debtNegotiation.debts.detail.partialPaidOverdueAlert":
     "There are paid installments, but overdue installments are still open.",
   "pages.debtNegotiation.debts.detail.negotiationSummary": "Negotiation summary",
@@ -140,6 +145,15 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.addPayment.observations": "Observations",
   "pages.debtNegotiation.debts.addPayment.observationsPlaceholder": "Enter observations",
   "pages.debtNegotiation.debts.addPayment.confirm": "Confirm",
+  "pages.debtNegotiation.debts.addPayment.toast.sending":
+    "Sending debt update…",
+  "pages.debtNegotiation.debts.addPayment.toast.success":
+    "Debt update completed successfully.",
+  "pages.debtNegotiation.debts.addPayment.toast.error":
+    "Failed to update the debt. Please try again.",
+  "pages.debtNegotiation.debts.addPayment.loading": "Loading...",
+  "pages.debtNegotiation.debts.addPayment.errorLoadingDetail":
+    "Error loading debt details.",
   "pages.debtNegotiation.debts.informPayment.title": "Inform payment",
   "pages.debtNegotiation.debts.informPayment.instruction":
     "Mark the debt as paid after client settlement",
@@ -156,6 +170,27 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.informPayment.status.overdue": "Overdue",
   "pages.debtNegotiation.debts.informPayment.close": "Close",
   "pages.debtNegotiation.debts.informPayment.processPayment": "Process payment",
+  "pages.debtNegotiation.debts.informPayment.toast.sending":
+    "Sending debt update...",
+  "pages.debtNegotiation.debts.informPayment.toast.success":
+    "Payment informed successfully.",
+  "pages.debtNegotiation.debts.informPayment.toast.error":
+    "Failed to inform payment. Please try again.",
+  "pages.debtNegotiation.debts.informPayment.toast.selectOne":
+    "Select at least one installment.",
+  "pages.debtNegotiation.debts.informPayment.confirmTitle": "Confirm payment",
+  "pages.debtNegotiation.debts.informPayment.continue": "Continue",
+  "pages.debtNegotiation.debts.informPayment.selectedInstallmentsHeading":
+    "Selected installments",
+  "pages.debtNegotiation.debts.informPayment.amountPerInstallment":
+    "Amount per installment",
+  "pages.debtNegotiation.debts.informPayment.totalToPay": "Total amount to pay",
+  "pages.debtNegotiation.debts.informPayment.paymentDateLabel":
+    "Payment date",
+  "pages.debtNegotiation.debts.informPayment.paymentDateRequiredHint":
+    "Required when the debt was settled.",
+  "pages.debtNegotiation.debts.informPayment.toast.paymentDateRequired":
+    "Enter the payment date to confirm settlement.",
   "pages.debtNegotiation.debts.status.criado": "Created",
   "pages.debtNegotiation.debts.status.cancelado": "Cancelled",
   "pages.debtNegotiation.debts.status.ignorado": "Ignored",
@@ -174,6 +209,17 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.status.prescrita": "Expired",
   "pages.debtNegotiation.debts.status.atrasado": "Overdue",
   "pages.debtNegotiation.debts.status.outros": "Other",
+  "pages.debtNegotiation.debts.manageStatus.title": "Manage debt status",
+  "pages.debtNegotiation.debts.manageStatus.alter": "Alter",
+  "pages.debtNegotiation.debts.manageStatus.currentStatus": "Current status",
+  "pages.debtNegotiation.debts.manageStatus.newStatus": "New status",
+  "pages.debtNegotiation.debts.manageStatus.reasonOptional": "Reason (optional)",
+  "pages.debtNegotiation.debts.manageStatus.reasonPlaceholder": "Enter the reason for the change (optional)",
+  "pages.debtNegotiation.debts.manageStatus.selectPlaceholder": "Select a status",
+  "pages.debtNegotiation.debts.manageStatus.save": "Save",
+  "pages.debtNegotiation.debts.manageStatus.toast.success": "Debt status updated successfully.",
+  "pages.debtNegotiation.debts.manageStatus.toast.noChange": "No changes were applied.",
+  "pages.debtNegotiation.debts.manageStatus.toast.error": "Failed to update the debt status. Please try again.",
   "pages.debtNegotiation.importDebts.breadcrumb": "Debt Renegotiation / Import Debts",
   "pages.debtNegotiation.importDebts.title": "Import Debts",
   "pages.debtNegotiation.importDebts.subtitle":

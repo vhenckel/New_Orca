@@ -11,6 +11,7 @@ export const collectionsModule: AppModuleDefinition = {
   titleKey: "modules.collections.title",
   descriptionKey: "modules.collections.description",
   icon: Receipt,
+  hideInSidebar: true,
   routes: [
     {
       path: "/collections",

@@ -50,51 +50,57 @@ export function AppSidebar({
               {t("app.sidebar.modules")}
             </p>
           )}
-          {modules.map((module) => (
-            <NavLink
-              key={module.key}
-              to={module.basePath}
-              title={collapsed ? t(module.titleKey) : undefined}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                  collapsed && "justify-center px-0",
-                  (isActive || currentModule.key === module.key) &&
-                    "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
-                )
-              }
-            >
-              <module.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">{t(module.titleKey)}</span>}
-            </NavLink>
-          ))}
+          {modules
+            .filter((module) => !module.hideInSidebar)
+            .map((module) => (
+              <NavLink
+                key={module.key}
+                to={module.basePath}
+                title={collapsed ? t(module.titleKey) : undefined}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                    collapsed && "justify-center px-0",
+                    (isActive || currentModule.key === module.key) &&
+                      "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
+                  )
+                }
+              >
+                <module.icon className="h-4 w-4 shrink-0" />
+                {!collapsed && <span className="truncate">{t(module.titleKey)}</span>}
+              </NavLink>
+            ))}
         </div>
 
-        <div className="mt-6 space-y-1">
-          {!collapsed && (
-            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              {t(currentModule.titleKey)}
-            </p>
-          )}
-          {currentModule.routes.filter((route) => !route.hideInSidebar).map((route) => (
-            <NavLink
-              key={route.path}
-              to={route.path}
-              end={route.path === currentModule.basePath}
-              title={collapsed ? t(route.labelKey) : undefined}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                  collapsed && "justify-center px-0",
-                  isActive && "bg-accent text-foreground",
-                )
-              }
-            >
-              <route.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">{t(route.labelKey)}</span>}
-            </NavLink>
-          ))}
-        </div>
+        {!currentModule.hideInSidebar && (
+          <div className="mt-6 space-y-1">
+            {!collapsed && (
+              <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                {t(currentModule.titleKey)}
+              </p>
+            )}
+            {currentModule.routes
+              .filter((route) => !route.hideInSidebar)
+              .map((route) => (
+                <NavLink
+                  key={route.path}
+                  to={route.path}
+                  end={route.path === currentModule.basePath}
+                  title={collapsed ? t(route.labelKey) : undefined}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                      collapsed && "justify-center px-0",
+                      isActive && "bg-accent text-foreground",
+                    )
+                  }
+                >
+                  <route.icon className="h-4 w-4 shrink-0" />
+                  {!collapsed && <span className="truncate">{t(route.labelKey)}</span>}
+                </NavLink>
+              ))}
+          </div>
+        )}
       </div>
 
       <div className="border-t border-border p-3">

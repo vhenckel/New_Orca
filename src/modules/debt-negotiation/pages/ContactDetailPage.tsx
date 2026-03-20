@@ -38,7 +38,7 @@ import {
   useContactCampaigns,
 } from "@/modules/debt-negotiation/hooks";
 import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
-import { StatusBadge } from "@/modules/debt-negotiation/components/StatusBadge";
+import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
 import type { ContactDetails, ContactActivity } from "@/modules/debt-negotiation/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { cn } from "@/shared/lib/utils";
@@ -88,7 +88,7 @@ function formatDateTime(iso: string | null | undefined): string {
   });
 }
 
-/** Mapeia status da API de dívidas para o nome de estágio usado pelo StatusBadge. */
+/** Mapeia status da API de dívidas para o nome de estágio usado pelo badge. */
 function debtStatusToStageName(apiStatus: string): string {
   const map: Record<string, string> = {
     NEGOTIATED_WITHOUT_PAYMENT: "negociado sem pagamento",
@@ -182,7 +182,7 @@ export function ContactDetailPage() {
                 <h1 className="text-xl font-semibold text-foreground">{detailsPending ? "…" : name}</h1>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   {details?.lastPipelineStage && (
-                    <StatusBadge stageName={details.lastPipelineStage} />
+                    <NegotiationStatusBadge stageName={details.lastPipelineStage} />
                   )}
                   <span className="text-xs text-muted-foreground">
                     {t("pages.debtNegotiation.contactDetail.lifecycleStage")}
@@ -567,7 +567,7 @@ export function ContactDetailPage() {
                         }).format(debt.totalAmount)}
                       </span>
                       <div className="flex items-center gap-2">
-                        <StatusBadge stageName={debtStatusToStageName(debt.status)} />
+                        <NegotiationStatusBadge stageName={debtStatusToStageName(debt.status)} />
                       </div>
                       <span className="text-muted-foreground">
                         {t("pages.debtNegotiation.contactDetail.renegotiationDate")}: {formatDate(debt.updatedAt)}

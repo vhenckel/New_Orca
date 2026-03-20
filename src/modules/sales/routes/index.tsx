@@ -11,6 +11,7 @@ export const salesModule: AppModuleDefinition = {
   titleKey: "modules.sales.title",
   descriptionKey: "modules.sales.description",
   icon: ShoppingCart,
+  hideInSidebar: true,
   routes: [
     {
       path: "/sales",

@@ -7,6 +7,13 @@ export interface ConfirmDealPayload {
   observation: string;
 }
 
+export interface ConfirmInstallmentPaymentPayload {
+  confirmed: boolean;
+  observation: string;
+  paidAt?: string;
+  items: Array<{ id: number }>;
+}
+
 export interface ConfirmDealResult {
   success: boolean;
   message: string;
@@ -18,6 +25,17 @@ export async function confirmDeal(
 ): Promise<ConfirmDealResult> {
   return spotJson<ConfirmDealResult>(`${RENEGOTIATION_PATH}/${renegotiationId}/deal`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function confirmInstallmentPayment(
+  renegotiationId: string,
+  payload: ConfirmInstallmentPaymentPayload
+): Promise<ConfirmDealResult> {
+  return spotJson<ConfirmDealResult>(`${RENEGOTIATION_PATH}/${renegotiationId}/deal`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });

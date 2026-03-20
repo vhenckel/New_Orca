@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { PayoutChangesModal } from "@/modules/finance/components/PayoutChangesModal";
+import { PayoutChangesDrawer } from "@/modules/finance/components/PayoutChangesDrawer";
 import { PayoutStatusBadge } from "@/modules/finance/components/PayoutStatusBadge";
 import { usePayoutList } from "@/modules/finance/hooks/usePayoutList";
 import { usePayoutListPaginationQueryState, usePayoutMonthYearQueryState } from "@/modules/finance/lib/payout-query-state";
@@ -41,7 +41,7 @@ function SortHeader({
 }
 
 export function PayoutsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const navigate = useNavigate();
   const { canViewPage, canViewDetails, canEdit, canViewReconciliation } = usePayoutPermissions();
   const { month, year, setMonthYear } = usePayoutMonthYearQueryState();
@@ -167,6 +167,20 @@ export function PayoutsPage() {
     ],
     [canEdit, canViewDetails, canViewReconciliation, navigate, t, toggleSort],
   );
+  const paginationLabels = useMemo(
+    () => ({
+      previous: t("common.pagination.previous"),
+      next: t("common.pagination.next"),
+      rowsPerPage: locale === "pt-BR" ? "Linhas por página" : "Rows per page",
+      range: (from: number, to: number, total: number) => {
+        if (locale === "pt-BR") {
+          return `${from}–${to} de ${total} ${total === 1 ? "item" : "itens"}`;
+        }
+        return `${from}-${to} of ${total} ${total === 1 ? "item" : "items"}`;
+      },
+    }),
+    [locale, t],
+  );
 
   if (!canViewPage) {
     return (
@@ -230,10 +244,11 @@ export function PayoutsPage() {
           emptyMessage={t("pages.finance.payouts.emptyList")}
           hidePagination={(data?.meta.total ?? 0) === 0 && !isPending}
           tableContainerClassName="border-0 rounded-none shadow-none"
+          paginationLabels={paginationLabels}
         />
       </div>
 
-      <PayoutChangesModal
+      <PayoutChangesDrawer
         open={!!modalPayout}
         payout={modalPayout}
         readOnly={!canEdit}
