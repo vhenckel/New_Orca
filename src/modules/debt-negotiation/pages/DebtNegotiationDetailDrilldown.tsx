@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 
 import { AddPaymentFlowDialog } from "@/modules/debt-negotiation/components/AddPaymentFlowDialog";
@@ -20,25 +19,10 @@ import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
 import { useResetPaginationOnDateRangeChange } from "@/shared/hooks/useResetPaginationOnDateRangeChange";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useI18n } from "@/shared/i18n/useI18n";
-import {
-  debtNegotiationPathWithDateRange,
-  useDebtNegotiationDateRangeQueryState,
-} from "@/shared/lib/nuqs-filters";
+import { useDebtNegotiationDateRangeQueryState } from "@/shared/lib/nuqs-filters";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 
 export type DebtNegotiationDetailVariant = RenegotiationViewListVariant;
-
-const TITLE_KEYS: Record<DebtNegotiationDetailVariant, string> = {
-  renegotiation: "pages.debtNegotiation.detail.renegotiation.title",
-  negotiated: "pages.debtNegotiation.detail.negotiated.title",
-  recovered: "pages.debtNegotiation.detail.recovered.title",
-};
-
-const SUBTITLE_KEYS: Record<DebtNegotiationDetailVariant, string> = {
-  renegotiation: "pages.debtNegotiation.detail.renegotiation.subtitle",
-  negotiated: "pages.debtNegotiation.detail.negotiated.subtitle",
-  recovered: "pages.debtNegotiation.detail.recovered.subtitle",
-};
 
 export interface DebtNegotiationDetailListState {
   page: number;
@@ -58,7 +42,6 @@ export function DebtNegotiationDetailDrilldown({
   listState: DebtNegotiationDetailListState;
 }) {
   const { t } = useI18n();
-  const navigate = useNavigate();
   const { page, pageSize, setPagination, search, setSearch, statuses, setStatuses } = listState;
   const debouncedSearch = useDebouncedValue(search, 400);
   const prevSearchRef = useRef(debouncedSearch);
@@ -152,15 +135,31 @@ export function DebtNegotiationDetailDrilldown({
 
   const totalRows = data?.total ?? 0;
 
+  const pageTitle = useMemo(() => {
+    switch (variant) {
+      case "renegotiation":
+        return {
+          title: t("pages.debtNegotiation.detail.renegotiation.title"),
+          subtitle: t("pages.debtNegotiation.detail.renegotiation.subtitle"),
+        };
+      case "negotiated":
+        return {
+          title: t("pages.debtNegotiation.detail.negotiated.title"),
+          subtitle: t("pages.debtNegotiation.detail.negotiated.subtitle"),
+        };
+      case "recovered":
+        return {
+          title: t("pages.debtNegotiation.detail.recovered.title"),
+          subtitle: t("pages.debtNegotiation.detail.recovered.subtitle"),
+        };
+    }
+  }, [variant, t]);
+
   return (
     <DashboardPageLayout
-      title={t(TITLE_KEYS[variant])}
-      subtitle={t(SUBTITLE_KEYS[variant])}
-      onBack={() =>
-        void navigate(
-          debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate }),
-        )
-      }
+      showPageHeader
+      title={pageTitle.title}
+      subtitle={pageTitle.subtitle}
       kpiItems={kpiItems}
       isLoadingKpis={boxesPending}
     >

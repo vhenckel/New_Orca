@@ -136,8 +136,9 @@ export function DebtsPage() {
 
   return (
     <DashboardPageLayout
-      title={t("pages.debtNegotiation.debts.pageTitle")}
-      subtitle={t("pages.debtNegotiation.debts.subtitle")}
+      showPageHeader
+      title={t("pages.debtNegotiation.debts.title")}
+      subtitle={t("pages.debtNegotiation.debts.description")}
       kpiItems={[
         {
           title: t("pages.debtNegotiation.debts.totalDebt"),

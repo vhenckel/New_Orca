@@ -26,6 +26,7 @@ import type { TranslationKey } from "@/shared/i18n/config";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useNavigate } from "react-router-dom";
 
+import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import {
   debtNegotiationPathWithDateRange,
   useDebtNegotiationDateRangeQueryState,
@@ -255,7 +256,11 @@ export function DashboardPage() {
         ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <DashboardPageLayout
+      showPageHeader
+      title={t("modules.debtNegotiation.routes.dashboard.label")}
+      subtitle={t("modules.debtNegotiation.routes.dashboard.description")}
+    >
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="size-4" />
@@ -308,6 +313,6 @@ export function DashboardPage() {
         <NegotiationFunnel />
         <ActivityFeed />
       </div>
-    </div>
+    </DashboardPageLayout>
   );
 }

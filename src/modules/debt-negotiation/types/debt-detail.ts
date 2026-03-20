@@ -17,10 +17,17 @@ export interface DebtDetailDeal {
 /** Resposta da API GET /trinity/renegotiation/:id/details (detalhe de uma dívida). */
 export interface DebtDetailResponse {
   renegotiationId: string;
-  contactId: string;
+  contactId: string | number;
   contactName: string;
-  contactCpf: string;
-  contactCnpj: string;
+  contactCpf: string | null;
+  contactCnpj: string | null;
+  contactBirthDate: string | null;
+  contactWhatsapps: Array<{
+    formattedNumber: string | null;
+    originalNumber: string;
+    isInBlacklist: boolean;
+    isActiveNumber: boolean;
+  }> | null;
   pipelineStageId: number;
   pipelineStageName: string;
   debtAge: number;

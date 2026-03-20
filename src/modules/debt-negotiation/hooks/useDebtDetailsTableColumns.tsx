@@ -2,11 +2,15 @@ import { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DollarSign, Eye, MessageCircle } from "lucide-react";
 
-import { StatusBadge } from "@/modules/debt-negotiation/components/StatusBadge";
+import {
+  DEBT_NEGOTIATION_STATUS_BADGE_WIDTH_PX,
+  NegotiationStatusBadge,
+} from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
 import { isRecoveredPipelineStage } from "@/modules/debt-negotiation/constants/pipeline-stages";
 import type { DebtDetailsItem } from "@/modules/debt-negotiation/types/debt-details";
 import {
   formatCnpj,
+  formatCpf,
   formatDebtAmountString,
 } from "@/modules/debt-negotiation/utils/debt-list-formatters";
 import type { TranslationKey } from "@/shared/i18n/config";
@@ -97,7 +101,7 @@ export function useDebtDetailsTableColumns(options: {
                 {r.contactCnpj && r.contactCnpj !== "0"
                   ? `CNPJ ${formatCnpj(r.contactCnpj)}`
                   : r.contactCpf && r.contactCpf !== "0"
-                    ? `CPF ${r.contactCpf}`
+                    ? `CPF ${formatCpf(r.contactCpf)}`
                     : "-"}
               </span>
             </div>
@@ -113,21 +117,20 @@ export function useDebtDetailsTableColumns(options: {
       },
       {
         id: "status",
-        size: 140,
-        minSize: 80,
-        maxSize: 200,
+        size: DEBT_NEGOTIATION_STATUS_BADGE_WIDTH_PX,
+        minSize: DEBT_NEGOTIATION_STATUS_BADGE_WIDTH_PX,
+        maxSize: DEBT_NEGOTIATION_STATUS_BADGE_WIDTH_PX,
         header: () => (
-          <span className="block min-w-[80px] max-w-[200px]">
+          <span className="block w-full">
             {t("pages.debtNegotiation.debts.col.status")}
           </span>
         ),
         cell: ({ row }) => (
-          <div className="w-full min-w-[80px] max-w-[200px]">
-            <StatusBadge
+          <div className="w-full">
+            <NegotiationStatusBadge
               stageName={row.original.pipelineStageName}
               showAlert={row.original.isOverdue}
               alertMessage={t("pages.debtNegotiation.debts.detail.partialPaidOverdueAlert")}
-              columnWidthClamp={{ min: 80, max: 200 }}
             />
           </div>
         ),
@@ -142,10 +145,10 @@ export function useDebtDetailsTableColumns(options: {
       {
         accessorKey: "debtAmount",
         header: () => (
-          <span className="block text-right">{t("pages.debtNegotiation.debts.col.debtAmount")}</span>
+          <span className="block text-left">{t("pages.debtNegotiation.debts.col.debtAmount")}</span>
         ),
         cell: ({ getValue }) => (
-          <div className="text-right font-medium tabular-nums">
+          <div className="font-medium tabular-nums">
             {formatDebtAmountString(String(getValue()))}
           </div>
         ),
@@ -153,12 +156,12 @@ export function useDebtDetailsTableColumns(options: {
       {
         accessorKey: "negotiatedValue",
         header: () => (
-          <span className="block text-right">
+          <span className="block text-left">
             {t("pages.debtNegotiation.debts.col.negotiatedValue")}
           </span>
         ),
         cell: ({ getValue }) => (
-          <div className="text-right text-muted-foreground tabular-nums">
+          <div className="text-muted-foreground tabular-nums">
             {formatDebtAmountString(getValue() as string | null)}
           </div>
         ),
@@ -166,12 +169,12 @@ export function useDebtDetailsTableColumns(options: {
       {
         accessorKey: "recoveredValue",
         header: () => (
-          <span className="block text-right">
+          <span className="block text-left">
             {t("pages.debtNegotiation.debts.col.recoveredValue")}
           </span>
         ),
         cell: ({ getValue }) => (
-          <div className="text-right text-muted-foreground tabular-nums">
+          <div className="text-muted-foreground tabular-nums">
             {formatDebtAmountString(getValue() as string | null)}
           </div>
         ),

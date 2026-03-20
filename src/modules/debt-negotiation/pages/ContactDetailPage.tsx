@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useState, useCallback } from "react";
 import {
   Award,
@@ -16,6 +16,7 @@ import {
   Send,
   User,
 } from "lucide-react";
+import { formatCpf } from "@/modules/debt-negotiation/utils/debt-list-formatters";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
@@ -38,12 +39,11 @@ import {
   useContactCampaigns,
 } from "@/modules/debt-negotiation/hooks";
 import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
-import { StatusBadge } from "@/modules/debt-negotiation/components/StatusBadge";
+import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
 import type { ContactDetails, ContactActivity } from "@/modules/debt-negotiation/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { cn } from "@/shared/lib/utils";
-
-const ROUTE_CONTACTS = "/debt-negotiation/contacts";
+import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 
 type ActivityFilter = "all" | "campaigns" | "collection" | "bot";
 
@@ -88,7 +88,7 @@ function formatDateTime(iso: string | null | undefined): string {
   });
 }
 
-/** Mapeia status da API de dívidas para o nome de estágio usado pelo StatusBadge. */
+/** Mapeia status da API de dívidas para o nome de estágio usado pelo badge. */
 function debtStatusToStageName(apiStatus: string): string {
   const map: Record<string, string> = {
     NEGOTIATED_WITHOUT_PAYMENT: "negociado sem pagamento",
@@ -155,22 +155,22 @@ export function ContactDetailPage() {
 
   if (id == null || !validId) {
     return (
-      <div className="space-y-4">
-        <Link to={ROUTE_CONTACTS} className="text-sm text-primary underline-offset-4 hover:underline">
-          ← {t("pages.debtNegotiation.contactDetail.backToContacts")}
-        </Link>
+      <DashboardPageLayout
+        showPageHeader
+        title={t("pages.debtNegotiation.contactDetail.detailsTitle")}
+        subtitle={t("pages.debtNegotiation.contactDetail.detailsDescription")}
+      >
         <p className="text-sm text-muted-foreground">ID de contato inválido.</p>
-      </div>
+      </DashboardPageLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Link to={ROUTE_CONTACTS} className="text-sm text-primary underline-offset-4 hover:underline">
-        ← {t("pages.debtNegotiation.contactDetail.backToContacts")}
-      </Link>
-
-      {/* Header do contato */}
+    <DashboardPageLayout
+      showPageHeader
+      title={t("pages.debtNegotiation.contactDetail.detailsTitle")}
+      subtitle={t("pages.debtNegotiation.contactDetail.detailsDescription")}
+    >
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -182,7 +182,7 @@ export function ContactDetailPage() {
                 <h1 className="text-xl font-semibold text-foreground">{detailsPending ? "…" : name}</h1>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   {details?.lastPipelineStage && (
-                    <StatusBadge stageName={details.lastPipelineStage} />
+                    <NegotiationStatusBadge stageName={details.lastPipelineStage} />
                   )}
                   <span className="text-xs text-muted-foreground">
                     {t("pages.debtNegotiation.contactDetail.lifecycleStage")}
@@ -222,8 +222,8 @@ export function ContactDetailPage() {
               </span>
             )}
             {details?.cpf && (
-              <span className="flex items-center gap-1">
-                {details.cpf}
+              <span className="flex items-center gap-1 font-mono">
+                {formatCpf(details.cpf)}
                 <CopyButton value={details.cpf} />
               </span>
             )}
@@ -567,7 +567,7 @@ export function ContactDetailPage() {
                         }).format(debt.totalAmount)}
                       </span>
                       <div className="flex items-center gap-2">
-                        <StatusBadge stageName={debtStatusToStageName(debt.status)} />
+                        <NegotiationStatusBadge stageName={debtStatusToStageName(debt.status)} />
                       </div>
                       <span className="text-muted-foreground">
                         {t("pages.debtNegotiation.contactDetail.renegotiationDate")}: {formatDate(debt.updatedAt)}
@@ -647,6 +647,6 @@ export function ContactDetailPage() {
         open={conversationOpen}
         onOpenChange={setConversationOpen}
       />
-    </div>
+    </DashboardPageLayout>
   );
 }

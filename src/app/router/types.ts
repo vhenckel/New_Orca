@@ -19,6 +19,19 @@ export interface AppRouteDefinition {
   showDebtNegotiationDateRangeInTopBar?: boolean;
   /** TopBar: atalho importar dívidas. */
   showImportDebtsInTopBar?: boolean;
+  /** TopBar: filtro mês/ano (repasses / conciliação financeira). */
+  showPayoutMonthYearInTopBar?: boolean;
+  /**
+   * TopBar em 3 níveis: Módulo → intermediário (link) → página atual.
+   * Sem isso: só Módulo + título da rota.
+   */
+  topBarParent?: {
+    labelKey: TranslationKey;
+    /** Pathname do nível intermediário (sem query). */
+    path: string;
+    /** Se true, repassa `location.search` ao navegar para o pai (ex.: período na URL). */
+    preserveSearch?: boolean;
+  };
 }
 
 export interface AppModuleDefinition {
@@ -27,5 +40,7 @@ export interface AppModuleDefinition {
   titleKey: TranslationKey;
   descriptionKey: TranslationKey;
   icon: LucideIcon;
+  /** Se true, o módulo nao aparece no menu lateral. */
+  hideInSidebar?: boolean;
   routes: AppRouteDefinition[];
 }

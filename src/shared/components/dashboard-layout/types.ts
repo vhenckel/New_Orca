@@ -1,9 +1,3 @@
-export type BreadcrumbItem = {
-  label: string;
-  href?: string;
-  onClick?: () => void;
-};
-
 export type KpiItem = {
   title: string;
   value: number | string;

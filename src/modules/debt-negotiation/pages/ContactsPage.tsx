@@ -8,6 +8,7 @@ import {
   CONTACT_LIST_PAGE_SIZE,
 } from "@/modules/debt-negotiation/hooks";
 import type { ContactListItem } from "@/modules/debt-negotiation/types/contact-list";
+import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
 import { useI18n } from "@/shared/i18n/useI18n";
 import {
@@ -92,19 +93,11 @@ export function ContactsPage() {
   const totalPages = Math.max(1, Math.ceil(total / CONTACT_LIST_PAGE_SIZE));
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">
-          {t("pages.debtNegotiation.contacts.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("pages.debtNegotiation.contacts.records").replace(
-            "{count}",
-            String(total),
-          )}
-        </p>
-      </div>
-
+    <DashboardPageLayout
+      showPageHeader
+      title={t("modules.debtNegotiation.routes.contacts.label")}
+      subtitle={t("modules.debtNegotiation.routes.contacts.description")}
+    >
       <FilterPanel
         showSearch
         searchValue={search}
@@ -223,6 +216,6 @@ export function ContactsPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardPageLayout>
   );
 }

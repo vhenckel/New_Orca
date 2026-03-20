@@ -2,20 +2,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
 
-interface ModulePlaceholderPageProps {
-  eyebrow: string;
-  title: string;
-  description: string;
-  primaryActionLabel?: string;
-}
+export type ModulePlaceholderPageProps =
+  | {
+      /** Título/descrição vêm do `DashboardPageLayout` no pai. */
+      headerInLayout: true;
+      primaryActionLabel?: string;
+    }
+  | {
+      headerInLayout?: false;
+      eyebrow: string;
+      title: string;
+      description: string;
+      primaryActionLabel?: string;
+    };
 
-export function ModulePlaceholderPage({
-  eyebrow,
-  title,
-  description,
-  primaryActionLabel,
-}: ModulePlaceholderPageProps) {
+export function ModulePlaceholderPage(props: ModulePlaceholderPageProps) {
   const { t } = useI18n();
+
+  if (props.headerInLayout) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">{t("common.placeholder.description")}</p>
+          <Button size="sm" variant="outline">
+            {props.primaryActionLabel ?? t("common.comingSoon")}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { eyebrow, title, description, primaryActionLabel } = props;
 
   return (
     <Card className="border-dashed">

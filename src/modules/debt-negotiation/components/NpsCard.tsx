@@ -138,10 +138,10 @@ export function NpsCard() {
   const { t } = useI18n();
   const { data, error } = useRenegotiationNps();
 
-  const chartData =
+  const chartData: { day: string; nps: number | null }[] =
     data?.dailyTrend?.map((item: NpsDailyTrendItem) => ({
       day: formatDayLabel(item.day),
-      nps: item.value ?? 0,
+      nps: item.value == null ? null : item.value,
     })) ?? [];
 
   return (
@@ -197,16 +197,33 @@ export function NpsCard() {
                     borderRadius: "8px",
                     fontSize: "12px",
                   }}
-                  formatter={(value: number) => [value, "NPS"]}
+                  formatter={(value: number | string | null | undefined) => [
+                    value === null || value === undefined || Number.isNaN(Number(value)) ? "—" : value,
+                    "NPS",
+                  ]}
                   labelFormatter={(label) => `Dia ${label}`}
                 />
                 <Line
-                  type="monotone"
+                  type="linear"
                   dataKey="nps"
                   stroke="hsl(var(--chart-1))"
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--chart-1))", r: 3 }}
-                  connectNulls={false}
+                  strokeWidth={2.5}
+                  dot={(props) => {
+                    const v = (props.payload as { nps?: number | null }).nps;
+                    if (v === null || v === undefined) return null;
+                    return (
+                      <circle
+                        cx={props.cx}
+                        cy={props.cy}
+                        r={5}
+                        fill="hsl(var(--chart-1))"
+                        stroke="hsl(var(--background))"
+                        strokeWidth={2}
+                      />
+                    );
+                  }}
+                  activeDot={{ r: 7, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                  connectNulls
                 />
               </LineChart>
             </ResponsiveContainer>

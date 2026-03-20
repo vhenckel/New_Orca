@@ -74,10 +74,7 @@ export function DataTable<T>({
       id: "__select",
       header: ({ table }) => (
         <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
+          checked={table.getIsAllPageRowsSelected() ? true : table.getIsSomePageRowsSelected() ? "indeterminate" : false}
           onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
           aria-label="Selecionar todas nesta página"
         />
@@ -135,7 +132,7 @@ export function DataTable<T>({
   const showPagination = !hidePagination && result.total > 0;
 
   return (
-    <div className="space-y-4" data-testid="data-table">
+    <div className="flex flex-col gap-4" data-testid="data-table">
       <div className={cn("rounded-md border", tableContainerClassName)}>
         <Table>
           <TableHeader>
@@ -174,7 +171,7 @@ export function DataTable<T>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={tableColumns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={tableColumns.length} className="h-24 text-left text-muted-foreground">
                   {emptyMessage}
                 </TableCell>
               </TableRow>

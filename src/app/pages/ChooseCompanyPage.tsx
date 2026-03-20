@@ -135,13 +135,13 @@ export function ChooseCompanyPage() {
             {!loading && accounts.length > 0 && (
               <div className="flex min-h-[28rem] flex-col gap-3">
                 <div className="relative shrink-0">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                   <Input
                     type="search"
                     placeholder="Buscar por nome ou ID..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="h-11 border-white/50 bg-white/90 pl-9 text-foreground placeholder:text-black/40"
+                    className="h-11 border-white/50 bg-white/90 pl-9 pr-4 text-[15px] text-neutral-900 placeholder:text-neutral-500 caret-neutral-900 focus-visible:border-primary focus-visible:ring-primary/20"
                   />
                 </div>
                 {filtered.length === 0 ? (

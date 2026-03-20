@@ -68,6 +68,8 @@ export interface MeResponse {
   maxNumberOfClients: number;
   branding?: BrandingConfig;
   userStatuses?: Array<{ statusId: number }>;
+  /** Features da conta (ex.: role "Super Admin"), quando retornadas pelo /me — alinhado ao management. */
+  features?: Array<{ name: string }>;
 }
 
 /** Payload do POST /auth/login. */

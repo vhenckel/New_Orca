@@ -2,6 +2,7 @@ import { Bell, Building2, ChevronDown, Download, LogOut, Settings2 } from "lucid
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
+import { PayoutMonthYearTopBar } from "@/modules/finance/components/PayoutMonthYearTopBar";
 import { DashboardDateRangePicker } from "@/shared/components/DashboardDateRangePicker";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { getCompanyNameFromToken } from "@/shared/auth/jwt";
@@ -43,25 +44,46 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
   const navigate = useNavigate();
 
   const showDebtDateRange = currentRoute.showDebtNegotiationDateRangeInTopBar === true;
+  const showPayoutMonthYear = currentRoute.showPayoutMonthYearInTopBar === true;
   const showImportDebts = currentRoute.showImportDebtsInTopBar === true;
 
+  const parent = currentRoute.topBarParent;
+  const parentTo =
+    parent != null
+      ? `${parent.path}${parent.preserveSearch ? location.search : ""}`
+      : null;
+
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-6">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-card px-6">
+      <div className="min-w-0 flex-1">
+        <nav aria-label={t("app.topbar.breadcrumbNav")} className="flex min-w-0 items-center gap-2">
+          <Link
+            to={currentModule.basePath}
+            className="shrink-0 truncate text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
             {t(currentModule.titleKey)}
-          </span>
-          <span className="hidden text-xs text-muted-foreground md:inline">/</span>
-          <h1 className="truncate text-sm font-semibold text-foreground">{t(currentRoute.labelKey)}</h1>
-        </div>
-        <p className="hidden truncate text-xs text-muted-foreground sm:block">
-          {t(currentRoute.descriptionKey)}
-        </p>
+          </Link>
+          {parentTo != null && parent != null ? (
+            <>
+              <span className="hidden shrink-0 text-sm text-muted-foreground md:inline">/</span>
+              <Link
+                to={parentTo}
+                className="min-w-0 max-w-[40%] truncate text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:max-w-[50%]"
+              >
+                {t(parent.labelKey)}
+              </Link>
+            </>
+          ) : null}
+          <span className="hidden shrink-0 text-sm text-muted-foreground md:inline">/</span>
+          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+            {t(currentRoute.labelKey)}
+          </h1>
+        </nav>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         {showDebtDateRange && <DashboardDateRangePicker />}
+        {showPayoutMonthYear && <PayoutMonthYearTopBar />}
         {showImportDebts && (
           <Button
             size="sm"
