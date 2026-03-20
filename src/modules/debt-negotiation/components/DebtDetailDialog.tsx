@@ -434,10 +434,13 @@ export function DebtDetailDialog({
                                     <TableCell>
                                       {formatAmount(item.amount)}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="whitespace-nowrap">
                                       <Badge
                                         variant="outline"
-                                        className={cn("text-xs", statusClass)}
+                                        className={cn(
+                                          "text-xs whitespace-nowrap",
+                                          statusClass,
+                                        )}
                                       >
                                         {t(statusKey)}
                                       </Badge>

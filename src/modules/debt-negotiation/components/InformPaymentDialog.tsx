@@ -340,8 +340,11 @@ export function InformPaymentDialog({
                             <TableCell>{formatDate(item.dueAt)}</TableCell>
                             <TableCell>{item.paidAt ? formatDate(item.paidAt) : "-"}</TableCell>
                             <TableCell>{formatAmount(item.amount)}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={cn("text-xs", statusClass)}>
+                            <TableCell className="whitespace-nowrap">
+                              <Badge
+                                variant="outline"
+                                className={cn("text-xs whitespace-nowrap", statusClass)}
+                              >
                                 {t(statusKey)}
                               </Badge>
                             </TableCell>
