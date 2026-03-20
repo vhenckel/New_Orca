@@ -184,7 +184,14 @@ export function PayoutsPage() {
 
   if (!canViewPage) {
     return (
-      <DashboardPageLayout title={t("pages.finance.payouts.title")}>
+      <DashboardPageLayout
+        title={t("pages.finance.payouts.title")}
+        modulePageBreadcrumb={{
+          moduleTitleKey: "modules.finance.title",
+          moduleHref: "/finance/payouts",
+          pageTitle: t("modules.finance.routes.payouts.label"),
+        }}
+      >
         <Alert>
           <AlertDescription>{t("pages.finance.payouts.errors.noPermission")}</AlertDescription>
         </Alert>
@@ -196,6 +203,11 @@ export function PayoutsPage() {
     <DashboardPageLayout
       title={t("pages.finance.payouts.title")}
       subtitle={t("pages.finance.payouts.description")}
+      modulePageBreadcrumb={{
+        moduleTitleKey: "modules.finance.title",
+        moduleHref: "/finance/payouts",
+        pageTitle: t("modules.finance.routes.payouts.label"),
+      }}
       headerActions={
         <div className="flex gap-2">
           <Select value={String(month)} onValueChange={(value) => setMonthYear({ month: Number(value), year })}>

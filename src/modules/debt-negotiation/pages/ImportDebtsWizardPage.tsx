@@ -12,7 +12,12 @@ import type {
   DebtImportFieldDefinition,
   DebtImportValidationRow,
 } from "@/modules/debt-negotiation/types";
+import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { useI18n } from "@/shared/i18n/useI18n";
+import {
+  debtNegotiationPathWithDateRange,
+  useDebtNegotiationDateRangeQueryState,
+} from "@/shared/lib/nuqs-filters";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
@@ -44,6 +49,8 @@ interface ParseState {
 export function ImportDebtsWizardPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
+  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate });
 
   const [step, setStep] = useState<WizardStep>(0);
   const [file, setFile] = useState<File | null>(null);
@@ -414,30 +421,25 @@ export function ImportDebtsWizardPage() {
     importMutation.isPending;
 
   return (
-    <div className="min-w-0 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {t("pages.debtNegotiation.importDebts.breadcrumb")}
-          </p>
-          <h1 className="text-xl font-semibold text-foreground">
-            {t("pages.debtNegotiation.importDebts.title")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t("pages.debtNegotiation.importDebts.subtitle")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-flex h-7 items-center rounded-full border border-border px-3">
-            {t("pages.debtNegotiation.importDebts.stepLabel", {
-              step: step + 1,
-              total: 4,
-              label: currentStepLabel,
-            })}
-          </span>
-        </div>
-      </div>
-
+    <DashboardPageLayout
+      className="min-w-0"
+      title={t("pages.debtNegotiation.importDebts.title")}
+      subtitle={t("pages.debtNegotiation.importDebts.subtitle")}
+      modulePageBreadcrumb={{
+        moduleTitleKey: "modules.debtNegotiation.title",
+        moduleHref,
+        pageTitle: t("pages.debtNegotiation.importDebts.title"),
+      }}
+      headerActions={
+        <span className="inline-flex h-7 items-center rounded-full border border-border px-3 text-xs text-muted-foreground">
+          {t("pages.debtNegotiation.importDebts.stepLabel", {
+            step: step + 1,
+            total: 4,
+            label: currentStepLabel,
+          })}
+        </span>
+      }
+    >
       {mainContent}
 
       <div className="flex items-center justify-between">
@@ -470,7 +472,7 @@ export function ImportDebtsWizardPage() {
           )}
         </div>
       </div>
-    </div>
+    </DashboardPageLayout>
   );
 }
 

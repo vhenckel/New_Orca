@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import {
   Award,
@@ -42,6 +42,11 @@ import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/Ne
 import type { ContactDetails, ContactActivity } from "@/modules/debt-negotiation/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { cn } from "@/shared/lib/utils";
+import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
+import {
+  debtNegotiationPathWithDateRange,
+  useDebtNegotiationDateRangeQueryState,
+} from "@/shared/lib/nuqs-filters";
 
 const ROUTE_CONTACTS = "/debt-negotiation/contacts";
 
@@ -133,6 +138,9 @@ function CopyButton({ value }: { value: string }) {
 
 export function ContactDetailPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
+  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
+  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate });
   const { id } = useParams<{ id: string }>();
   const contactId = id != null ? parseInt(id, 10) : NaN;
   const validId = Number.isInteger(contactId) && contactId > 0 ? contactId : null;
@@ -155,22 +163,30 @@ export function ContactDetailPage() {
 
   if (id == null || !validId) {
     return (
-      <div className="space-y-4">
-        <Link to={ROUTE_CONTACTS} className="text-sm text-primary underline-offset-4 hover:underline">
-          ← {t("pages.debtNegotiation.contactDetail.backToContacts")}
-        </Link>
+      <DashboardPageLayout
+        onBack={() => void navigate(ROUTE_CONTACTS)}
+        modulePageBreadcrumb={{
+          moduleTitleKey: "modules.debtNegotiation.title",
+          moduleHref,
+          pageTitle: t("modules.debtNegotiation.routes.contacts.label"),
+        }}
+      >
         <p className="text-sm text-muted-foreground">ID de contato inválido.</p>
-      </div>
+      </DashboardPageLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Link to={ROUTE_CONTACTS} className="text-sm text-primary underline-offset-4 hover:underline">
-        ← {t("pages.debtNegotiation.contactDetail.backToContacts")}
-      </Link>
-
-      {/* Header do contato */}
+    <DashboardPageLayout
+      onBack={() => void navigate(ROUTE_CONTACTS)}
+      breadcrumb={{
+        items: [
+          { label: t("modules.debtNegotiation.title"), href: moduleHref },
+          { label: t("modules.debtNegotiation.routes.contacts.label"), href: ROUTE_CONTACTS },
+          { label: detailsPending ? "…" : name },
+        ],
+      }}
+    >
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -647,6 +663,6 @@ export function ContactDetailPage() {
         open={conversationOpen}
         onOpenChange={setConversationOpen}
       />
-    </div>
+    </DashboardPageLayout>
   );
 }

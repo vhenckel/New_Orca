@@ -26,6 +26,7 @@ import type { TranslationKey } from "@/shared/i18n/config";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useNavigate } from "react-router-dom";
 
+import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import {
   debtNegotiationPathWithDateRange,
   useDebtNegotiationDateRangeQueryState,
@@ -254,8 +255,18 @@ export function DashboardPage() {
           { label: t("dashboard.kpis.conversionRate"), value: "-", subtitle: t("dashboard.subtitles.conversionRate"), delay: 350 },
         ];
 
+  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", dateRange);
+
   return (
-    <div className="flex flex-col gap-6">
+    <DashboardPageLayout
+      title={t("modules.debtNegotiation.routes.dashboard.label")}
+      subtitle={t("modules.debtNegotiation.routes.dashboard.description")}
+      modulePageBreadcrumb={{
+        moduleTitleKey: "modules.debtNegotiation.title",
+        moduleHref,
+        pageTitle: t("modules.debtNegotiation.routes.dashboard.label"),
+      }}
+    >
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="size-4" />
@@ -308,6 +319,6 @@ export function DashboardPage() {
         <NegotiationFunnel />
         <ActivityFeed />
       </div>
-    </div>
+    </DashboardPageLayout>
   );
 }

@@ -204,7 +204,16 @@ export function PayoutDetailPage() {
 
   if (!canViewReconciliation) {
     return (
-      <DashboardPageLayout title={t("pages.finance.payoutDetail.title")}>
+      <DashboardPageLayout
+        title={t("pages.finance.payoutDetail.title")}
+        breadcrumb={{
+          items: [
+            { label: t("modules.finance.title"), href: "/finance/payouts" },
+            { label: t("modules.finance.routes.payouts.label"), href: backToListUrl },
+            { label: t("modules.finance.routes.payoutDetail.label") },
+          ],
+        }}
+      >
         <Alert>
           <AlertDescription>{t("pages.finance.payoutDetail.errors.noPermission")}</AlertDescription>
         </Alert>
@@ -216,6 +225,13 @@ export function PayoutDetailPage() {
     <DashboardPageLayout
       title={t("pages.finance.payoutDetail.title")}
       subtitle={headerSubtitle}
+      breadcrumb={{
+        items: [
+          { label: t("modules.finance.title"), href: "/finance/payouts" },
+          { label: t("modules.finance.routes.payouts.label"), href: backToListUrl },
+          { label: t("modules.finance.routes.payoutDetail.label") },
+        ],
+      }}
       onBack={() => navigate(backToListUrl)}
       backLabel={t("common.actions.back")}
       headerActions={

@@ -61,7 +61,7 @@ export function AppShell({ children, modules }: AppShellProps) {
           sidebarCollapsed ? "ml-16" : "ml-64",
         )}
       >
-        <TopBar currentModule={currentModule} currentRoute={currentRoute} />
+        <TopBar currentRoute={currentRoute} />
 
         {currentModule.key === "debt-negotiation" && <PendingPaymentBanner />}
 
