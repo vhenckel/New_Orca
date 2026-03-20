@@ -174,7 +174,14 @@ export function RenegotiationConfigPage() {
       : undefined;
   }, [form?.monthlyInterest, t]);
 
-  const hasValidationError = Boolean(lateFeeWarning || monthlyInterestWarning);
+  const agentNameWarning = useMemo(() => {
+    if (form?.agentName.trim()) return undefined;
+    return t("modules.agent.renegotiationConfig.validation.agentNameRequired");
+  }, [form?.agentName, t]);
+
+  const hasValidationError = Boolean(
+    lateFeeWarning || monthlyInterestWarning || agentNameWarning,
+  );
 
   const isAgentSectionDirty = useMemo(() => {
     if (!form || !initialForm) return false;
@@ -200,10 +207,10 @@ export function RenegotiationConfigPage() {
 
   const handleSaveSection = (section: "agent" | "debt") => {
     if (!form || companyId == null) return;
-    if (section === "debt" && hasValidationError) return;
+    if (hasValidationError) return;
 
     const payload: RenegotiationConfigPayload = {
-      agentName: form.agentName,
+      agentName: form.agentName.trim(),
       companyDetails: normalizeCompanyDetails(form.companyDetails),
       lateFee: form.lateFee,
       monthlyInterest: form.monthlyInterest,
@@ -279,11 +286,13 @@ export function RenegotiationConfigPage() {
                   <CardContent className="grid flex-1 gap-3 pt-0">
                     <FormRow
                       label={t("modules.agent.renegotiationConfig.fields.agentName.label")}
+                      warning={agentNameWarning}
                       info={t("modules.agent.renegotiationConfig.fields.agentName.info")}
                       className="py-2"
                     >
                       <Input
                         value={form.agentName}
+                        aria-invalid={Boolean(agentNameWarning)}
                         onChange={(e) => {
                           setForm((prev) =>
                             prev
@@ -321,7 +330,11 @@ export function RenegotiationConfigPage() {
                   </CardContent>
                   <CardFooter className="mt-auto justify-end border-t border-border/60 pt-4">
                     <Button
-                      disabled={!isAgentSectionDirty || updateMutation.isPending}
+                      disabled={
+                        !isAgentSectionDirty ||
+                        Boolean(agentNameWarning) ||
+                        updateMutation.isPending
+                      }
                       onClick={() => handleSaveSection("agent")}
                     >
                       {updateMutation.isPending

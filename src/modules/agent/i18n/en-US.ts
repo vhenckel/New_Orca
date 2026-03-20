@@ -8,6 +8,8 @@ export const agentEnUS = {
     "Maximum allowed value is 2%.",
   "modules.agent.renegotiationConfig.validation.maxMonthlyInterest":
     "Maximum allowed value is 1%.",
+  "modules.agent.renegotiationConfig.validation.agentNameRequired":
+    "Agent name is required.",
   "modules.agent.renegotiationConfig.toast.saving": "Saving changes...",
   "modules.agent.renegotiationConfig.toast.success":
     "Settings saved successfully.",

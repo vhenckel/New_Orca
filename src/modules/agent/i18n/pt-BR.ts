@@ -10,6 +10,8 @@ export const agentPtBR = {
     "O valor máximo permitido é de 2%.",
   "modules.agent.renegotiationConfig.validation.maxMonthlyInterest":
     "O valor máximo permitido é de 1%.",
+  "modules.agent.renegotiationConfig.validation.agentNameRequired":
+    "Informe o nome do agente.",
   "modules.agent.renegotiationConfig.toast.saving": "Salvando alterações...",
   "modules.agent.renegotiationConfig.toast.success":
     "Configurações salvas com sucesso.",
