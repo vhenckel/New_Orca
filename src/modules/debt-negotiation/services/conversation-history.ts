@@ -4,7 +4,8 @@ import type { ConversationHistoryResponse } from "@/modules/debt-negotiation/typ
 
 const CONVERSATION_HISTORY_PATH = "/contact";
 
-const TAKE = 50;
+/** Deve ser o mesmo valor usado em `useConversationHistory` para `hasNextPage`. */
+export const CONVERSATION_HISTORY_TAKE = 50;
 const ORDER = "ASC";
 
 export async function fetchConversationHistory(
@@ -13,7 +14,7 @@ export async function fetchConversationHistory(
 ): Promise<ConversationHistoryResponse> {
   const companyId = getCurrentCompanyId();
   const search = new URLSearchParams({
-    take: String(TAKE),
+    take: String(CONVERSATION_HISTORY_TAKE),
     order: ORDER,
     "companyIds[]": String(companyId),
   });

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchConversationHistory } from "@/modules/debt-negotiation/services/conversation-history";
+import {
+  CONVERSATION_HISTORY_TAKE,
+  fetchConversationHistory,
+} from "@/modules/debt-negotiation/services/conversation-history";
 import type { ConversationChat, MediaAtt } from "@/modules/debt-negotiation/types/conversation-history";
-
-const TAKE = 10;
 
 function mergeMediasAtt(prev: MediaAtt[], next: MediaAtt[]): MediaAtt[] {
   const byMediaId = new Map(prev.map((m) => [m.mediaId, m]));
@@ -36,7 +37,8 @@ export function useConversationHistory(contactId: number | null, open: boolean) 
           setChats((prev) => [...prev, ...pageChats]);
           setMediasAtt((prev) => mergeMediasAtt(prev, res.mediasAtt ?? []));
         }
-        setHasNextPage(res.chats.length === TAKE);
+        /** Página cheia na resposta bruta ⇒ provável próxima página (alinhado ao `take` da API). */
+        setHasNextPage(res.chats.length >= CONVERSATION_HISTORY_TAKE);
         setCursor(res.chats.length > 0 ? res.chats[res.chats.length - 1].id : null);
       } catch (e) {
         setError(e instanceof Error ? e : new Error(String(e)));
