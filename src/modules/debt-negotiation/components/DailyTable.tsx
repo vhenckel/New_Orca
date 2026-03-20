@@ -73,7 +73,7 @@ export function DailyTable() {
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-border">
               {columns.map((column) => (
@@ -89,7 +89,7 @@ export function DailyTable() {
           <tbody>
             {rows.length === 0 && !error ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                <td colSpan={columns.length} className="px-4 py-8 text-left text-sm text-muted-foreground">
                   Nenhum dado no período.
                 </td>
               </tr>

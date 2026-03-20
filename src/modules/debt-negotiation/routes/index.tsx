@@ -1,4 +1,4 @@
-import { FileText, LayoutDashboard, Landmark, Users } from "lucide-react";
+import { FileText, Handshake, LayoutDashboard, Users } from "lucide-react";
 
 import type { AppModuleDefinition } from "@/app/router/types";
 import { ContactDetailPage } from "@/modules/debt-negotiation/pages/ContactDetailPage";
@@ -15,7 +15,7 @@ export const debtNegotiationModule: AppModuleDefinition = {
   basePath: "/debt-negotiation",
   titleKey: "modules.debtNegotiation.title",
   descriptionKey: "modules.debtNegotiation.description",
-  icon: Landmark,
+  icon: Handshake,
   routes: [
     {
       path: "/debt-negotiation",

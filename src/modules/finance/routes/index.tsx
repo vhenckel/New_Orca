@@ -1,4 +1,4 @@
-import { Landmark, ListChecks, Receipt } from "lucide-react";
+import { DollarSign, ListChecks, Receipt } from "lucide-react";
 
 import type { AppModuleDefinition } from "@/app/router/types";
 import { PayoutDetailPage } from "@/modules/finance/pages/PayoutDetailPage";
@@ -9,7 +9,7 @@ export const financeModule: AppModuleDefinition = {
   basePath: "/finance/payouts",
   titleKey: "modules.finance.title",
   descriptionKey: "modules.finance.description",
-  icon: Landmark,
+  icon: DollarSign,
   routes: [
     {
       path: "/finance/payouts",

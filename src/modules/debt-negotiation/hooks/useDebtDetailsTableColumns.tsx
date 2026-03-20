@@ -144,10 +144,10 @@ export function useDebtDetailsTableColumns(options: {
       {
         accessorKey: "debtAmount",
         header: () => (
-          <span className="block text-right">{t("pages.debtNegotiation.debts.col.debtAmount")}</span>
+          <span className="block text-left">{t("pages.debtNegotiation.debts.col.debtAmount")}</span>
         ),
         cell: ({ getValue }) => (
-          <div className="text-right font-medium tabular-nums">
+          <div className="font-medium tabular-nums">
             {formatDebtAmountString(String(getValue()))}
           </div>
         ),
@@ -155,12 +155,12 @@ export function useDebtDetailsTableColumns(options: {
       {
         accessorKey: "negotiatedValue",
         header: () => (
-          <span className="block text-right">
+          <span className="block text-left">
             {t("pages.debtNegotiation.debts.col.negotiatedValue")}
           </span>
         ),
         cell: ({ getValue }) => (
-          <div className="text-right text-muted-foreground tabular-nums">
+          <div className="text-muted-foreground tabular-nums">
             {formatDebtAmountString(getValue() as string | null)}
           </div>
         ),
@@ -168,12 +168,12 @@ export function useDebtDetailsTableColumns(options: {
       {
         accessorKey: "recoveredValue",
         header: () => (
-          <span className="block text-right">
+          <span className="block text-left">
             {t("pages.debtNegotiation.debts.col.recoveredValue")}
           </span>
         ),
         cell: ({ getValue }) => (
-          <div className="text-right text-muted-foreground tabular-nums">
+          <div className="text-muted-foreground tabular-nums">
             {formatDebtAmountString(getValue() as string | null)}
           </div>
         ),

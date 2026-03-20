@@ -171,7 +171,7 @@ export function DataTable<T>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={tableColumns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={tableColumns.length} className="h-24 text-left text-muted-foreground">
                   {emptyMessage}
                 </TableCell>
               </TableRow>
