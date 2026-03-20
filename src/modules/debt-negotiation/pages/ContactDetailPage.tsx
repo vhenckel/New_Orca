@@ -16,6 +16,7 @@ import {
   Send,
   User,
 } from "lucide-react";
+import { formatCpf } from "@/modules/debt-negotiation/utils/debt-list-formatters";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
@@ -238,8 +239,8 @@ export function ContactDetailPage() {
               </span>
             )}
             {details?.cpf && (
-              <span className="flex items-center gap-1">
-                {details.cpf}
+              <span className="flex items-center gap-1 font-mono">
+                {formatCpf(details.cpf)}
                 <CopyButton value={details.cpf} />
               </span>
             )}

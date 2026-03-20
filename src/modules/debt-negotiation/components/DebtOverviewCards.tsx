@@ -2,18 +2,12 @@ import { Ban, Info, Pencil } from "lucide-react";
 
 import type { DebtDetailResponse } from "@/modules/debt-negotiation/types/debt-detail";
 import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
+import { formatCnpj, formatCpf } from "@/modules/debt-negotiation/utils/debt-list-formatters";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Separator } from "@/shared/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-
-function formatCnpj(cnpj: string | null | undefined): string {
-  if (!cnpj || cnpj === "0") return "-";
-  const d = String(cnpj).replace(/\D/g, "");
-  if (d.length !== 14) return cnpj;
-  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
-}
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return "-";
@@ -88,7 +82,7 @@ export function DebtContactCard({
     debtData.contactCnpj && debtData.contactCnpj !== "0"
       ? formatCnpj(debtData.contactCnpj)
       : debtData.contactCpf && debtData.contactCpf !== "0"
-        ? debtData.contactCpf
+        ? formatCpf(debtData.contactCpf)
         : "-";
 
   return (

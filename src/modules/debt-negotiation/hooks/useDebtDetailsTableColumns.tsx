@@ -10,6 +10,7 @@ import { isRecoveredPipelineStage } from "@/modules/debt-negotiation/constants/p
 import type { DebtDetailsItem } from "@/modules/debt-negotiation/types/debt-details";
 import {
   formatCnpj,
+  formatCpf,
   formatDebtAmountString,
 } from "@/modules/debt-negotiation/utils/debt-list-formatters";
 import type { TranslationKey } from "@/shared/i18n/config";
@@ -100,7 +101,7 @@ export function useDebtDetailsTableColumns(options: {
                 {r.contactCnpj && r.contactCnpj !== "0"
                   ? `CNPJ ${formatCnpj(r.contactCnpj)}`
                   : r.contactCpf && r.contactCpf !== "0"
-                    ? `CPF ${r.contactCpf}`
+                    ? `CPF ${formatCpf(r.contactCpf)}`
                     : "-"}
               </span>
             </div>
