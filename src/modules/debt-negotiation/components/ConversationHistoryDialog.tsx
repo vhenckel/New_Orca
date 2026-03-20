@@ -198,19 +198,23 @@ export function ConversationHistoryDialog({
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!sentinelRef.current || !open) return;
-    const el = sentinelRef.current;
+    if (!open) return;
+    const sentinel = sentinelRef.current;
+    const scrollRoot = scrollRef.current;
+    if (!sentinel) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && hasNextPage && !isNextPending) {
           fetchNextPage();
         }
       },
-      { root: null, rootMargin: "80px", threshold: 0 },
+      /** `root` = área rolável do painel (viewport enganava com painel lateral). */
+      { root: scrollRoot, rootMargin: "80px", threshold: 0 },
     );
-    observer.observe(el);
+    observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [open, hasNextPage, isNextPending, fetchNextPage]);
+  }, [open, hasNextPage, isNextPending, fetchNextPage, chats.length]);
 
   useEffect(() => {
     if (open && scrollRef.current && chats.length > 0) {
