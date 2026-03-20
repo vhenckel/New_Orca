@@ -1,7 +1,9 @@
-import { Ban, Info } from "lucide-react";
+import { Ban, Info, Pencil } from "lucide-react";
 
 import type { DebtDetailResponse } from "@/modules/debt-negotiation/types/debt-detail";
+import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Separator } from "@/shared/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
@@ -138,9 +140,22 @@ export function DebtContactCard({
 
 interface DebtMetricsCardProps {
   debtData: DebtDetailResponse;
+  /** Alerta de parcelas (ex.: parcial pago + atraso) — mesmo comportamento do badge na lista. */
+  statusShowAlert?: boolean;
+  statusAlertMessage?: string;
+  canManageStatus?: boolean;
+  onManageStatus?: () => void;
+  manageStatusPending?: boolean;
 }
 
-export function DebtMetricsCard({ debtData }: DebtMetricsCardProps) {
+export function DebtMetricsCard({
+  debtData,
+  statusShowAlert = false,
+  statusAlertMessage = "",
+  canManageStatus = false,
+  onManageStatus,
+  manageStatusPending = false,
+}: DebtMetricsCardProps) {
   const { t } = useI18n();
   const negotiatedValue = debtData.negotiatedValue ?? 0;
   const recoveredValue = debtData.recoveredValue ?? 0;
@@ -158,15 +173,59 @@ export function DebtMetricsCard({ debtData }: DebtMetricsCardProps) {
             className="pointer-events-none absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-border"
           />
 
+          <div className="flex flex-col gap-0.5 py-2">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              {t("pages.debtNegotiation.debts.detail.status")}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex cursor-help rounded-full p-0.5 hover:bg-muted">
+                    <Info className="h-3.5 w-3.5" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  {t("pages.debtNegotiation.debts.detail.statusInfo")}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
+              <div className="min-w-0 shrink">
+                <NegotiationStatusBadge
+                  stageName={debtData.pipelineStageName}
+                  showAlert={statusShowAlert}
+                  alertMessage={statusAlertMessage}
+                />
+              </div>
+              {canManageStatus && onManageStatus ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                      onClick={onManageStatus}
+                      disabled={manageStatusPending}
+                      aria-label={t("pages.debtNegotiation.debts.manageStatus.alter")}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    {t("pages.debtNegotiation.debts.manageStatus.alter")}
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+            </div>
+          </div>
           <Row
-            label={t("pages.debtNegotiation.debts.detail.originalDebtDate")}
-            value={formatDate(debtData.debtRegistrationDate)}
+            label={t("pages.debtNegotiation.debts.detail.platformRegistrationDate")}
+            value={formatDate(debtData.platformRegistrationDate)}
             withInfo
             infoLabel={t("pages.debtNegotiation.debts.detail.additionalInfo")}
           />
           <Row
-            label={t("pages.debtNegotiation.debts.detail.platformRegistrationDate")}
-            value={formatDate(debtData.platformRegistrationDate)}
+            label={t("pages.debtNegotiation.debts.detail.originalDebtDate")}
+            value={formatDate(debtData.debtRegistrationDate)}
             withInfo
             infoLabel={t("pages.debtNegotiation.debts.detail.additionalInfo")}
           />
@@ -186,6 +245,7 @@ export function DebtMetricsCard({ debtData }: DebtMetricsCardProps) {
             label={t("pages.debtNegotiation.debts.col.contractNumber")}
             value={debtData.contractId}
           />
+          <div aria-hidden className="min-h-0" />
         </div>
 
         <Separator />

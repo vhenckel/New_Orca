@@ -123,6 +123,9 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.detail.fullName": "Nome Completo",
   "pages.debtNegotiation.debts.detail.cnpj": "CNPJ",
   "pages.debtNegotiation.debts.detail.currentStatus": "Status atual",
+  "pages.debtNegotiation.debts.detail.status": "Status",
+  "pages.debtNegotiation.debts.detail.statusInfo":
+    "Estágio atual da negociação no funil; o selo colorido é o status oficial.",
   "pages.debtNegotiation.debts.detail.originalDebtDate": "Data da dívida (original)",
   "pages.debtNegotiation.debts.detail.originalDebtAmount": "Valor da dívida (original)",
   "pages.debtNegotiation.debts.detail.platformRegistrationDate": "Data de registro na plataforma",

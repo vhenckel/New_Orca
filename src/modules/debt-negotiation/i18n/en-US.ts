@@ -123,6 +123,9 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.detail.fullName": "Full name",
   "pages.debtNegotiation.debts.detail.cnpj": "CNPJ",
   "pages.debtNegotiation.debts.detail.currentStatus": "Current status",
+  "pages.debtNegotiation.debts.detail.status": "Status",
+  "pages.debtNegotiation.debts.detail.statusInfo":
+    "Current negotiation stage in the pipeline; the pill is the official status.",
   "pages.debtNegotiation.debts.detail.originalDebtDate": "Original debt date",
   "pages.debtNegotiation.debts.detail.originalDebtAmount": "Original debt amount",
   "pages.debtNegotiation.debts.detail.platformRegistrationDate": "Platform registration date",
