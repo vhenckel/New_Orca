@@ -6,13 +6,15 @@ import type {
   MediaAtt,
 } from "@/modules/debt-negotiation/types/conversation-history";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { SidePanelLayout } from "@/shared/ui/side-panel-layout";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+  SidePanel,
+  SidePanelContent,
+  SidePanelFooter,
+  SidePanelTitle,
+} from "@/shared/ui/side-panel";
 import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/button";
 
 function formatMessageDate(iso: string): string {
   const d = new Date(iso);
@@ -37,13 +39,13 @@ function textWithBold(text: string | undefined | null): React.ReactNode[] {
       </strong>
     ) : (
       part
-    )
+    ),
   );
 }
 
 function resolveMediaUrl(
   message: { mediaId?: string; url?: string },
-  mediasAtt: MediaAtt[]
+  mediasAtt: MediaAtt[],
 ): string | undefined {
   if (message.url) return message.url;
   if (message.mediaId) {
@@ -71,7 +73,9 @@ function MessageContent({
     const url = resolveMediaUrl(message, mediasAtt);
     if (!url) {
       return (
-        <span className="text-xs text-muted-foreground">Imagem não disponível</span>
+        <span className="text-xs text-muted-foreground">
+          Imagem não disponível
+        </span>
       );
     }
     return (
@@ -96,7 +100,9 @@ function MessageContent({
     const label = message.fileName ?? "Documento";
     if (!url) {
       return (
-        <span className="text-xs text-muted-foreground">Documento não disponível</span>
+        <span className="text-xs text-muted-foreground">
+          Documento não disponível
+        </span>
       );
     }
     return (
@@ -142,22 +148,19 @@ function ChatBubble({
   const { t } = useI18n();
   const isBot = chat.sender === 2;
   return (
-    <div
-      className={cn(
-        "flex w-full",
-        isBot ? "justify-end" : "justify-start"
-      )}
-    >
+    <div className={cn("flex w-full", isBot ? "justify-end" : "justify-start")}>
       <div
         className={cn(
           "flex max-w-[85%] flex-col gap-0.5 rounded-lg px-3 py-2 shadow-sm",
           isBot
             ? "bg-muted rounded-br-md"
-            : "bg-green-100 text-green-900 dark:bg-green-900/50 dark:text-green-100 rounded-bl-md"
+            : "bg-green-100 text-green-900 dark:bg-green-900/50 dark:text-green-100 rounded-bl-md",
         )}
       >
         <span className="text-xs font-medium opacity-80">
-          {isBot ? t("pages.debtNegotiation.debts.conversationHistory.botLabel") : t("pages.debtNegotiation.debts.conversationHistory.userLabel")}
+          {isBot
+            ? t("pages.debtNegotiation.debts.conversationHistory.botLabel")
+            : t("pages.debtNegotiation.debts.conversationHistory.userLabel")}
         </span>
         <MessageContent message={chat.message} mediasAtt={mediasAtt} />
         <span className="text-right text-xs text-muted-foreground">
@@ -182,8 +185,15 @@ export function ConversationHistoryDialog({
   onOpenChange,
 }: ConversationHistoryDialogProps) {
   const { t } = useI18n();
-  const { chats, mediasAtt, isPending, isNextPending, error, fetchNextPage, hasNextPage } =
-    useConversationHistory(contactId, open);
+  const {
+    chats,
+    mediasAtt,
+    isPending,
+    isNextPending,
+    error,
+    fetchNextPage,
+    hasNextPage,
+  } = useConversationHistory(contactId, open);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -196,7 +206,7 @@ export function ConversationHistoryDialog({
           fetchNextPage();
         }
       },
-      { root: null, rootMargin: "80px", threshold: 0 }
+      { root: null, rootMargin: "80px", threshold: 0 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -209,49 +219,53 @@ export function ConversationHistoryDialog({
   }, [open, chats.length]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="flex max-h-[90vh] flex-col gap-0 p-0 sm:max-w-2xl"
-        aria-describedby={undefined}
-      >
-        <DialogHeader className="border-b px-4 py-3">
-          <DialogTitle className="text-center text-base">
-            {t("pages.debtNegotiation.debts.conversationHistory.title")}
-            {contactName ? ` – ${contactName}` : ""}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div
-          ref={scrollRef}
-          className="flex-1 space-y-3 overflow-y-auto p-4"
-          style={{ minHeight: "400px", maxHeight: "75vh" }}
+    <SidePanel open={open} onOpenChange={onOpenChange}>
+      <SidePanelContent size="xl">
+        <SidePanelLayout
+          header={
+            <SidePanelTitle className="text-base">
+              {t("pages.debtNegotiation.debts.conversationHistory.title")}
+              {contactName ? ` – ${contactName}` : ""}
+            </SidePanelTitle>
+          }
+          bodyClassName="p-0"
+          footerLeft={
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              {t("common.actions.cancel")}
+            </Button>
+          }
         >
-          {isPending && (
-            <div className="flex justify-center py-8 text-sm text-muted-foreground">
-              {t("pages.debtNegotiation.debts.conversationHistory.loading")}
-            </div>
-          )}
-          {error && (
-            <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {t("pages.debtNegotiation.debts.conversationHistory.error")}
-            </div>
-          )}
-          {!isPending && !error && chats.length === 0 && (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              {t("pages.debtNegotiation.debts.conversationHistory.empty")}
-            </div>
-          )}
-          {chats.map((chat) => (
-            <ChatBubble key={chat.id} chat={chat} mediasAtt={mediasAtt} />
-          ))}
-          <div ref={sentinelRef} className="h-4" />
-          {isNextPending && (
-            <div className="flex justify-center py-2 text-xs text-muted-foreground">
-              {t("pages.debtNegotiation.debts.conversationHistory.loading")}
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+          <div
+            ref={scrollRef}
+            className="flex-1 min-h-0 h-full space-y-3 overflow-y-auto bg-background px-4 py-4"
+          >
+            {isPending && (
+              <div className="flex justify-center py-8 text-sm text-muted-foreground">
+                {t("pages.debtNegotiation.debts.conversationHistory.loading")}
+              </div>
+            )}
+            {error && (
+              <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {t("pages.debtNegotiation.debts.conversationHistory.error")}
+              </div>
+            )}
+            {!isPending && !error && chats.length === 0 && (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                {t("pages.debtNegotiation.debts.conversationHistory.empty")}
+              </div>
+            )}
+            {chats.map((chat) => (
+              <ChatBubble key={chat.id} chat={chat} mediasAtt={mediasAtt} />
+            ))}
+            <div ref={sentinelRef} className="h-4" />
+            {isNextPending && (
+              <div className="flex justify-center py-2 text-xs text-muted-foreground">
+                {t("pages.debtNegotiation.debts.conversationHistory.loading")}
+              </div>
+            )}
+          </div>
+        </SidePanelLayout>
+      </SidePanelContent>
+    </SidePanel>
   );
 }

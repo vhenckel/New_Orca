@@ -1,21 +1,25 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Info } from "lucide-react";
 
 import { confirmDeal } from "@/modules/debt-negotiation/services/deal";
+import { manageDebtStatus } from "@/modules/debt-negotiation/services/manage-debt-status";
+import {
+  DebtContactCard,
+  DebtMetricsCard,
+} from "@/modules/debt-negotiation/components/DebtOverviewCards";
 import type { DebtDetailResponse } from "@/modules/debt-negotiation/types/debt-detail";
 import { hasPartialPaidOverdueInstallments } from "@/modules/debt-negotiation/utils/debtInstallmentAlert";
-import { StatusBadge } from "@/modules/debt-negotiation/components/StatusBadge";
+import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { SidePanelLayout } from "@/shared/ui/side-panel-layout";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+  SidePanel,
+  SidePanelContent,
+  SidePanelTitle,
+} from "@/shared/ui/side-panel";
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
+import { Card, CardContent } from "@/shared/ui/card";
 import {
   Select,
   SelectContent,
@@ -24,66 +28,7 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { Textarea } from "@/shared/ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-
-function formatCnpj(cnpj: string): string {
-  if (!cnpj || cnpj === "0") return "-";
-  const d = String(cnpj).replace(/\D/g, "");
-  if (d.length !== 14) return cnpj;
-  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
-}
-
-function formatDate(iso: string): string {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function formatAmount(value: number | null): string {
-  if (value == null) return "-";
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function Row({
-  label,
-  value,
-  withInfo,
-}: {
-  label: string;
-  value: React.ReactNode;
-  withInfo?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-0.5 py-2">
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        {label}
-        {withInfo && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex cursor-help rounded-full p-0.5 hover:bg-muted">
-                <Info className="h-3.5 w-3.5" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-xs">
-              Informação adicional
-            </TooltipContent>
-          </Tooltip>
-        )}
-      </div>
-      <div className="text-sm font-medium text-foreground">{value}</div>
-    </div>
-  );
-}
+import { toast } from "@/shared/ui/sonner";
 
 export type DebtSettledValue = "no" | "yes";
 
@@ -104,21 +49,68 @@ export function AddPaymentDialog({
 }: AddPaymentDialogProps) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const toastId = `confirm-deal-${renegotiationId}`;
   const [settled, setSettled] = useState<DebtSettledValue>("no");
   const [observation, setObservation] = useState("");
   const showPartialPaidOverdueAlert = hasPartialPaidOverdueInstallments(debtData.deal?.items);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      confirmDeal(renegotiationId, {
-        confirmed: settled === "yes",
-        observation: observation.trim(),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["renegotiation", "debt-detail", renegotiationId] });
+    mutationFn: async () => {
+      const confirmed = settled === "yes";
+      const trimmedObservation = observation.trim();
+
+      if (confirmed) {
+        const idNum = Number(renegotiationId);
+        if (!Number.isFinite(idNum) || idNum <= 0) {
+          throw new Error("Invalid renegotiation id");
+        }
+
+        await manageDebtStatus({
+          renegotiationIds: [idNum],
+          newStatus: "PAYMENT_CONFIRM",
+          reason: trimmedObservation || undefined,
+        });
+
+        return {
+          success: true,
+          message: "",
+        };
+      }
+
+      return confirmDeal(renegotiationId, {
+        confirmed,
+        observation: trimmedObservation,
+      });
+    },
+    onMutate: () => {
+      toast.loading(t("pages.debtNegotiation.debts.addPayment.toast.sending"), {
+        id: toastId,
+      });
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        toast.error(result.message || t("pages.debtNegotiation.debts.addPayment.toast.error"), {
+          id: toastId,
+        });
+        return;
+      }
+
+      toast.success(t("pages.debtNegotiation.debts.addPayment.toast.success"), { id: toastId });
+      queryClient.invalidateQueries({
+        queryKey: ["renegotiation", "debt-detail", renegotiationId],
+      });
       queryClient.invalidateQueries({ queryKey: ["renegotiation", "debt-details"] });
+      queryClient.invalidateQueries({
+        queryKey: ["renegotiation", "pending-payment-confirmations"],
+      });
       onOpenChange(false);
       onSuccess?.();
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error ? err.message : t("pages.debtNegotiation.debts.addPayment.toast.error"),
+        { id: toastId },
+      );
     },
   });
 
@@ -136,114 +128,84 @@ export function AddPaymentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-left">
-            {t("pages.debtNegotiation.debts.addPayment.title")}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-0">
-          <Row label={t("pages.debtNegotiation.debts.detail.fullName")} value={debtData.contactName} />
-          <Row
-            label={t("pages.debtNegotiation.debts.detail.cnpj")}
-            value={
-              debtData.contactCnpj && debtData.contactCnpj !== "0"
-                ? formatCnpj(debtData.contactCnpj)
-                : "-"
-            }
-          />
-          <Row
-            label={t("pages.debtNegotiation.debts.detail.currentStatus")}
-            value={
-              <StatusBadge
+    <SidePanel open={open} onOpenChange={handleOpenChange}>
+      <SidePanelContent size="md">
+        <SidePanelLayout
+          header={
+            <SidePanelTitle className="text-base">
+              {t("pages.debtNegotiation.debts.addPayment.title")}
+            </SidePanelTitle>
+          }
+          footerLeft={
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>
+              {t("pages.debtNegotiation.debts.detail.back")}
+            </Button>
+          }
+          footerRight={
+            <Button onClick={handleConfirm} disabled={mutation.isPending}>
+              {mutation.isPending ? "..." : t("pages.debtNegotiation.debts.addPayment.confirm")}
+            </Button>
+          }
+        >
+          <div className="flex flex-col gap-3">
+            <div className="w-full flex items-center justify-end">
+              <NegotiationStatusBadge
                 stageName={debtData.pipelineStageName}
                 showAlert={showPartialPaidOverdueAlert}
                 alertMessage={t("pages.debtNegotiation.debts.detail.partialPaidOverdueAlert")}
               />
-            }
-          />
-          <Row
-            label={t("pages.debtNegotiation.debts.detail.originalDebtDate")}
-            value={formatDate(debtData.debtRegistrationDate)}
-            withInfo
-          />
-          <Row
-            label={t("pages.debtNegotiation.debts.detail.originalDebtAmount")}
-            value={formatAmount(debtData.originalDebtAmount)}
-          />
-          <Row
-            label={t("pages.debtNegotiation.debts.detail.platformRegistrationDate")}
-            value={formatDate(debtData.platformRegistrationDate)}
-            withInfo
-          />
-          <Row
-            label={t("pages.debtNegotiation.debts.detail.debtAgeOnPlatform")}
-            value={
-              debtData.debtAge === 1 ? "1 dia" : `${debtData.debtAge} dias`
-            }
-            withInfo
-          />
-          <Row
-            label={t("pages.debtNegotiation.debts.detail.updatedDebtAmount")}
-            value={formatAmount(debtData.debtAmount)}
-          />
+            </div>
 
-          <div className="flex flex-col gap-1.5 py-3">
-            <Label className="text-sm text-muted-foreground">
-              {t("pages.debtNegotiation.debts.addPayment.debtSettled")}
-            </Label>
-            <Select
-              value={settled}
-              onValueChange={(v) => setSettled(v as DebtSettledValue)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no">
-                  {t("pages.debtNegotiation.debts.addPayment.debtSettledNo")}
-                </SelectItem>
-                <SelectItem value="yes">
-                  {t("pages.debtNegotiation.debts.addPayment.debtSettledYes")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <DebtContactCard debtData={debtData} />
+            <DebtMetricsCard debtData={debtData} />
+
+            <Card className="shadow-sm">
+              <CardContent className="space-y-4 pt-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-sm text-muted-foreground">
+                    {t("pages.debtNegotiation.debts.addPayment.debtSettled")}
+                  </Label>
+                  <Select
+                    value={settled}
+                    onValueChange={(v) => setSettled(v as DebtSettledValue)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no">
+                        {t("pages.debtNegotiation.debts.addPayment.debtSettledNo")}
+                      </SelectItem>
+                      <SelectItem value="yes">
+                        {t("pages.debtNegotiation.debts.addPayment.debtSettledYes")}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-sm text-muted-foreground">
+                    {t("pages.debtNegotiation.debts.addPayment.observations")}
+                  </Label>
+                  <Textarea
+                    placeholder={t("pages.debtNegotiation.debts.addPayment.observationsPlaceholder")}
+                    value={observation}
+                    onChange={(e) => setObservation(e.target.value)}
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {mutation.isError && (
+              <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                Erro ao confirmar. Tente novamente.
+              </div>
+            )}
           </div>
-
-          <div className="flex flex-col gap-1.5 py-2">
-            <Label className="text-sm text-muted-foreground">
-              {t("pages.debtNegotiation.debts.addPayment.observations")}
-            </Label>
-            <Textarea
-              placeholder={t("pages.debtNegotiation.debts.addPayment.observationsPlaceholder")}
-              value={observation}
-              onChange={(e) => setObservation(e.target.value)}
-              rows={3}
-              className="resize-none"
-            />
-          </div>
-        </div>
-
-        {mutation.isError && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            Erro ao confirmar. Tente novamente.
-          </div>
-        )}
-
-        <DialogFooter className="flex-row justify-between gap-2 sm:justify-between">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            {t("pages.debtNegotiation.debts.detail.back")}
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? "..." : t("pages.debtNegotiation.debts.addPayment.confirm")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SidePanelLayout>
+      </SidePanelContent>
+    </SidePanel>
   );
 }

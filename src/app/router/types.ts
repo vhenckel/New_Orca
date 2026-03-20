@@ -27,5 +27,7 @@ export interface AppModuleDefinition {
   titleKey: TranslationKey;
   descriptionKey: TranslationKey;
   icon: LucideIcon;
+  /** Se true, o módulo nao aparece no menu lateral. */
+  hideInSidebar?: boolean;
   routes: AppRouteDefinition[];
 }

@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { ChevronLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
@@ -59,7 +60,9 @@ export function PageHeader({
                     {isLast ? (
                       <BreadcrumbPage>{item.label}</BreadcrumbPage>
                     ) : item.href ? (
-                      <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                      <BreadcrumbLink asChild>
+                        <Link to={item.href}>{item.label}</Link>
+                      </BreadcrumbLink>
                     ) : item.onClick ? (
                       <BreadcrumbLink asChild>
                         <button type="button" onClick={item.onClick} className="cursor-pointer">

@@ -3,7 +3,10 @@ import { AlertTriangle } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-import { getStageI18nKey, statusBadgeClass } from "@/modules/debt-negotiation/utils/statusBadgeClass";
+import {
+  getStageI18nKey,
+  statusBadgeClass,
+} from "@/modules/debt-negotiation/utils/statusBadgeClass";
 
 interface StatusBadgeProps {
   stageName: string;
@@ -42,23 +45,23 @@ export function StatusBadge({
     >
       <span
         className={cn(
-          "rounded-full px-2 py-0.5 text-xs font-medium leading-tight",
+            "rounded-full px-3 py-1 text-xs font-medium leading-tight whitespace-nowrap",
           statusBadgeClass(stageName),
           constrained
             ? cn(
                 "flex min-h-6 min-w-0 items-center justify-center",
-                showAlert ? "min-w-0 flex-1" : "w-full",
+                  showAlert ? "flex-1" : "w-full",
               )
             : "inline-flex text-center",
         )}
       >
-        {constrained ? (
-          <span className="min-w-0 max-w-full truncate text-center">
+          <span
+            className={cn(
+              constrained ? "w-full text-center" : "text-center",
+            )}
+          >
             {t(getStageI18nKey(stageName))}
           </span>
-        ) : (
-          t(getStageI18nKey(stageName))
-        )}
       </span>
       {showAlert && (
         <Tooltip>

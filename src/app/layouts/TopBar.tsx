@@ -1,7 +1,7 @@
 import { Bell, Building2, ChevronDown, Download, LogOut, Settings2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
+import type { AppRouteDefinition } from "@/app/router/types";
 import { DashboardDateRangePicker } from "@/shared/components/DashboardDateRangePicker";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { getCompanyNameFromToken } from "@/shared/auth/jwt";
@@ -18,11 +18,10 @@ import {
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
 interface TopBarProps {
-  currentModule: AppModuleDefinition;
   currentRoute: AppRouteDefinition;
 }
 
-export function TopBar({ currentModule, currentRoute }: TopBarProps) {
+export function TopBar({ currentRoute }: TopBarProps) {
   const { t } = useI18n();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -46,20 +45,7 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
   const showImportDebts = currentRoute.showImportDebtsInTopBar === true;
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-6">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-            {t(currentModule.titleKey)}
-          </span>
-          <span className="hidden text-xs text-muted-foreground md:inline">/</span>
-          <h1 className="truncate text-sm font-semibold text-foreground">{t(currentRoute.labelKey)}</h1>
-        </div>
-        <p className="hidden truncate text-xs text-muted-foreground sm:block">
-          {t(currentRoute.descriptionKey)}
-        </p>
-      </div>
-
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-end border-b border-border bg-card px-6">
       <div className="flex items-center gap-3">
         {showDebtDateRange && <DashboardDateRangePicker />}
         {showImportDebts && (

@@ -1,21 +1,41 @@
-import { useState } from "react";
-import { Info } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { AddPaymentDialog } from "@/modules/debt-negotiation/components/AddPaymentDialog";
+import { AddPaymentFlowDialog } from "@/modules/debt-negotiation/components/AddPaymentFlowDialog";
+import {
+  DebtContactCard,
+  DebtMetricsCard,
+} from "@/modules/debt-negotiation/components/DebtOverviewCards";
 import type { DealItem } from "@/modules/debt-negotiation/types/debt-detail";
 import { useDebtDetail } from "@/modules/debt-negotiation/hooks";
 import { hasPartialPaidOverdueInstallments } from "@/modules/debt-negotiation/utils/debtInstallmentAlert";
 import { useI18n } from "@/shared/i18n/useI18n";
-import { StatusBadge } from "@/modules/debt-negotiation/components/StatusBadge";
+import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+  manageDebtStatus,
+  type ManageDebtStatusNewStatus,
+  type ManageDebtStatusResult,
+} from "@/modules/debt-negotiation/services/manage-debt-status";
+import { toast } from "@/shared/ui/sonner";
+import { SidePanelLayout } from "@/shared/ui/side-panel-layout";
+import {
+  SidePanel,
+  SidePanelContent,
+  SidePanelTitle,
+} from "@/shared/ui/side-panel";
 import { Button } from "@/shared/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { Badge } from "@/shared/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Label } from "@/shared/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
+import { Separator } from "@/shared/ui/separator";
+import { Textarea } from "@/shared/ui/textarea";
 import {
   Table,
   TableBody,
@@ -25,15 +45,10 @@ import {
   TableRow,
 } from "@/shared/ui/table";
 import { cn } from "@/shared/lib/utils";
+import { useAuth } from "@/shared/auth/AuthContext";
+import { isSuperAdminUser } from "@/shared/auth/is-super-admin";
 
-function formatCnpj(cnpj: string): string {
-  if (!cnpj || cnpj === "0") return "-";
-  const d = String(cnpj).replace(/\D/g, "");
-  if (d.length !== 14) return cnpj;
-  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
-}
-
-function formatDate(iso: string): string {
+function formatDate(iso: string | null | undefined): string {
   if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
@@ -61,36 +76,6 @@ function getInstallmentStatus(item: DealItem): "paid" | "onTime" | "overdue" {
   return due < now ? "overdue" : "onTime";
 }
 
-function Row({
-  label,
-  value,
-  withInfo,
-}: {
-  label: string;
-  value: React.ReactNode;
-  withInfo?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-0.5 py-2">
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        {label}
-        {withInfo && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex cursor-help rounded-full p-0.5 hover:bg-muted">
-                <Info className="h-3.5 w-3.5" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-xs">
-              Informação adicional
-            </TooltipContent>
-          </Tooltip>
-        )}
-      </div>
-      <div className="text-sm font-medium text-foreground">{value}</div>
-    </div>
-  );
-}
 
 interface DebtDetailDialogProps {
   renegotiationId: string | null;
@@ -98,164 +83,392 @@ interface DebtDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function DebtDetailDialog({ renegotiationId, open, onOpenChange }: DebtDetailDialogProps) {
+export function DebtDetailDialog({
+  renegotiationId,
+  open,
+  onOpenChange,
+}: DebtDetailDialogProps) {
   const { t } = useI18n();
+  const { user } = useAuth();
+  const canManageStatus = isSuperAdminUser(user);
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
-  const { data, isPending, error } = useDebtDetail(open ? renegotiationId : null);
-  const showPartialPaidOverdueAlert = hasPartialPaidOverdueInstallments(data?.deal?.items);
+  const [view, setView] = useState<"details" | "manageStatus">("details");
+  const { data, isPending, error } = useDebtDetail(
+    open ? renegotiationId : null,
+  );
+
+  const queryClient = useQueryClient();
+
+  const [selectedNewStatus, setSelectedNewStatus] = useState<ManageDebtStatusNewStatus | null>(null);
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (!open) {
+      setView("details");
+      setAddPaymentOpen(false);
+      setSelectedNewStatus(null);
+      setReason("");
+      return;
+    }
+    // Sempre entra no drawer em "details"
+    setView("details");
+    setAddPaymentOpen(false);
+    setSelectedNewStatus(null);
+    setReason("");
+  }, [open]);
+
+  useEffect(() => {
+    if (view !== "manageStatus") return;
+    setSelectedNewStatus(null);
+    setReason("");
+  }, [view]);
+
+  useEffect(() => {
+    if (!canManageStatus && view === "manageStatus") {
+      setView("details");
+    }
+  }, [canManageStatus, view]);
+
+  const inManageStatus = canManageStatus && view === "manageStatus";
+
+  const manageStatusOptions = useMemo(
+    () =>
+      [
+        {
+          value: "CANCELED" satisfies ManageDebtStatusNewStatus,
+          label: t("pages.debtNegotiation.debts.status.cancelado"),
+        },
+        {
+          value: "PAYMENT_CONFIRM" satisfies ManageDebtStatusNewStatus,
+          label: t("pages.debtNegotiation.debts.status.confirmacaoPagamento"),
+        },
+      ] as const,
+    [t],
+  );
+
+  const manageStatusMutation = useMutation({
+    mutationFn: async (): Promise<ManageDebtStatusResult> => {
+      if (!renegotiationId || !selectedNewStatus) {
+        throw new Error("Missing renegotiationId/selectedNewStatus");
+      }
+      const idNum = Number(renegotiationId);
+      if (!Number.isFinite(idNum) || idNum <= 0) {
+        throw new Error("Invalid renegotiationId");
+      }
+
+      return manageDebtStatus({
+        renegotiationIds: [idNum],
+        newStatus: selectedNewStatus,
+        reason: reason.trim() || undefined,
+      });
+    },
+    onSuccess: (dataResult) => {
+      // Invalidate queries to reflect the new status
+      if (renegotiationId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["renegotiation", "debt-detail", renegotiationId],
+        });
+      }
+      void queryClient.invalidateQueries({
+        queryKey: ["renegotiation", "debt-details"],
+      });
+
+      const changedCount = dataResult?.results?.filter((r) => r.changed)?.length ?? 0;
+      toast.success(
+        changedCount > 0
+          ? t("pages.debtNegotiation.debts.manageStatus.toast.success")
+          : t("pages.debtNegotiation.debts.manageStatus.toast.noChange"),
+      );
+      // Fechar drawer externo ao concluir a alteração
+      onOpenChange(false);
+    },
+    onError: () => {
+      toast.error(t("pages.debtNegotiation.debts.manageStatus.toast.error"));
+    },
+  });
+
+  const showPartialPaidOverdueAlert = hasPartialPaidOverdueInstallments(
+    data?.deal?.items,
+  );
   const items = data?.deal?.items ?? [];
   const hasInstallments = items.length > 0;
+  const paidInstallments = items.filter((item) => !!item.paidAt).length;
+
+  const drawerFooterLeft =
+    inManageStatus ? (
+      <Button
+        variant="outline"
+        onClick={() => setView("details")}
+        disabled={manageStatusMutation.isPending}
+      >
+        {t("common.back")}
+      </Button>
+    ) : (
+      <Button variant="outline" onClick={() => onOpenChange(false)}>
+        {t("pages.debtNegotiation.debts.detail.back")}
+      </Button>
+    );
+
+  const drawerFooterRight =
+    inManageStatus ? (
+      <Button
+        onClick={() => manageStatusMutation.mutate()}
+        disabled={manageStatusMutation.isPending || !selectedNewStatus}
+      >
+        {manageStatusMutation.isPending
+          ? "..."
+          : t("pages.debtNegotiation.debts.manageStatus.save")}
+      </Button>
+    ) : (
+      <Button
+        onClick={() => setAddPaymentOpen(true)}
+        disabled={!data || !!error}
+      >
+        {t("pages.debtNegotiation.debts.detail.updateDebt")}
+      </Button>
+    );
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          className={
-            hasInstallments
-              ? "max-w-4xl min-w-[28rem] sm:min-w-[32rem] max-h-[90vh] overflow-y-auto"
-              : "max-w-md"
-          }
-        >
-          <DialogHeader>
-            <DialogTitle className="text-left">
-              {t("pages.debtNegotiation.debts.detail.title")}
-            </DialogTitle>
-          </DialogHeader>
-
-          {isPending && (
-            <div className="py-8 text-center text-sm text-muted-foreground">Carregando…</div>
-          )}
-          {error && (
-            <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              Erro ao carregar detalhes da dívida.
-            </div>
-          )}
-          {data && !error && (
-            <div className="space-y-0">
-              <Row label={t("pages.debtNegotiation.debts.detail.fullName")} value={data.contactName} />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.cnpj")}
-                value={data.contactCnpj && data.contactCnpj !== "0" ? formatCnpj(data.contactCnpj) : "-"}
-              />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.currentStatus")}
-                value={
-                  <StatusBadge
-                    stageName={data.pipelineStageName}
-                    showAlert={showPartialPaidOverdueAlert}
-                    alertMessage={t("pages.debtNegotiation.debts.detail.partialPaidOverdueAlert")}
-                  />
-                }
-              />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.originalDebtDate")}
-                value={formatDate(data.debtRegistrationDate)}
-                withInfo
-              />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.originalDebtAmount")}
-                value={formatAmount(data.originalDebtAmount)}
-              />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.platformRegistrationDate")}
-                value={formatDate(data.platformRegistrationDate)}
-                withInfo
-              />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.debtAgeOnPlatform")}
-                value={data.debtAge === 1 ? "1 dia" : `${data.debtAge} dias`}
-                withInfo
-              />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.updatedDebtAmount")}
-                value={formatAmount(data.debtAmount)}
-              />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.negotiatedValue")}
-                value={formatAmount(data.negotiatedValue)}
-              />
-              <Row
-                label={t("pages.debtNegotiation.debts.detail.recoveredValue")}
-                value={formatAmount(data.recoveredValue)}
-              />
-              {hasInstallments && (
-                <div className="mt-6 space-y-3">
-                  <h3 className="text-sm font-medium text-foreground">
-                    {t("pages.debtNegotiation.debts.detail.negotiationSummary")}
-                  </h3>
-                  <div className="card-surface overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.installment")}</TableHead>
-                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.dueDate")}</TableHead>
-                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.paymentDate")}</TableHead>
-                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.amount")}</TableHead>
-                          <TableHead>{t("pages.debtNegotiation.debts.informPayment.col.status")}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {items.map((item) => {
-                          const status = getInstallmentStatus(item);
-                          const isPaid = status === "paid";
-                          const statusKey =
-                            status === "paid"
-                              ? "pages.debtNegotiation.debts.informPayment.status.paid"
-                              : status === "overdue"
-                                ? "pages.debtNegotiation.debts.informPayment.status.overdue"
-                                : "pages.debtNegotiation.debts.informPayment.status.onTime";
-                          const statusClass =
-                            status === "paid"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
-                              : status === "overdue"
-                                ? "bg-destructive/15 text-destructive"
-                                : "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300";
-                          return (
-                            <TableRow key={item.id} className={isPaid ? "opacity-90" : undefined}>
-                              <TableCell>{item.installment}</TableCell>
-                              <TableCell>{formatDate(item.dueAt)}</TableCell>
-                              <TableCell>{item.paidAt ? formatDate(item.paidAt) : "-"}</TableCell>
-                              <TableCell>{formatAmount(item.amount)}</TableCell>
-                              <TableCell>
-                                <span
-                                  className={cn(
-                                    "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
-                                    statusClass
-                                  )}
-                                >
-                                  {t(statusKey)}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
+      <SidePanel open={open} onOpenChange={onOpenChange}>
+        <SidePanelContent size="xl">
+          <SidePanelLayout
+            header={
+              <SidePanelTitle className="text-base">
+                {inManageStatus
+                  ? t("pages.debtNegotiation.debts.manageStatus.title")
+                  : t("pages.debtNegotiation.debts.detail.title")}
+              </SidePanelTitle>
+            }
+            footerLeft={drawerFooterLeft}
+            footerRight={drawerFooterRight}
+          >
+            <div className="flex flex-col gap-3">
+              {isPending && (
+                <div className="rounded-lg border bg-background px-4 py-8 text-center text-sm text-muted-foreground">
+                  {t("pages.debtNegotiation.debts.addPayment.loading")}
                 </div>
               )}
+              {error && (
+                <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {t("pages.debtNegotiation.debts.addPayment.errorLoadingDetail")}
+                </div>
+              )}
+              {data && !error && (
+                <>
+                  {inManageStatus && (
+                    <div className="flex flex-col gap-4">
+                      <Card className="shadow-sm">
+                        <CardContent className="space-y-0 pt-4">
+                          <div className="flex items-center justify-between gap-3 px-1">
+                            <div className="text-sm font-medium text-muted-foreground">
+                              {t(
+                                "pages.debtNegotiation.debts.manageStatus.currentStatus",
+                              )}
+                            </div>
+                            <NegotiationStatusBadge
+                              stageName={data.pipelineStageName}
+                              showAlert={false}
+                            />
+                          </div>
+
+                          <Separator className="mt-4" />
+
+                          <div className="flex flex-col gap-1.5 pt-4 px-1">
+                            <Label>
+                              {t("pages.debtNegotiation.debts.manageStatus.newStatus")}
+                            </Label>
+                            <Select
+                              value={selectedNewStatus ?? undefined}
+                              onValueChange={(v) =>
+                                setSelectedNewStatus(
+                                  v as ManageDebtStatusNewStatus,
+                                )
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue
+                                  placeholder={t(
+                                    "pages.debtNegotiation.debts.manageStatus.selectPlaceholder",
+                                  )}
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {manageStatusOptions.map((opt) => (
+                                  <SelectItem
+                                    key={opt.value}
+                                    value={opt.value}
+                                  >
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex flex-col gap-1.5 pt-4 px-1">
+                            <Label>
+                              {t(
+                                "pages.debtNegotiation.debts.manageStatus.reasonOptional",
+                              )}
+                            </Label>
+                            <Textarea
+                              value={reason}
+                              onChange={(e) => setReason(e.target.value)}
+                              placeholder={t(
+                                "pages.debtNegotiation.debts.manageStatus.reasonPlaceholder",
+                              )}
+                              rows={3}
+                              maxLength={500}
+                              className="resize-none"
+                            />
+                            <div className="text-xs text-muted-foreground">
+                              {reason.length}/500
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                  {view === "details" && (
+                    <>
+                      <div className="w-full flex items-center justify-end gap-2">
+                        {canManageStatus && (
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="h-auto px-0 text-sm"
+                            onClick={() => setView("manageStatus")}
+                            disabled={manageStatusMutation.isPending}
+                          >
+                            {t("pages.debtNegotiation.debts.manageStatus.alter")}
+                          </Button>
+                        )}
+                        <NegotiationStatusBadge
+                          stageName={data.pipelineStageName}
+                          showAlert={showPartialPaidOverdueAlert}
+                          alertMessage={t(
+                            "pages.debtNegotiation.debts.detail.partialPaidOverdueAlert",
+                          )}
+                        />
+                      </div>
+                  <DebtContactCard debtData={data} showBlacklistIcon />
+                  <DebtMetricsCard debtData={data} />
+
+                  {hasInstallments && (
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-xs uppercase text-right tracking-wide text-muted-foreground">
+                          <div className="text-xs text-muted-foreground">
+                            {t("pages.debtNegotiation.debts.detail.installmentsPaid", {
+                              paid: paidInstallments,
+                              total: items.length,
+                            })}
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-0 pb-2">
+                        <div className="card-surface overflow-x-auto border-0 rounded-none shadow-none">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>
+                                  {t(
+                                    "pages.debtNegotiation.debts.informPayment.col.installment",
+                                  )}
+                                </TableHead>
+                                <TableHead>
+                                  {t(
+                                    "pages.debtNegotiation.debts.informPayment.col.dueDate",
+                                  )}
+                                </TableHead>
+                                <TableHead>
+                                  {t(
+                                    "pages.debtNegotiation.debts.informPayment.col.paymentDate",
+                                  )}
+                                </TableHead>
+                                <TableHead>
+                                  {t(
+                                    "pages.debtNegotiation.debts.informPayment.col.amount",
+                                  )}
+                                </TableHead>
+                                <TableHead>
+                                  {t(
+                                    "pages.debtNegotiation.debts.informPayment.col.status",
+                                  )}
+                                </TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {items.map((item) => {
+                                const status = getInstallmentStatus(item);
+                                const isPaid = status === "paid";
+                                const statusKey =
+                                  status === "paid"
+                                    ? "pages.debtNegotiation.debts.informPayment.status.paid"
+                                    : status === "overdue"
+                                      ? "pages.debtNegotiation.debts.informPayment.status.overdue"
+                                      : "pages.debtNegotiation.debts.informPayment.status.onTime";
+                                const statusClass =
+                                  status === "paid"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : status === "overdue"
+                                      ? "bg-destructive/10 text-destructive border-destructive/20"
+                                      : "bg-sky-50 text-sky-700 border-sky-200";
+                                return (
+                                  <TableRow
+                                    key={item.id}
+                                    className={
+                                      isPaid ? "opacity-90" : undefined
+                                    }
+                                  >
+                                    <TableCell>{item.installment}</TableCell>
+                                    <TableCell>
+                                      {formatDate(item.dueAt)}
+                                    </TableCell>
+                                    <TableCell>
+                                      {item.paidAt
+                                        ? formatDate(item.paidAt)
+                                        : "-"}
+                                    </TableCell>
+                                    <TableCell>
+                                      {formatAmount(item.amount)}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge
+                                        variant="outline"
+                                        className={cn("text-xs", statusClass)}
+                                      >
+                                        {t(statusKey)}
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                    </>
+                  )}
+                </>
+              )}
             </div>
-          )}
+          </SidePanelLayout>
+        </SidePanelContent>
+      </SidePanel>
 
-          <DialogFooter className="flex-row justify-between gap-2 sm:justify-between">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {t("pages.debtNegotiation.debts.detail.back")}
-            </Button>
-            <Button onClick={() => setAddPaymentOpen(true)}>
-              {t("pages.debtNegotiation.debts.detail.updateDebt")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {data && renegotiationId && (
-        <AddPaymentDialog
-          renegotiationId={renegotiationId}
-          debtData={data}
-          open={addPaymentOpen}
-          onOpenChange={setAddPaymentOpen}
-        />
-      )}
+      <AddPaymentFlowDialog
+        renegotiationId={renegotiationId}
+        open={addPaymentOpen}
+        onOpenChange={setAddPaymentOpen}
+        onSuccess={() => {
+          // Ao concluir o update, fechar também o drawer externo de detalhes.
+          onOpenChange(false);
+        }}
+      />
     </>
   );
 }

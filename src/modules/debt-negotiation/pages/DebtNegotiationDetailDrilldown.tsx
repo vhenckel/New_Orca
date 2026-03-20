@@ -152,15 +152,23 @@ export function DebtNegotiationDetailDrilldown({
 
   const totalRows = data?.total ?? 0;
 
+  const dashboardHref = debtNegotiationPathWithDateRange("/debt-negotiation", {
+    startDate,
+    endDate,
+  });
+
   return (
     <DashboardPageLayout
       title={t(TITLE_KEYS[variant])}
       subtitle={t(SUBTITLE_KEYS[variant])}
-      onBack={() =>
-        void navigate(
-          debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate }),
-        )
-      }
+      breadcrumb={{
+        items: [
+          { label: t("modules.debtNegotiation.title"), href: dashboardHref },
+          { label: t("modules.debtNegotiation.routes.dashboard.label"), href: dashboardHref },
+          { label: t(TITLE_KEYS[variant]) },
+        ],
+      }}
+      onBack={() => void navigate(dashboardHref)}
       kpiItems={kpiItems}
       isLoadingKpis={boxesPending}
     >

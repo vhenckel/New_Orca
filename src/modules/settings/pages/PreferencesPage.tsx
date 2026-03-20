@@ -1,6 +1,7 @@
 import { Check, Languages, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
+import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
 import { useAccentColor } from "@/shared/theme/useAccentColor";
@@ -23,12 +24,16 @@ export function PreferencesPage() {
   const { accentColor, setAccentColor } = useAccentColor();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-foreground">{t("app.preferences.title")}</h2>
-        <p className="text-sm text-muted-foreground">{t("app.preferences.description")}</p>
-      </div>
-
+    <DashboardPageLayout
+      className="mx-auto max-w-4xl"
+      title={t("app.preferences.title")}
+      subtitle={t("app.preferences.description")}
+      modulePageBreadcrumb={{
+        moduleTitleKey: "modules.settings.title",
+        moduleHref: "/settings",
+        pageTitle: t("modules.settings.routes.preferences.label"),
+      }}
+    >
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>
           <CardHeader>
@@ -137,6 +142,6 @@ export function PreferencesPage() {
           <p className="text-sm text-muted-foreground">{t("app.preferences.savedHint")}</p>
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageLayout>
   );
 }

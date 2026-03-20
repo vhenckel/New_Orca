@@ -7,6 +7,8 @@ interface ModulePlaceholderPageProps {
   title: string;
   description: string;
   primaryActionLabel?: string;
+  /** Quando true, não repete título/eyebrow (use com `DashboardPageLayout` no pai). */
+  headerInLayout?: boolean;
 }
 
 export function ModulePlaceholderPage({
@@ -14,8 +16,22 @@ export function ModulePlaceholderPage({
   title,
   description,
   primaryActionLabel,
+  headerInLayout = false,
 }: ModulePlaceholderPageProps) {
   const { t } = useI18n();
+
+  if (headerInLayout) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">{t("common.placeholder.description")}</p>
+          <Button size="sm" variant="outline">
+            {primaryActionLabel ?? t("common.comingSoon")}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-dashed">

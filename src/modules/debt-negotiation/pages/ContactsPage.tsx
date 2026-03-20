@@ -8,8 +8,13 @@ import {
   CONTACT_LIST_PAGE_SIZE,
 } from "@/modules/debt-negotiation/hooks";
 import type { ContactListItem } from "@/modules/debt-negotiation/types/contact-list";
+import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
 import { useI18n } from "@/shared/i18n/useI18n";
+import {
+  debtNegotiationPathWithDateRange,
+  useDebtNegotiationDateRangeQueryState,
+} from "@/shared/lib/nuqs-filters";
 import {
   Table,
   TableBody,
@@ -68,6 +73,8 @@ function OptStatusIcon({ optStatus }: { optStatus: number }) {
 
 export function ContactsPage() {
   const { t } = useI18n();
+  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
+  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate });
   const [page, setPage] = useState(1);
   const [search, setSearch] = useQueryState(
     "q",
@@ -92,19 +99,15 @@ export function ContactsPage() {
   const totalPages = Math.max(1, Math.ceil(total / CONTACT_LIST_PAGE_SIZE));
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">
-          {t("pages.debtNegotiation.contacts.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("pages.debtNegotiation.contacts.records").replace(
-            "{count}",
-            String(total),
-          )}
-        </p>
-      </div>
-
+    <DashboardPageLayout
+      title={t("pages.debtNegotiation.contacts.title")}
+      subtitle={t("pages.debtNegotiation.contacts.records").replace("{count}", String(total))}
+      modulePageBreadcrumb={{
+        moduleTitleKey: "modules.debtNegotiation.title",
+        moduleHref,
+        pageTitle: t("modules.debtNegotiation.routes.contacts.label"),
+      }}
+    >
       <FilterPanel
         showSearch
         searchValue={search}
@@ -223,6 +226,6 @@ export function ContactsPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardPageLayout>
   );
 }

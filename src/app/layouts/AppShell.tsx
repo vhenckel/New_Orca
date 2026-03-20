@@ -61,12 +61,12 @@ export function AppShell({ children, modules }: AppShellProps) {
           sidebarCollapsed ? "ml-16" : "ml-64",
         )}
       >
-        <TopBar currentModule={currentModule} currentRoute={currentRoute} />
+        <TopBar currentRoute={currentRoute} />
 
         {currentModule.key === "debt-negotiation" && <PendingPaymentBanner />}
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="mx-auto max-w-[1440px] p-6">{children}</div>
+          <div className="mx-auto max-w-[2046px] p-6">{children}</div>
         </main>
       </div>
     </div>
