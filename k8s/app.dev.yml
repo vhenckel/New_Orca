@@ -23,11 +23,11 @@ spec:
             - containerPort: 80
           resources:
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 200m
+              memory: 256Mi
             requests:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 200m
+              memory: 256Mi
       imagePullSecrets:
         - name: o2obots-docker
 ---
