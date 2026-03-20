@@ -258,7 +258,7 @@ export function DebtDetailDialog({
                     <div className="flex flex-col gap-4">
                       <Card className="shadow-sm">
                         <CardContent className="space-y-0 pt-4">
-                          <div className="flex items-center justify-between gap-3 px-1">
+                          <div className="flex items-center justify-between gap-3 px-1 pb-5">
                             <div className="text-sm font-medium text-muted-foreground">
                               {t(
                                 "pages.debtNegotiation.debts.manageStatus.currentStatus",
@@ -270,9 +270,9 @@ export function DebtDetailDialog({
                             />
                           </div>
 
-                          <Separator className="mt-4" />
+                          <Separator className="shrink-0" />
 
-                          <div className="flex flex-col gap-1.5 pt-4 px-1">
+                          <div className="flex flex-col gap-1.5 pt-5 px-1">
                             <Label>
                               {t(
                                 "pages.debtNegotiation.debts.manageStatus.newStatus",
