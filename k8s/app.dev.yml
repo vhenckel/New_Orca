@@ -17,7 +17,7 @@ spec:
       serviceAccountName: o2obots-default-app
       containers:
         - name: o2obots-app-frontend
-          image: o2obotsteam/o2obots-app-frontend-dev:e793d25
+          image: o2obotsteam/o2obots-app-frontend-dev:a144f0d
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
