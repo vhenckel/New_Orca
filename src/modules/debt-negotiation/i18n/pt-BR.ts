@@ -145,6 +145,27 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.addPayment.observations": "Observações",
   "pages.debtNegotiation.debts.addPayment.observationsPlaceholder": "Digite as observações",
   "pages.debtNegotiation.debts.addPayment.confirm": "Confirmar",
+  "pages.debtNegotiation.debts.addPayment.confirmPayment": "Confirmar pagamento",
+  "pages.debtNegotiation.debts.addPayment.paymentDate": "Data de pagamento",
+  "pages.debtNegotiation.debts.addPayment.paymentType": "Tipo de pagamento",
+  "pages.debtNegotiation.debts.addPayment.paymentTypeCash": "À vista",
+  "pages.debtNegotiation.debts.addPayment.paymentTypeInstallment": "Parcelado",
+  "pages.debtNegotiation.debts.addPayment.paidAmount": "Valor pago",
+  "pages.debtNegotiation.debts.addPayment.downPayment": "Valor de entrada",
+  "pages.debtNegotiation.debts.addPayment.nextInstallmentDue": "Vencimento da próxima parcela",
+  "pages.debtNegotiation.debts.addPayment.installmentCount": "Quantidade de parcelas",
+  "pages.debtNegotiation.debts.addPayment.selectInstallmentsPlaceholder": "Selecione a quantidade",
+  "pages.debtNegotiation.debts.addPayment.installmentOption": "{count}x — {amount}",
+  "pages.debtNegotiation.debts.addPayment.installmentSummary": "Resumo das parcelas",
+  "pages.debtNegotiation.debts.addPayment.col.installment": "Parcela",
+  "pages.debtNegotiation.debts.addPayment.col.dueDate": "Vencimento",
+  "pages.debtNegotiation.debts.addPayment.col.amount": "Valor",
+  "pages.debtNegotiation.debts.addPayment.simulating": "Calculando parcelas…",
+  "pages.debtNegotiation.debts.addPayment.simulationError":
+    "Não foi possível simular o parcelamento. Verifique o valor de entrada e tente novamente.",
+  "pages.debtNegotiation.debts.addPayment.validationFillFields":
+    "Preencha os campos obrigatórios para confirmar a quitação.",
+  "pages.debtNegotiation.debts.addPayment.validationPaymentDate": "Informe a data de pagamento.",
   "pages.debtNegotiation.debts.addPayment.toast.sending":
     "Enviando atualização da dívida…",
   "pages.debtNegotiation.debts.addPayment.toast.success":

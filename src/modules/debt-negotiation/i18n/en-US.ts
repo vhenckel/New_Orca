@@ -145,6 +145,27 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.addPayment.observations": "Observations",
   "pages.debtNegotiation.debts.addPayment.observationsPlaceholder": "Enter observations",
   "pages.debtNegotiation.debts.addPayment.confirm": "Confirm",
+  "pages.debtNegotiation.debts.addPayment.confirmPayment": "Confirm payment",
+  "pages.debtNegotiation.debts.addPayment.paymentDate": "Payment date",
+  "pages.debtNegotiation.debts.addPayment.paymentType": "Payment type",
+  "pages.debtNegotiation.debts.addPayment.paymentTypeCash": "Cash (single payment)",
+  "pages.debtNegotiation.debts.addPayment.paymentTypeInstallment": "Installments",
+  "pages.debtNegotiation.debts.addPayment.paidAmount": "Amount paid",
+  "pages.debtNegotiation.debts.addPayment.downPayment": "Down payment",
+  "pages.debtNegotiation.debts.addPayment.nextInstallmentDue": "Next installment due date",
+  "pages.debtNegotiation.debts.addPayment.installmentCount": "Number of installments",
+  "pages.debtNegotiation.debts.addPayment.selectInstallmentsPlaceholder": "Select quantity",
+  "pages.debtNegotiation.debts.addPayment.installmentOption": "{count}x — {amount}",
+  "pages.debtNegotiation.debts.addPayment.installmentSummary": "Installment summary",
+  "pages.debtNegotiation.debts.addPayment.col.installment": "Installment",
+  "pages.debtNegotiation.debts.addPayment.col.dueDate": "Due date",
+  "pages.debtNegotiation.debts.addPayment.col.amount": "Amount",
+  "pages.debtNegotiation.debts.addPayment.simulating": "Calculating installments…",
+  "pages.debtNegotiation.debts.addPayment.simulationError":
+    "Could not simulate installments. Check the down payment and try again.",
+  "pages.debtNegotiation.debts.addPayment.validationFillFields":
+    "Fill required fields to confirm settlement.",
+  "pages.debtNegotiation.debts.addPayment.validationPaymentDate": "Enter the payment date.",
   "pages.debtNegotiation.debts.addPayment.toast.sending":
     "Sending debt update…",
   "pages.debtNegotiation.debts.addPayment.toast.success":
