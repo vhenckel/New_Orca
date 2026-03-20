@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useState, useCallback } from "react";
 import {
   Award,
@@ -44,12 +44,6 @@ import type { ContactDetails, ContactActivity } from "@/modules/debt-negotiation
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { cn } from "@/shared/lib/utils";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
-import {
-  debtNegotiationPathWithDateRange,
-  useDebtNegotiationDateRangeQueryState,
-} from "@/shared/lib/nuqs-filters";
-
-const ROUTE_CONTACTS = "/debt-negotiation/contacts";
 
 type ActivityFilter = "all" | "campaigns" | "collection" | "bot";
 
@@ -139,9 +133,6 @@ function CopyButton({ value }: { value: string }) {
 
 export function ContactDetailPage() {
   const { t } = useI18n();
-  const navigate = useNavigate();
-  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
-  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate });
   const { id } = useParams<{ id: string }>();
   const contactId = id != null ? parseInt(id, 10) : NaN;
   const validId = Number.isInteger(contactId) && contactId > 0 ? contactId : null;
@@ -165,12 +156,9 @@ export function ContactDetailPage() {
   if (id == null || !validId) {
     return (
       <DashboardPageLayout
-        onBack={() => void navigate(ROUTE_CONTACTS)}
-        modulePageBreadcrumb={{
-          moduleTitleKey: "modules.debtNegotiation.title",
-          moduleHref,
-          pageTitle: t("modules.debtNegotiation.routes.contacts.label"),
-        }}
+        showPageHeader
+        title={t("pages.debtNegotiation.contactDetail.detailsTitle")}
+        subtitle={t("pages.debtNegotiation.contactDetail.detailsDescription")}
       >
         <p className="text-sm text-muted-foreground">ID de contato inválido.</p>
       </DashboardPageLayout>
@@ -179,14 +167,9 @@ export function ContactDetailPage() {
 
   return (
     <DashboardPageLayout
-      onBack={() => void navigate(ROUTE_CONTACTS)}
-      breadcrumb={{
-        items: [
-          { label: t("modules.debtNegotiation.title"), href: moduleHref },
-          { label: t("modules.debtNegotiation.routes.contacts.label"), href: ROUTE_CONTACTS },
-          { label: detailsPending ? "…" : name },
-        ],
-      }}
+      showPageHeader
+      title={t("pages.debtNegotiation.contactDetail.detailsTitle")}
+      subtitle={t("pages.debtNegotiation.contactDetail.detailsDescription")}
     >
       <Card>
         <CardHeader className="pb-4">

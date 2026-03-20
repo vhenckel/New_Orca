@@ -26,6 +26,10 @@ export const salesModule: AppModuleDefinition = {
       descriptionKey: "modules.sales.routes.contacts.description",
       icon: Users,
       element: <ContactsPage />,
+      topBarParent: {
+        labelKey: "modules.sales.routes.dashboard.label",
+        path: "/sales",
+      },
     },
     {
       path: "/sales/pipeline",
@@ -33,6 +37,10 @@ export const salesModule: AppModuleDefinition = {
       descriptionKey: "modules.sales.routes.pipeline.description",
       icon: ShoppingCart,
       element: <PipelinePage />,
+      topBarParent: {
+        labelKey: "modules.sales.routes.dashboard.label",
+        path: "/sales",
+      },
     },
   ],
 };

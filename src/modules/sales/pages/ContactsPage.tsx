@@ -7,19 +7,12 @@ export function ContactsPage() {
 
   return (
     <DashboardPageLayout
-      title={t("pages.sales.contacts.title")}
-      subtitle={t("pages.sales.contacts.description")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.sales.title",
-        moduleHref: "/sales",
-        pageTitle: t("modules.sales.routes.contacts.label"),
-      }}
+      showPageHeader
+      title={t("modules.sales.routes.contacts.label")}
+      subtitle={t("modules.sales.routes.contacts.description")}
     >
       <ModulePlaceholderPage
         headerInLayout
-        eyebrow={t("pages.sales.contacts.eyebrow")}
-        title={t("pages.sales.contacts.title")}
-        description={t("pages.sales.contacts.description")}
         primaryActionLabel={t("pages.sales.contacts.action")}
       />
     </DashboardPageLayout>

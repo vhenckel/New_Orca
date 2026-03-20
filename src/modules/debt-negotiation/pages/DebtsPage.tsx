@@ -24,7 +24,6 @@ import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { formatCurrency } from "@/shared/lib/format";
 import {
-  debtNegotiationPathWithDateRange,
   useDebtsPaginationQueryState,
   useDebtNegotiationDateRangeQueryState,
 } from "@/shared/lib/nuqs-filters";
@@ -135,20 +134,11 @@ export function DebtsPage() {
   const totalCount = data?.totalDebtCount.currentValue ?? 0;
   const totalRows = data?.total ?? 0;
 
-  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", {
-    startDate,
-    endDate,
-  });
-
   return (
     <DashboardPageLayout
-      title={t("pages.debtNegotiation.debts.pageTitle")}
-      subtitle={t("pages.debtNegotiation.debts.subtitle")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.debtNegotiation.title",
-        moduleHref,
-        pageTitle: t("pages.debtNegotiation.debts.pageTitle"),
-      }}
+      showPageHeader
+      title={t("pages.debtNegotiation.debts.title")}
+      subtitle={t("pages.debtNegotiation.debts.description")}
       kpiItems={[
         {
           title: t("pages.debtNegotiation.debts.totalDebt"),

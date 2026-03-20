@@ -26,13 +26,9 @@ export function PreferencesPage() {
   return (
     <DashboardPageLayout
       className="mx-auto max-w-4xl"
-      title={t("app.preferences.title")}
-      subtitle={t("app.preferences.description")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.settings.title",
-        moduleHref: "/settings",
-        pageTitle: t("modules.settings.routes.preferences.label"),
-      }}
+      showPageHeader
+      title={t("modules.settings.routes.preferences.label")}
+      subtitle={t("modules.settings.routes.preferences.description")}
     >
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>

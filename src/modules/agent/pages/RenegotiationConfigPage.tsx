@@ -249,13 +249,9 @@ export function RenegotiationConfigPage() {
 
   return (
     <DashboardPageLayout
+      showPageHeader
       title={t("modules.agent.routes.renegotiationConfig.label")}
       subtitle={t("modules.agent.routes.renegotiationConfig.description")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.agent.title",
-        moduleHref: "/agent/renegotiation-config",
-        pageTitle: t("modules.agent.routes.renegotiationConfig.label"),
-      }}
     >
       <div className="space-y-4">
         {error ? (

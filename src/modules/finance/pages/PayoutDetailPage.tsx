@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { ArrowUpDown, Download } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { DataTable } from "@/shared/components/data-table";
@@ -16,8 +16,6 @@ import { usePayoutPermissions } from "@/modules/finance/hooks/usePayoutPermissio
 import {
   usePayoutDetailPaginationQueryState,
   usePayoutDetailSearchQueryState,
-  usePayoutListPaginationQueryState,
-  usePayoutMonthYearQueryState,
 } from "@/modules/finance/lib/payout-query-state";
 import type { PayoutItemDetailDto } from "@/modules/finance/types/payouts";
 import { toast } from "@/shared/ui/sonner";
@@ -33,24 +31,14 @@ function SortHeader({ label, onClick }: { label: string; onClick: () => void }) 
 
 export function PayoutDetailPage() {
   const { t, locale } = useI18n();
-  const navigate = useNavigate();
   const { id } = useParams();
   const payoutId = Number(id);
   const { canViewReconciliation, canExport } = usePayoutPermissions();
-  const { month, year } = usePayoutMonthYearQueryState();
-  const { page: listPage, pageSize: listPageSize } = usePayoutListPaginationQueryState();
   const { page, pageSize, setPagination } = usePayoutDetailPaginationQueryState();
   const [search, setSearch] = usePayoutDetailSearchQueryState();
   const [orderBy, setOrderBy] = useState<"id" | "contactName" | "contractId" | "paidAt" | "totalAmount" | "netAmount">("id");
   const [orderDirection, setOrderDirection] = useState<"ASC" | "DESC">("ASC");
   const [exporting, setExporting] = useState(false);
-  const dateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(locale, {
-        dateStyle: "long",
-      }),
-    [locale],
-  );
   const currencyFormatter = useMemo(
     () =>
       new Intl.NumberFormat(locale, {
@@ -79,30 +67,6 @@ export function PayoutDetailPage() {
     setPagination({ page: 1 });
   }, [orderBy, setPagination]);
 
-  const formatDate = useCallback(
-    (dateValue?: string | null) => {
-      if (!dateValue) return null;
-      const parsed = new Date(dateValue);
-      if (Number.isNaN(parsed.getTime())) return null;
-      return dateFormatter.format(parsed);
-    },
-    [dateFormatter],
-  );
-
-  const headerSubtitle = useMemo(() => {
-    const paidAt = formatDate(data?.paidAt);
-    if (paidAt) {
-      return t("pages.finance.payoutDetail.subtitle.paidAt", { date: paidAt });
-    }
-
-    const scheduledDate = formatDate(data?.scheduledDate);
-    if (scheduledDate) {
-      return t("pages.finance.payoutDetail.subtitle.scheduledDate", { date: scheduledDate });
-    }
-
-    return t("pages.finance.payoutDetail.description");
-  }, [data?.paidAt, data?.scheduledDate, formatDate, t]);
-
   const kpiValues = useMemo(() => {
     const totalGross = data?.filteredItemsSummary?.totalAmount ?? data?.totalAmount ?? 0;
     const totalNet = data?.filteredItemsSummary?.netAmount ?? data?.netAmount ?? 0;
@@ -125,15 +89,6 @@ export function PayoutDetailPage() {
     }),
     [locale, t],
   );
-  const backToListUrl = useMemo(() => {
-    const searchParams = new URLSearchParams({
-      payoutMonth: String(month),
-      payoutYear: String(year),
-      payoutPage: String(listPage),
-      payoutPageSize: String(listPageSize),
-    });
-    return `/finance/payouts?${searchParams.toString()}`;
-  }, [listPage, listPageSize, month, year]);
 
   const columns = useMemo<ColumnDef<PayoutItemDetailDto>[]>(
     () => [
@@ -205,14 +160,9 @@ export function PayoutDetailPage() {
   if (!canViewReconciliation) {
     return (
       <DashboardPageLayout
-        title={t("pages.finance.payoutDetail.title")}
-        breadcrumb={{
-          items: [
-            { label: t("modules.finance.title"), href: "/finance/payouts" },
-            { label: t("modules.finance.routes.payouts.label"), href: backToListUrl },
-            { label: t("modules.finance.routes.payoutDetail.label") },
-          ],
-        }}
+        showPageHeader
+        title={t("modules.finance.routes.payoutDetail.label")}
+        subtitle={t("modules.finance.routes.payoutDetail.description")}
       >
         <Alert>
           <AlertDescription>{t("pages.finance.payoutDetail.errors.noPermission")}</AlertDescription>
@@ -223,17 +173,9 @@ export function PayoutDetailPage() {
 
   return (
     <DashboardPageLayout
-      title={t("pages.finance.payoutDetail.title")}
-      subtitle={headerSubtitle}
-      breadcrumb={{
-        items: [
-          { label: t("modules.finance.title"), href: "/finance/payouts" },
-          { label: t("modules.finance.routes.payouts.label"), href: backToListUrl },
-          { label: t("modules.finance.routes.payoutDetail.label") },
-        ],
-      }}
-      onBack={() => navigate(backToListUrl)}
-      backLabel={t("common.actions.back")}
+      showPageHeader
+      title={t("modules.finance.routes.payoutDetail.label")}
+      subtitle={t("modules.finance.routes.payoutDetail.description")}
       headerActions={
         <Tooltip>
           <TooltipTrigger asChild>

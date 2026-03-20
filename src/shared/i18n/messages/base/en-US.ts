@@ -8,6 +8,7 @@ export const baseEnUS = {
   "app.topbar.userMenu": "Open user menu",
   "app.topbar.changeCompany": "Switch company",
   "app.topbar.logout": "Log out",
+  "app.topbar.breadcrumbNav": "Breadcrumb",
   "app.preferences.title": "Preferences",
   "app.preferences.description":
     "Choose how the application should look for you. Your choices are saved in this browser.",

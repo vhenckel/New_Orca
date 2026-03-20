@@ -29,6 +29,8 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.contactDetail.backToContacts": "Voltar para Contatos",
   "pages.debtNegotiation.contactDetail.viewConversation": "Ver histórico de conversa",
   "pages.debtNegotiation.contactDetail.detailsTitle": "Detalhes do Contato",
+  "pages.debtNegotiation.contactDetail.detailsDescription":
+    "Histórico, dívidas e métricas do contato.",
   "pages.debtNegotiation.contactDetail.generalInfo": "Informações Gerais",
   "pages.debtNegotiation.contactDetail.contactOwner": "Proprietário do contato",
   "pages.debtNegotiation.contactDetail.contactOrigin": "Origem do contato",

@@ -7,19 +7,12 @@ export function PipelinePage() {
 
   return (
     <DashboardPageLayout
-      title={t("pages.sales.pipeline.title")}
-      subtitle={t("pages.sales.pipeline.description")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.sales.title",
-        moduleHref: "/sales",
-        pageTitle: t("modules.sales.routes.pipeline.label"),
-      }}
+      showPageHeader
+      title={t("modules.sales.routes.pipeline.label")}
+      subtitle={t("modules.sales.routes.pipeline.description")}
     >
       <ModulePlaceholderPage
         headerInLayout
-        eyebrow={t("pages.sales.pipeline.eyebrow")}
-        title={t("pages.sales.pipeline.title")}
-        description={t("pages.sales.pipeline.description")}
         primaryActionLabel={t("pages.sales.pipeline.action")}
       />
     </DashboardPageLayout>

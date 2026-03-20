@@ -255,17 +255,11 @@ export function DashboardPage() {
           { label: t("dashboard.kpis.conversionRate"), value: "-", subtitle: t("dashboard.subtitles.conversionRate"), delay: 350 },
         ];
 
-  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", dateRange);
-
   return (
     <DashboardPageLayout
+      showPageHeader
       title={t("modules.debtNegotiation.routes.dashboard.label")}
       subtitle={t("modules.debtNegotiation.routes.dashboard.description")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.debtNegotiation.title",
-        moduleHref,
-        pageTitle: t("modules.debtNegotiation.routes.dashboard.label"),
-      }}
     >
       {error && (
         <Alert variant="destructive">

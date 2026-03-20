@@ -9,14 +9,18 @@ import {
 
 import type { PayoutStatus } from "@/modules/finance/types/payouts";
 
-const monthYearParsers = {
-  payoutMonth: parseAsInteger.withDefault(new Date().getMonth() + 1),
-  payoutYear: parseAsInteger.withDefault(new Date().getFullYear()),
-} as const;
+/** Lista de repasses: mês/ano + paginação compartilham a mesma query (nuqs). */
+const payoutListReplaceOpts = { history: "replace" as const, scroll: false };
 
-const listPaginationParsers = {
-  payoutPage: parseAsInteger.withDefault(1),
-  payoutPageSize: parseAsInteger.withDefault(10),
+const payoutListQueryParsers = {
+  payoutMonth: parseAsInteger
+    .withDefault(new Date().getMonth() + 1)
+    .withOptions(payoutListReplaceOpts),
+  payoutYear: parseAsInteger
+    .withDefault(new Date().getFullYear())
+    .withOptions(payoutListReplaceOpts),
+  payoutPage: parseAsInteger.withDefault(1).withOptions(payoutListReplaceOpts),
+  payoutPageSize: parseAsInteger.withDefault(10).withOptions(payoutListReplaceOpts),
 } as const;
 
 const detailPaginationParsers = {
@@ -25,19 +29,20 @@ const detailPaginationParsers = {
 } as const;
 
 export function usePayoutMonthYearQueryState() {
-  const [raw, setRaw] = useQueryStates(monthYearParsers);
+  const [raw, setRaw] = useQueryStates(payoutListQueryParsers);
   const month = raw.payoutMonth >= 1 && raw.payoutMonth <= 12 ? raw.payoutMonth : new Date().getMonth() + 1;
   const year = raw.payoutYear >= 2000 && raw.payoutYear <= 2100 ? raw.payoutYear : new Date().getFullYear();
   return {
     month,
     year,
+    /** Atualiza URL (nuqs) e volta para página 1 — dispara refetch em `usePayoutList`. */
     setMonthYear: (next: { month: number; year: number }) =>
-      setRaw({ payoutMonth: next.month, payoutYear: next.year }),
+      setRaw({ payoutMonth: next.month, payoutYear: next.year, payoutPage: 1 }),
   };
 }
 
 export function usePayoutListPaginationQueryState() {
-  const [raw, setRaw] = useQueryStates(listPaginationParsers);
+  const [raw, setRaw] = useQueryStates(payoutListQueryParsers);
   return {
     page: raw.payoutPage,
     pageSize: raw.payoutPageSize,

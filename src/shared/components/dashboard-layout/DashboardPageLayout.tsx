@@ -1,22 +1,19 @@
 import type { ReactNode } from "react";
 
-import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
 
 import { KpiGrid } from "./KpiGrid";
 import { PageHeader } from "./PageHeader";
-import type { BreadcrumbItem, KpiItem, ModulePageBreadcrumb } from "./types";
+import type { KpiItem } from "./types";
 
 export type DashboardPageLayoutProps = {
   headerContent?: ReactNode;
   title?: string;
   subtitle?: string;
-  /** Se definido, tem prioridade sobre `modulePageBreadcrumb`. */
-  breadcrumb?: { items: BreadcrumbItem[] };
-  /** Breadcrumb padrão: módulo (link) → título da página. */
-  modulePageBreadcrumb?: ModulePageBreadcrumb;
-  onBack?: () => void;
-  backLabel?: string;
+  /**
+   * Quando true, exibe título e subtítulo no corpo da página (navegação no TopBar).
+   */
+  showPageHeader?: boolean;
   headerActions?: ReactNode;
 
   kpiContent?: ReactNode;
@@ -31,10 +28,7 @@ export function DashboardPageLayout({
   headerContent,
   title = "",
   subtitle,
-  breadcrumb,
-  modulePageBreadcrumb,
-  onBack,
-  backLabel,
+  showPageHeader = false,
   headerActions,
   kpiContent,
   kpiItems,
@@ -42,30 +36,13 @@ export function DashboardPageLayout({
   children,
   className,
 }: DashboardPageLayoutProps) {
-  const { t } = useI18n();
-
-  const resolvedBreadcrumb =
-    breadcrumb ??
-    (modulePageBreadcrumb
-      ? {
-          items: [
-            {
-              label: t(modulePageBreadcrumb.moduleTitleKey),
-              href: modulePageBreadcrumb.moduleHref,
-            },
-            { label: modulePageBreadcrumb.pageTitle },
-          ],
-        }
-      : undefined);
+  const resolvedTitle = showPageHeader ? title : "";
+  const resolvedSubtitle = showPageHeader ? subtitle : "";
 
   const showDefaultHeader =
     headerContent == null &&
     Boolean(
-      title ||
-        subtitle ||
-        (resolvedBreadcrumb?.items?.length ?? 0) > 0 ||
-        onBack ||
-        headerActions,
+      headerActions || (showPageHeader && (title || subtitle)),
     );
 
   const showKpi =
@@ -77,11 +54,8 @@ export function DashboardPageLayout({
     <div className={cn("flex flex-col gap-6", className)}>
       {headerContent ?? (showDefaultHeader ? (
         <PageHeader
-          title={title}
-          subtitle={subtitle}
-          breadcrumb={resolvedBreadcrumb}
-          onBack={onBack}
-          backLabel={backLabel}
+          title={resolvedTitle}
+          subtitle={resolvedSubtitle}
           actions={headerActions}
         />
       ) : null)}

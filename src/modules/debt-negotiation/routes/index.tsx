@@ -34,6 +34,11 @@ export const debtNegotiationModule: AppModuleDefinition = {
       element: <DebtsPage />,
       showDebtNegotiationDateRangeInTopBar: true,
       showImportDebtsInTopBar: true,
+      topBarParent: {
+        labelKey: "modules.debtNegotiation.routes.dashboard.label",
+        path: "/debt-negotiation",
+        preserveSearch: true,
+      },
     },
     {
       path: "/debt-negotiation/debts/import",
@@ -42,6 +47,11 @@ export const debtNegotiationModule: AppModuleDefinition = {
       icon: FileText,
       element: <ImportDebtsWizardPage />,
       hideInSidebar: true,
+      topBarParent: {
+        labelKey: "modules.debtNegotiation.routes.debts.label",
+        path: "/debt-negotiation/debts",
+        preserveSearch: true,
+      },
     },
     {
       path: "/debt-negotiation/contacts",
@@ -49,6 +59,11 @@ export const debtNegotiationModule: AppModuleDefinition = {
       descriptionKey: "modules.debtNegotiation.routes.contacts.description",
       icon: Users,
       element: <ContactsPage />,
+      topBarParent: {
+        labelKey: "modules.debtNegotiation.routes.dashboard.label",
+        path: "/debt-negotiation",
+        preserveSearch: true,
+      },
     },
     {
       path: "/debt-negotiation/contacts/:id",
@@ -57,6 +72,11 @@ export const debtNegotiationModule: AppModuleDefinition = {
       icon: Users,
       element: <ContactDetailPage />,
       hideInSidebar: true,
+      topBarParent: {
+        labelKey: "modules.debtNegotiation.routes.contacts.label",
+        path: "/debt-negotiation/contacts",
+        preserveSearch: true,
+      },
     },
     {
       path: "/debt-negotiation/renegotiation-details",
@@ -66,6 +86,11 @@ export const debtNegotiationModule: AppModuleDefinition = {
       element: <RenegotiationDetailsPage />,
       hideInSidebar: true,
       showDebtNegotiationDateRangeInTopBar: true,
+      topBarParent: {
+        labelKey: "modules.debtNegotiation.routes.dashboard.label",
+        path: "/debt-negotiation",
+        preserveSearch: true,
+      },
     },
     {
       path: "/debt-negotiation/negotiated-details",
@@ -75,6 +100,11 @@ export const debtNegotiationModule: AppModuleDefinition = {
       element: <NegotiatedDetailsPage />,
       hideInSidebar: true,
       showDebtNegotiationDateRangeInTopBar: true,
+      topBarParent: {
+        labelKey: "modules.debtNegotiation.routes.dashboard.label",
+        path: "/debt-negotiation",
+        preserveSearch: true,
+      },
     },
     {
       path: "/debt-negotiation/recovered-details",
@@ -84,6 +114,11 @@ export const debtNegotiationModule: AppModuleDefinition = {
       element: <RecoveredDetailsPage />,
       hideInSidebar: true,
       showDebtNegotiationDateRangeInTopBar: true,
+      topBarParent: {
+        labelKey: "modules.debtNegotiation.routes.dashboard.label",
+        path: "/debt-negotiation",
+        preserveSearch: true,
+      },
     },
   ],
 };

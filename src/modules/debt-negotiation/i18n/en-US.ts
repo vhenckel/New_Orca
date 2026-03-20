@@ -29,6 +29,8 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.contactDetail.backToContacts": "Back to Contacts",
   "pages.debtNegotiation.contactDetail.viewConversation": "View conversation history",
   "pages.debtNegotiation.contactDetail.detailsTitle": "Contact Details",
+  "pages.debtNegotiation.contactDetail.detailsDescription":
+    "Debts, metrics and activity for this contact.",
   "pages.debtNegotiation.contactDetail.generalInfo": "General Information",
   "pages.debtNegotiation.contactDetail.contactOwner": "Contact owner",
   "pages.debtNegotiation.contactDetail.contactOrigin": "Contact origin",

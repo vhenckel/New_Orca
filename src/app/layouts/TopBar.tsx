@@ -1,7 +1,8 @@
 import { Bell, Building2, ChevronDown, Download, LogOut, Settings2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import type { AppRouteDefinition } from "@/app/router/types";
+import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
+import { PayoutMonthYearTopBar } from "@/modules/finance/components/PayoutMonthYearTopBar";
 import { DashboardDateRangePicker } from "@/shared/components/DashboardDateRangePicker";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { getCompanyNameFromToken } from "@/shared/auth/jwt";
@@ -18,10 +19,11 @@ import {
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
 interface TopBarProps {
+  currentModule: AppModuleDefinition;
   currentRoute: AppRouteDefinition;
 }
 
-export function TopBar({ currentRoute }: TopBarProps) {
+export function TopBar({ currentModule, currentRoute }: TopBarProps) {
   const { t } = useI18n();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -42,12 +44,46 @@ export function TopBar({ currentRoute }: TopBarProps) {
   const navigate = useNavigate();
 
   const showDebtDateRange = currentRoute.showDebtNegotiationDateRangeInTopBar === true;
+  const showPayoutMonthYear = currentRoute.showPayoutMonthYearInTopBar === true;
   const showImportDebts = currentRoute.showImportDebtsInTopBar === true;
 
+  const parent = currentRoute.topBarParent;
+  const parentTo =
+    parent != null
+      ? `${parent.path}${parent.preserveSearch ? location.search : ""}`
+      : null;
+
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-end border-b border-border bg-card px-6">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-card px-6">
+      <div className="min-w-0 flex-1">
+        <nav aria-label={t("app.topbar.breadcrumbNav")} className="flex min-w-0 items-center gap-2">
+          <Link
+            to={currentModule.basePath}
+            className="shrink-0 truncate text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {t(currentModule.titleKey)}
+          </Link>
+          {parentTo != null && parent != null ? (
+            <>
+              <span className="hidden shrink-0 text-sm text-muted-foreground md:inline">/</span>
+              <Link
+                to={parentTo}
+                className="min-w-0 max-w-[40%] truncate text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:max-w-[50%]"
+              >
+                {t(parent.labelKey)}
+              </Link>
+            </>
+          ) : null}
+          <span className="hidden shrink-0 text-sm text-muted-foreground md:inline">/</span>
+          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+            {t(currentRoute.labelKey)}
+          </h1>
+        </nav>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-3">
         {showDebtDateRange && <DashboardDateRangePicker />}
+        {showPayoutMonthYear && <PayoutMonthYearTopBar />}
         {showImportDebts && (
           <Button
             size="sm"

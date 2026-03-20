@@ -14,10 +14,6 @@ import type {
 } from "@/modules/debt-negotiation/types";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { useI18n } from "@/shared/i18n/useI18n";
-import {
-  debtNegotiationPathWithDateRange,
-  useDebtNegotiationDateRangeQueryState,
-} from "@/shared/lib/nuqs-filters";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
@@ -49,8 +45,6 @@ interface ParseState {
 export function ImportDebtsWizardPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
-  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate });
 
   const [step, setStep] = useState<WizardStep>(0);
   const [file, setFile] = useState<File | null>(null);
@@ -423,13 +417,9 @@ export function ImportDebtsWizardPage() {
   return (
     <DashboardPageLayout
       className="min-w-0"
+      showPageHeader
       title={t("pages.debtNegotiation.importDebts.title")}
       subtitle={t("pages.debtNegotiation.importDebts.subtitle")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.debtNegotiation.title",
-        moduleHref,
-        pageTitle: t("pages.debtNegotiation.importDebts.title"),
-      }}
       headerActions={
         <span className="inline-flex h-7 items-center rounded-full border border-border px-3 text-xs text-muted-foreground">
           {t("pages.debtNegotiation.importDebts.stepLabel", {

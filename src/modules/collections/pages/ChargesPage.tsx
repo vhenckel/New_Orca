@@ -7,19 +7,12 @@ export function ChargesPage() {
 
   return (
     <DashboardPageLayout
-      title={t("pages.collections.charges.title")}
-      subtitle={t("pages.collections.charges.description")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.collections.title",
-        moduleHref: "/collections",
-        pageTitle: t("modules.collections.routes.charges.label"),
-      }}
+      showPageHeader
+      title={t("modules.collections.routes.charges.label")}
+      subtitle={t("modules.collections.routes.charges.description")}
     >
       <ModulePlaceholderPage
         headerInLayout
-        eyebrow={t("pages.collections.charges.eyebrow")}
-        title={t("pages.collections.charges.title")}
-        description={t("pages.collections.charges.description")}
         primaryActionLabel={t("pages.collections.charges.action")}
       />
     </DashboardPageLayout>

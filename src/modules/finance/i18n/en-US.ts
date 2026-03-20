@@ -12,6 +12,7 @@ export const financeEnUS = {
   "pages.finance.payouts.errors.loadList": "Failed to load payouts list.",
   "pages.finance.payouts.errors.noPermission": "You do not have permission to access this page.",
   "pages.finance.payouts.filters.monthPlaceholder": "Month",
+  "pages.finance.payouts.filters.year": "Year",
   "pages.finance.payouts.table.actions": "Actions",
   "pages.finance.payouts.table.actions.viewDetails": "View payout details",
   "pages.finance.payouts.table.actions.noPermission": "No permission for details",

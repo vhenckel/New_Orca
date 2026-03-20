@@ -16,6 +16,7 @@ export const financeModule: AppModuleDefinition = {
       labelKey: "modules.finance.routes.payouts.label",
       descriptionKey: "modules.finance.routes.payouts.description",
       icon: ListChecks,
+      showPayoutMonthYearInTopBar: true,
       element: <PayoutsPage />,
     },
     {
@@ -25,6 +26,11 @@ export const financeModule: AppModuleDefinition = {
       icon: Receipt,
       element: <PayoutDetailPage />,
       hideInSidebar: true,
+      topBarParent: {
+        labelKey: "modules.finance.routes.payouts.label",
+        path: "/finance/payouts",
+        preserveSearch: true,
+      },
     },
   ],
 };

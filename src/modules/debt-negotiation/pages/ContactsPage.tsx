@@ -12,10 +12,6 @@ import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
 import { useI18n } from "@/shared/i18n/useI18n";
 import {
-  debtNegotiationPathWithDateRange,
-  useDebtNegotiationDateRangeQueryState,
-} from "@/shared/lib/nuqs-filters";
-import {
   Table,
   TableBody,
   TableCell,
@@ -73,8 +69,6 @@ function OptStatusIcon({ optStatus }: { optStatus: number }) {
 
 export function ContactsPage() {
   const { t } = useI18n();
-  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
-  const moduleHref = debtNegotiationPathWithDateRange("/debt-negotiation", { startDate, endDate });
   const [page, setPage] = useState(1);
   const [search, setSearch] = useQueryState(
     "q",
@@ -100,13 +94,9 @@ export function ContactsPage() {
 
   return (
     <DashboardPageLayout
-      title={t("pages.debtNegotiation.contacts.title")}
-      subtitle={t("pages.debtNegotiation.contacts.records").replace("{count}", String(total))}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.debtNegotiation.title",
-        moduleHref,
-        pageTitle: t("modules.debtNegotiation.routes.contacts.label"),
-      }}
+      showPageHeader
+      title={t("modules.debtNegotiation.routes.contacts.label")}
+      subtitle={t("modules.debtNegotiation.routes.contacts.description")}
     >
       <FilterPanel
         showSearch

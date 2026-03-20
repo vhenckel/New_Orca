@@ -8,16 +8,7 @@ import { DataTable } from "@/shared/components/data-table";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
-import { Input } from "@/shared/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
 import { PayoutChangesDrawer } from "@/modules/finance/components/PayoutChangesDrawer";
 import { PayoutStatusBadge } from "@/modules/finance/components/PayoutStatusBadge";
 import { usePayoutList } from "@/modules/finance/hooks/usePayoutList";
@@ -44,31 +35,11 @@ export function PayoutsPage() {
   const { t, locale } = useI18n();
   const navigate = useNavigate();
   const { canViewPage, canViewDetails, canEdit, canViewReconciliation } = usePayoutPermissions();
-  const { month, year, setMonthYear } = usePayoutMonthYearQueryState();
+  const { month, year } = usePayoutMonthYearQueryState();
   const { page, pageSize, setPagination } = usePayoutListPaginationQueryState();
   const [orderBy, setOrderBy] = useState<"scheduledDate" | "createdAt" | "id">("scheduledDate");
   const [orderDirection, setOrderDirection] = useState<"ASC" | "DESC">("ASC");
   const [modalPayout, setModalPayout] = useState<PayoutDayDto | null>(null);
-  const monthFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(undefined, {
-        month: "long",
-      }),
-    [],
-  );
-  const monthOptions = useMemo(
-    () =>
-      Array.from({ length: 12 }).map((_, index) => {
-        const monthNumber = index + 1;
-        const monthLabel = monthFormatter.format(new Date(2020, index, 1));
-        return {
-          value: String(monthNumber),
-          label: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
-        };
-      }),
-    [monthFormatter],
-  );
-
   const { data, isPending, error } = usePayoutList(month, year, {
     orderBy,
     orderDirection,
@@ -165,7 +136,7 @@ export function PayoutsPage() {
       { accessorKey: "feeAmountFormatted", header: t("pages.finance.payouts.table.feeAmount") },
       { accessorKey: "netAmountFormatted", header: t("pages.finance.payouts.table.netAmount") },
     ],
-    [canEdit, canViewDetails, canViewReconciliation, navigate, t, toggleSort],
+    [canEdit, canViewDetails, canViewReconciliation, month, navigate, page, pageSize, t, toggleSort, year],
   );
   const paginationLabels = useMemo(
     () => ({
@@ -185,12 +156,9 @@ export function PayoutsPage() {
   if (!canViewPage) {
     return (
       <DashboardPageLayout
+        showPageHeader
         title={t("pages.finance.payouts.title")}
-        modulePageBreadcrumb={{
-          moduleTitleKey: "modules.finance.title",
-          moduleHref: "/finance/payouts",
-          pageTitle: t("modules.finance.routes.payouts.label"),
-        }}
+        subtitle={t("pages.finance.payouts.description")}
       >
         <Alert>
           <AlertDescription>{t("pages.finance.payouts.errors.noPermission")}</AlertDescription>
@@ -201,37 +169,9 @@ export function PayoutsPage() {
 
   return (
     <DashboardPageLayout
+      showPageHeader
       title={t("pages.finance.payouts.title")}
       subtitle={t("pages.finance.payouts.description")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.finance.title",
-        moduleHref: "/finance/payouts",
-        pageTitle: t("modules.finance.routes.payouts.label"),
-      }}
-      headerActions={
-        <div className="flex gap-2">
-          <Select value={String(month)} onValueChange={(value) => setMonthYear({ month: Number(value), year })}>
-            <SelectTrigger className="w-28">
-              <SelectValue placeholder={t("pages.finance.payouts.filters.monthPlaceholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {monthOptions.map((monthOption) => (
-                  <SelectItem key={monthOption.value} value={monthOption.value}>
-                    {monthOption.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <Input
-            type="number"
-            className="w-24"
-            value={year}
-            onChange={(e) => setMonthYear({ month, year: Number(e.target.value) || year })}
-          />
-        </div>
-      }
       kpiItems={[
         { title: t("pages.finance.payouts.kpi.totalToTransfer"), value: data?.totalToTransferFormatted ?? "-" },
         { title: t("pages.finance.payouts.kpi.pendingToTransfer"), value: data?.pendingToTransferFormatted ?? "-" },

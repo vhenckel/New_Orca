@@ -26,6 +26,10 @@ export const collectionsModule: AppModuleDefinition = {
       descriptionKey: "modules.collections.routes.contacts.description",
       icon: Users,
       element: <ContactsPage />,
+      topBarParent: {
+        labelKey: "modules.collections.routes.dashboard.label",
+        path: "/collections",
+      },
     },
     {
       path: "/collections/charges",
@@ -33,6 +37,10 @@ export const collectionsModule: AppModuleDefinition = {
       descriptionKey: "modules.collections.routes.charges.description",
       icon: Receipt,
       element: <ChargesPage />,
+      topBarParent: {
+        labelKey: "modules.collections.routes.dashboard.label",
+        path: "/collections",
+      },
     },
   ],
 };

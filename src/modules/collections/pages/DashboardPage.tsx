@@ -7,19 +7,12 @@ export function DashboardPage() {
 
   return (
     <DashboardPageLayout
-      title={t("pages.collections.dashboard.title")}
-      subtitle={t("pages.collections.dashboard.description")}
-      modulePageBreadcrumb={{
-        moduleTitleKey: "modules.collections.title",
-        moduleHref: "/collections",
-        pageTitle: t("modules.collections.routes.dashboard.label"),
-      }}
+      showPageHeader
+      title={t("modules.collections.routes.dashboard.label")}
+      subtitle={t("modules.collections.routes.dashboard.description")}
     >
       <ModulePlaceholderPage
         headerInLayout
-        eyebrow={t("pages.collections.dashboard.eyebrow")}
-        title={t("pages.collections.dashboard.title")}
-        description={t("pages.collections.dashboard.description")}
         primaryActionLabel={t("pages.collections.dashboard.action")}
       />
     </DashboardPageLayout>

@@ -12,6 +12,7 @@ export const financePtBR = {
   "pages.finance.payouts.errors.loadList": "Falha ao carregar lista de repasses.",
   "pages.finance.payouts.errors.noPermission": "Sem permissão para acessar esta página.",
   "pages.finance.payouts.filters.monthPlaceholder": "Mês",
+  "pages.finance.payouts.filters.year": "Ano",
   "pages.finance.payouts.table.actions": "Ações",
   "pages.finance.payouts.table.actions.viewDetails": "Ver detalhes do repasse",
   "pages.finance.payouts.table.actions.noPermission": "Sem permissão para detalhes",
