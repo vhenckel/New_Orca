@@ -4,12 +4,12 @@ import type { ConversationHistoryResponse } from "@/modules/debt-negotiation/typ
 
 const CONVERSATION_HISTORY_PATH = "/contact";
 
-const TAKE = 10;
+const TAKE = 50;
 const ORDER = "ASC";
 
 export async function fetchConversationHistory(
   contactId: number,
-  params?: { cursor?: string }
+  params?: { cursor?: string },
 ): Promise<ConversationHistoryResponse> {
   const companyId = getCurrentCompanyId();
   const search = new URLSearchParams({
@@ -20,6 +20,6 @@ export async function fetchConversationHistory(
   if (params?.cursor) search.set("cursor", params.cursor);
 
   return spotJson<ConversationHistoryResponse>(
-    `${CONVERSATION_HISTORY_PATH}/${contactId}/conversation-history?${search.toString()}`
+    `${CONVERSATION_HISTORY_PATH}/${contactId}/conversation-history?${search.toString()}`,
   );
 }
