@@ -10,7 +10,6 @@ export interface RenegotiationConfigDto {
   minInstallmentValue: number | null;
   maxInstallment: number | null;
 
-  // Campos presentes no backend (UI pode usar, mesmo que PUT não envie).
   applyOver?: AgentApplyOver | string;
   prescriptionYears?: number | null;
 
@@ -27,5 +26,6 @@ export interface RenegotiationConfigPayload {
   cashDiscount: number | null;
   minInstallmentValue: number | null;
   maxInstallment: number | null;
+  prescriptionYears: number | null;
 }
 

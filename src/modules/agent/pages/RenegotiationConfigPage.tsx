@@ -211,6 +211,7 @@ export function RenegotiationConfigPage() {
       cashDiscount: form.cashDiscount,
       minInstallmentValue: form.minInstallmentValue,
       maxInstallment: form.maxInstallment,
+      prescriptionYears: form.prescriptionYears,
     };
 
     const toastId =
