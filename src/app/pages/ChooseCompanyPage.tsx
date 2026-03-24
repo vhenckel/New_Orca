@@ -23,11 +23,12 @@ export function ChooseCompanyPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
+  const visibleAccounts = accounts.filter(([, name]) => !name.trim().startsWith("_"));
   const searchLower = search.trim().toLowerCase();
   const filtered =
     !searchLower
-      ? accounts
-      : accounts.filter(
+      ? visibleAccounts
+      : visibleAccounts.filter(
           ([id, name]) =>
             name.toLowerCase().includes(searchLower) ||
             String(id).includes(searchLower)
@@ -102,7 +103,7 @@ export function ChooseCompanyPage() {
               Escolha a empresa que deseja acessar
             </h1>
             <p className="mt-4 text-lg text-white/90">
-              Você possui acesso a mais de uma empresa. Selecione abaixo para continuar.
+              Você possui acesso a mais de uma empresa. Selecione ao lado para continuar.
             </p>
           </div>
         </section>
@@ -129,10 +130,10 @@ export function ChooseCompanyPage() {
             {loading && (
               <p className="text-center text-white/80">Carregando empresas…</p>
             )}
-            {!loading && accounts.length === 0 && (
+            {!loading && visibleAccounts.length === 0 && (
               <p className="text-center text-white/80">Nenhuma empresa encontrada.</p>
             )}
-            {!loading && accounts.length > 0 && (
+            {!loading && visibleAccounts.length > 0 && (
               <div className="flex min-h-[28rem] flex-col gap-3">
                 <div className="relative shrink-0">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />

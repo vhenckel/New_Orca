@@ -30,7 +30,11 @@ export function useDebtImportParse() {
 }
 
 export function useDebtImportValidate() {
-  return useMutation<DebtImportValidateResponse, Error, { file: File; mapping: Record<string, string> }>({
+  return useMutation<
+    DebtImportValidateResponse,
+    Error,
+    { file: File; mapping: Record<string, string | number> }
+  >({
     mutationFn: ({ file, mapping }) => validateDebtImportCsv(file, mapping),
   });
 }
