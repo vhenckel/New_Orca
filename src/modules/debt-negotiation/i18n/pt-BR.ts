@@ -222,7 +222,7 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.status.ignorado": "Ignorado",
   "pages.debtNegotiation.debts.status.emNegociacao": "Em negociação",
   "pages.debtNegotiation.debts.status.recuperadoParcialmente": "Recuperado parcialmente",
-  "pages.debtNegotiation.debts.status.recuperado": "Recuperado",
+  "pages.debtNegotiation.debts.status.recuperado": "Pago",
   "pages.debtNegotiation.debts.status.pagoDiretamente": "Pago diretamente",
   "pages.debtNegotiation.debts.status.confirmacaoPagamento": "Confirmação de pagamento",
   "pages.debtNegotiation.debts.status.emCobranca": "Em cobrança",

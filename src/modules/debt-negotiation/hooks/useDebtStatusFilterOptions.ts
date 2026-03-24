@@ -11,7 +11,18 @@ export function useDebtStatusFilterOptions(
 ) {
   return useMemo(() => {
     const fromApi = availableFilters?.find((f) => f.id === "statuses" || f.id === "status");
-    if (fromApi?.options?.length) return fromApi.options;
+    if (fromApi?.options?.length) {
+      return fromApi.options.map((opt) => {
+        const normalized = opt.label?.toLowerCase().trim();
+        if (normalized === "recuperado") {
+          return {
+            ...opt,
+            label: t("pages.debtNegotiation.debts.status.recuperado"),
+          };
+        }
+        return opt;
+      });
+    }
     return [
       {
         value: PAYMENT_CONFIRMATION_FILTER_STAGE_ID,

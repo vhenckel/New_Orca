@@ -222,7 +222,7 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.status.ignorado": "Ignored",
   "pages.debtNegotiation.debts.status.emNegociacao": "In negotiation",
   "pages.debtNegotiation.debts.status.recuperadoParcialmente": "Partially recovered",
-  "pages.debtNegotiation.debts.status.recuperado": "Recovered",
+  "pages.debtNegotiation.debts.status.recuperado": "Paid",
   "pages.debtNegotiation.debts.status.pagoDiretamente": "Paid directly",
   "pages.debtNegotiation.debts.status.confirmacaoPagamento": "Payment confirmation",
   "pages.debtNegotiation.debts.status.emCobranca": "In collection",
