@@ -1,6 +1,8 @@
 import { ActivityFeed } from "@/modules/debt-negotiation/components/ActivityFeed";
+import { AverageTicketCard } from "@/modules/debt-negotiation/components/AverageTicketCard";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/shared/ui/button";
 import { DailyTable } from "@/modules/debt-negotiation/components/DailyTable";
 import { DonutCard } from "@/modules/debt-negotiation/components/DonutCard";
 import { KPICard } from "@/modules/debt-negotiation/components/KPICard";
@@ -8,7 +10,9 @@ import { MetricCard } from "@/modules/debt-negotiation/components/MetricCard";
 import { NegotiationFunnel } from "@/modules/debt-negotiation/components/NegotiationFunnel";
 import { NpsCard } from "@/modules/debt-negotiation/components/NpsCard";
 import { PerformanceChart } from "@/modules/debt-negotiation/components/PerformanceChart";
+import { SubscriptionPlanCard } from "@/modules/debt-negotiation/components/SubscriptionPlanCard";
 import { useRenegotiationBoxes, useRenegotiationGraphics } from "@/modules/debt-negotiation/hooks";
+import { useRenegotiationPlanUsage } from "@/modules/debt-negotiation/hooks";
 import type {
   KpiMetric,
   OperationalMetric,
@@ -24,6 +28,9 @@ import {
 } from "@/shared/lib/format";
 import type { TranslationKey } from "@/shared/i18n/config";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { getCurrentCompanyId } from "@/shared/auth/current-company";
+import { getPlanAlerts } from "@/modules/debt-negotiation/utils";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
@@ -36,6 +43,8 @@ function trendFromChange(percentageChange: number | null | undefined): "up" | "d
   if (percentageChange == null || Number.isNaN(percentageChange)) return "up";
   return percentageChange >= 0 ? "up" : "down";
 }
+
+const PLANS_PAGE_URL = "https://renegociacao.agentedeia.o2obots.com/#planos";
 
 function mapBoxesToKpiMetrics(
   data: RenegotiationBoxesResponse,
@@ -156,6 +165,17 @@ export function DashboardPage() {
   const dateRange = { startDate, endDate };
   const { data: boxesData, error } = useRenegotiationBoxes();
   const { data: graphicsData } = useRenegotiationGraphics();
+  const companyId = getCurrentCompanyId();
+  const { data: planUsageData } = useRenegotiationPlanUsage({ companyId });
+  const planAlerts = useMemo(
+    () => getPlanAlerts(planUsageData, companyId, t),
+    [planUsageData, companyId, t],
+  );
+
+  const planAlertClassName = (variant: "default" | "destructive") =>
+    variant === "destructive"
+      ? "border-destructive/40 bg-destructive/10 text-foreground py-3 [&>svg]:text-destructive"
+      : "border-amber-500/40 bg-amber-500/10 text-foreground py-3 [&>svg]:text-amber-500";
 
   const debtAgeLabel = (name: string) =>
     t(
@@ -270,6 +290,26 @@ export function DashboardPage() {
           </AlertDescription>
         </Alert>
       )}
+      {planAlerts.map((alert) => (
+        <Alert
+          key={`${alert.kind}-${alert.title}`}
+          variant={alert.variant}
+          className={planAlertClassName(alert.variant)}
+        >
+          <AlertCircle className="size-4" />
+          <AlertDescription className="flex min-h-10 items-center justify-between gap-4">
+            <div className="flex flex-col gap-0.5">
+              <p className="text-sm font-semibold leading-5 text-foreground">{alert.title}</p>
+              <p className="text-sm leading-5 text-foreground/90">{alert.content}</p>
+            </div>
+            <Button asChild size="sm" className="h-8 shrink-0 px-3">
+              <a href={PLANS_PAGE_URL} target="_blank" rel="noreferrer">
+                {t("dashboard.subscription.plan.upgradeCta")}
+              </a>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ))}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiMetrics.map((metric) => (
           <KPICard
@@ -298,7 +338,20 @@ export function DashboardPage() {
         ))}
       </div>
 
-      <NpsCard />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <NpsCard />
+        </div>
+        <div className="flex flex-col gap-4">
+          <AverageTicketCard value={boxesData?.averageTicket?.currentValue} delay={350} />
+          <SubscriptionPlanCard
+            planType={planUsageData?.planType}
+            endDate={planUsageData?.endDate}
+            debtsLimit={planUsageData?.debtsLimit}
+            delay={400}
+          />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <DonutCard title={t("dashboard.donut.debtAge")} data={debtAgeData} delay={400} />

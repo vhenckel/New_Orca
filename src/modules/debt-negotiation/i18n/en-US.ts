@@ -374,4 +374,35 @@ export const debtNegotiationEnUS = {
   "dashboard.nps.detractor": "Detractor",
   "dashboard.nps.neutral": "Neutral",
   "dashboard.nps.promoter": "Promoter",
+  "dashboard.subscription.averageTicket.title": "Average Ticket",
+  "dashboard.subscription.averageTicket.tooltip":
+    "Average recovered amount per negotiated debt.",
+  "dashboard.subscription.plan.fallbackName": "Plan",
+  "dashboard.subscription.plan.debtsLimit": "Debts Limit",
+  "dashboard.subscription.plan.of": "of",
+  "dashboard.subscription.plan.upgradeCta": "Upgrade Plan",
+  "dashboard.subscription.plan.trialExpired": "Your plan has expired!",
+  "dashboard.subscription.plan.trialExpiresToday": "Your plan expires today!",
+  "dashboard.subscription.plan.trialExpiresInDays":
+    "{days} day(s) left until the end of {planType}",
+  "dashboard.alerts.debtsLimit80.title":
+    "You reached 80% of your debts limit",
+  "dashboard.alerts.debtsLimit80.content":
+    "Monitor your usage. Consider adjusting your operation or upgrading your plan.",
+  "dashboard.alerts.debtsLimit90.title":
+    "You reached 90% of your debts limit",
+  "dashboard.alerts.debtsLimit90.content":
+    "Warning: you are close to reaching your registered debts limit.",
+  "dashboard.alerts.debtsLimit100.title":
+    "You reached 100% of your debts limit",
+  "dashboard.alerts.debtsLimit100.content":
+    "To continue your operations, upgrade your plan or free more limit.",
+  "dashboard.alerts.planExpired.title": "Your plan has expired!",
+  "dashboard.alerts.planExpired.content":
+    "You cannot send messages until you renew.",
+  "dashboard.alerts.planExpiringSoon.title":
+    "Your plan is about to expire!",
+  "dashboard.alerts.planExpiringSoon.today": "Your plan expires today.",
+  "dashboard.alerts.planExpiringSoon.inDays":
+    "Your plan expires in {days} day(s).",
 } as const;

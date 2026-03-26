@@ -56,3 +56,20 @@ export async function setPersonMainContact(
   });
   if (!res.ok) throw new Error(await readErrorMessage(res));
 }
+
+/** POST /contact/person/unlink — desvincula um contato da pessoa pelo contato âncora. */
+export async function unlinkPersonContact(
+  contactId: number,
+  anchorContactId: number,
+  companyId: number = getCurrentCompanyId(),
+): Promise<{ unlinked: boolean; softDeleted: boolean }> {
+  const search = new URLSearchParams();
+  search.append("companyIds", String(companyId));
+  const res = await spotFetch(`${BASE}/unlink?${search.toString()}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contactId, anchorContactId }),
+  });
+  if (!res.ok) throw new Error(await readErrorMessage(res));
+  return res.json() as Promise<{ unlinked: boolean; softDeleted: boolean }>;
+}

@@ -2,6 +2,7 @@ export { useRenegotiationBoxes } from "./useRenegotiationBoxes";
 export { useRenegotiationDetails } from "./useRenegotiationDetails";
 export { useRenegotiationGraphics } from "./useRenegotiationGraphics";
 export { useRenegotiationNps } from "./useRenegotiationNps";
+export { useRenegotiationPlanUsage } from "./useRenegotiationPlanUsage";
 export {
   useContactList,
   CONTACT_LIST_PAGE_SIZE,

@@ -9,6 +9,7 @@ import {
   fetchContactForEdit,
   fetchPersonContactQuery,
   setPersonMainContact,
+  unlinkPersonContact,
   updateContact,
 } from "@/modules/contact/services";
 import type { ContactEntityForEdit } from "@/modules/contact/types/contact-edit";
@@ -255,6 +256,7 @@ export function EditContactDrawer({
   });
   const { control, getValues, handleSubmit, register, reset, setValue, watch } = form;
   const [submitting, setSubmitting] = useState(false);
+  const [pendingRemovalContactIds, setPendingRemovalContactIds] = useState<number[]>([]);
 
   const { fields: waFields, append, remove } = useFieldArray({
     control,
@@ -264,6 +266,7 @@ export function EditContactDrawer({
   useEffect(() => {
     if (!open || !contactEntity) return;
     reset(defaults);
+    setPendingRemovalContactIds([]);
   }, [open, contactEntity, defaults, reset]);
 
   const loading = open && (fieldsLoading || contactLoading);
@@ -346,11 +349,16 @@ export function EditContactDrawer({
         }
       }
 
+      for (const removedContactId of pendingRemovalContactIds) {
+        await unlinkPersonContact(removedContactId, contactId);
+      }
+
       toast.success(t("pages.contact.editDrawer.success"));
       await queryClient.invalidateQueries({ queryKey: ["contact", "details", contactId] });
       await queryClient.invalidateQueries({ queryKey: ["contact", "person-cluster", contactId] });
       await queryClient.invalidateQueries({ queryKey: ["contact", "for-edit", contactId] });
       await queryClient.invalidateQueries({ queryKey: ["contact", "list"] });
+      setPendingRemovalContactIds([]);
       onOpenChange(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("pages.contact.editDrawer.errorGeneric"));
@@ -478,6 +486,16 @@ export function EditContactDrawer({
                               className="shrink-0"
                               onClick={() => {
                                 if (getValues(`whatsappRows.${index}.isInBlackList` as const)) return;
+                                const removedContactId = getValues(
+                                  `whatsappRows.${index}.contactId` as const,
+                                );
+                                if (removedContactId) {
+                                  setPendingRemovalContactIds((prev) =>
+                                    prev.includes(removedContactId)
+                                      ? prev
+                                      : [...prev, removedContactId],
+                                  );
+                                }
                                 const current = getValues("mainRowIndex") ?? 0;
                                 remove(index);
                                 if (index < current) {
