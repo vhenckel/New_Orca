@@ -7,7 +7,8 @@ export interface ContactDetails {
   email: string | null;
   phone: string | null;
   cpf: string | null;
-  origin: string | null;
+  /** String ou objeto serializado (ex.: `{ originOption: { name } }`). */
+  origin: string | null | Record<string, unknown>;
   lastPipelineStage: string | null;
   persona: string | null;
   genre: string | null;

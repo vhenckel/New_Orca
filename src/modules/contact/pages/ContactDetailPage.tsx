@@ -1,7 +1,8 @@
-import { useParams } from "react-router-dom";
-import { useState, useCallback } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useState, useCallback, useMemo, type MouseEvent } from "react";
 import {
   Award,
+  Ban,
   Bot,
   ChevronDown,
   Clock,
@@ -16,7 +17,9 @@ import {
   Send,
   User,
 } from "lucide-react";
-import { formatCpf } from "@/modules/debt-negotiation/utils/debt-list-formatters";
+import { formatCpf } from "@/shared/lib/format";
+import { formatContactOriginLabel } from "@/modules/contact/utils/format-contact-origin";
+import { formatWhatsApp } from "@/modules/contact/utils/format-whatsapp";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
@@ -26,24 +29,40 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/shared/ui/collapsible";
+import { AddToBlocklistDialog } from "@/modules/contact/components/AddToBlocklistDialog";
+import { EditContactDrawer } from "@/modules/contact/components/EditContactDrawer";
 import {
   useContactDetails,
   useContactMetrics,
   useContactDebts,
   useContactActivities,
   useContactCampaigns,
-} from "@/modules/debt-negotiation/hooks";
+  usePersonContactCluster,
+} from "@/modules/contact/hooks";
+import type { PersonContactListItem } from "@/modules/contact/types/person-contact";
+import { PermissionGuard } from "@/shared/auth/PermissionGuard";
 import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
 import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
-import type { ContactDetails, ContactActivity } from "@/modules/debt-negotiation/types";
+import type { ContactDetails, ContactActivity } from "@/modules/contact/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { copyTextToClipboard } from "@/shared/lib/copy-to-clipboard";
 import { cn } from "@/shared/lib/utils";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
+
+const CONTACT_BLOCKLIST_PATH = "/debt-negotiation/contacts/blocklist";
+
+/** Query `contactsBlQ` na blocklist (dígitos do appkey, mesmo critério da listagem). */
+function blocklistFilteredHref(appkey: string | null | undefined): string {
+  const digits = String(appkey ?? "").replace(/\D/g, "");
+  if (!digits) return CONTACT_BLOCKLIST_PATH;
+  return `${CONTACT_BLOCKLIST_PATH}?${new URLSearchParams({ contactsBlQ: digits }).toString()}`;
+}
 
 type ActivityFilter = "all" | "campaigns" | "collection" | "bot";
 
@@ -111,13 +130,20 @@ function formatAddress(d: ContactDetails): string {
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
-  const copy = useCallback(() => {
-    if (!value) return;
-    void navigator.clipboard.writeText(value).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }, [value]);
+  const copy = useCallback(
+    async (e: MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const text = String(value ?? "").trim();
+      if (!text) return;
+      const ok = await copyTextToClipboard(text);
+      if (ok) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }
+    },
+    [value],
+  );
   if (!value) return null;
   return (
     <button
@@ -138,11 +164,14 @@ export function ContactDetailPage() {
   const validId = Number.isInteger(contactId) && contactId > 0 ? contactId : null;
 
   const { data: details, isPending: detailsPending } = useContactDetails(validId);
+  const { data: personCluster } = usePersonContactCluster(validId);
   const { data: metrics } = useContactMetrics(validId);
   const { data: debts } = useContactDebts(validId);
   const { data: activitiesData } = useContactActivities(validId, 1);
   const { data: campaignsData } = useContactCampaigns(validId);
   const [conversationOpen, setConversationOpen] = useState(false);
+  const [addToBlocklistOpen, setAddToBlocklistOpen] = useState(false);
+  const [editContactOpen, setEditContactOpen] = useState(false);
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
 
   const activities = activitiesData?.data ?? [];
@@ -152,6 +181,38 @@ export function ContactDetailPage() {
 
   const name = details?.name ?? "-";
   const addressLine = details ? formatAddress(details) : "";
+  const linkedContacts = personCluster?.contacts ?? [];
+  /** Principal primeiro, depois demais por id. */
+  const sortedLinkedContacts = useMemo(() => {
+    if (linkedContacts.length === 0) return [];
+    return [...linkedContacts].sort((a, b) => {
+      if (a.main !== b.main) return a.main ? -1 : 1;
+      return a.id - b.id;
+    });
+  }, [linkedContacts]);
+
+  /** WhatsApp principal da pessoa (header ao lado do e-mail). */
+  const mainContactForHeader = useMemo(() => {
+    if (sortedLinkedContacts.length === 0) return null;
+    return sortedLinkedContacts.find((c) => c.main) ?? sortedLinkedContacts[0];
+  }, [sortedLinkedContacts]);
+
+  /** Candidatos ao modal de blocklist: cluster da pessoa ou contato único (fallback). */
+  const blocklistCandidates = useMemo((): PersonContactListItem[] => {
+    if (sortedLinkedContacts.length > 0) return sortedLinkedContacts;
+    if (details && validId != null) {
+      return [
+        {
+          id: validId,
+          name: details.name,
+          appkey: details.phone ?? null,
+          main: true,
+          isInBlackList: false,
+        },
+      ];
+    }
+    return [];
+  }, [sortedLinkedContacts, details, validId]);
 
   if (id == null || !validId) {
     return (
@@ -191,9 +252,22 @@ export function ContactDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Editar">
-                <Pencil className="h-4 w-4" />
-              </Button>
+              <PermissionGuard
+                permissionNames={["editar"]}
+                moduleName="contatos"
+                subModuleName="contatos"
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  aria-label="Editar"
+                  onClick={() => setEditContactOpen(true)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </PermissionGuard>
               <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Documento">
                 <FileText className="h-4 w-4" />
               </Button>
@@ -203,6 +277,21 @@ export function ContactDetailPage() {
               <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Enviar">
                 <Send className="h-4 w-4" />
               </Button>
+              <PermissionGuard
+                permissionNames={["mover_para_blocklist"]}
+                moduleName="contatos"
+                subModuleName="contatos"
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setAddToBlocklistOpen(true)}
+                >
+                  <Ban className="h-4 w-4" />
+                  {t("pages.contact.addToBlocklist.button")}
+                </Button>
+              </PermissionGuard>
               <Button onClick={() => setConversationOpen(true)}>
                 {t("pages.debtNegotiation.contactDetail.viewConversation")}
               </Button>
@@ -215,12 +304,37 @@ export function ContactDetailPage() {
                 <CopyButton value={details.email} />
               </span>
             )}
-            {details?.phone && (
+            {mainContactForHeader?.appkey ? (
+              <span className="flex items-center gap-2 font-medium text-foreground">
+                {mainContactForHeader.isInBlackList ? (
+                  <PermissionGuard
+                    permissionNames={["mover_para_blocklist", "retirar_da_blocklist"]}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          to={blocklistFilteredHref(mainContactForHeader.appkey)}
+                          className="inline-flex shrink-0 items-center justify-center rounded-full p-0.5 text-destructive hover:bg-muted"
+                          aria-label={t("pages.debtNegotiation.contactDetail.blocklist")}
+                        >
+                          <Ban className="h-4 w-4" />
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-xs">
+                        {t("pages.debtNegotiation.contactDetail.blocklist")}
+                      </TooltipContent>
+                    </Tooltip>
+                  </PermissionGuard>
+                ) : null}
+                {formatWhatsApp(mainContactForHeader.appkey)}
+                <CopyButton value={mainContactForHeader.appkey} />
+              </span>
+            ) : linkedContacts.length === 0 && details?.phone ? (
               <span className="flex items-center gap-1">
                 {details.phone}
                 <CopyButton value={details.phone} />
               </span>
-            )}
+            ) : null}
             {details?.cpf && (
               <span className="flex items-center gap-1 font-mono">
                 {formatCpf(details.cpf)}
@@ -243,12 +357,12 @@ export function ContactDetailPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Coluna esquerda: Detalhes do Contato + Atividades */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.detailsTitle")}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-0 pt-0">
+            <CardContent className="pt-0">
               {/* Informações Gerais */}
               <Collapsible defaultOpen className="group border-b last:border-b-0">
                 <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
@@ -274,9 +388,64 @@ export function ContactDetailPage() {
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">{t("pages.debtNegotiation.contactDetail.contactOrigin")}</dt>
-                      <dd>{details?.origin ?? "-"}</dd>
+                      <dd>{formatContactOriginLabel(details?.origin) || "-"}</dd>
                     </div>
                   </dl>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* WhatsApp(s) — principal no topo da lista */}
+              <Collapsible defaultOpen className="group border-b last:border-b-0">
+                <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
+                  <span className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                    {t("pages.debtNegotiation.contactDetail.whatsapps")}
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  {sortedLinkedContacts.length > 0 ? (
+                    <div className="flex flex-col gap-2 pb-4">
+                      {sortedLinkedContacts.map((c, idx) => (
+                        <div key={`${c.id}-${idx}`} className="flex items-center gap-2">
+                          {c.isInBlackList ? (
+                            <PermissionGuard
+                              permissionNames={["mover_para_blocklist", "retirar_da_blocklist"]}
+                            >
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Link
+                                    to={blocklistFilteredHref(c.appkey)}
+                                    className="inline-flex shrink-0 items-center justify-center rounded-full p-0.5 text-destructive hover:bg-muted"
+                                    aria-label={t("pages.debtNegotiation.contactDetail.blocklist")}
+                                  >
+                                    <Ban className="h-4 w-4" />
+                                  </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-xs">
+                                  {t("pages.debtNegotiation.contactDetail.blocklist")}
+                                </TooltipContent>
+                              </Tooltip>
+                            </PermissionGuard>
+                          ) : null}
+                          <span className="text-sm font-medium text-foreground">
+                            {formatWhatsApp(c.appkey ?? "")}
+                            {c.main
+                              ? ` (${t("pages.debtNegotiation.contactDetail.mainContact")})`
+                              : ""}
+                          </span>
+                          {c.appkey ? <CopyButton value={c.appkey} /> : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : details?.phone ? (
+                    <p className="flex items-center gap-1 pb-4 text-sm text-muted-foreground">
+                      <span>{details.phone}</span>
+                      <CopyButton value={details.phone} />
+                    </p>
+                  ) : (
+                    <p className="pb-4 text-sm text-muted-foreground">-</p>
+                  )}
                 </CollapsibleContent>
               </Collapsible>
 
@@ -460,7 +629,7 @@ export function ContactDetailPage() {
                                 >
                                   <Icon className="h-4 w-4" />
                                 </span>
-                                <div className="min-w-0 flex-1 space-y-0.5">
+                                <div className="min-w-0 flex flex-1 flex-col gap-0.5">
                                   <p className="text-sm text-foreground">{activity.eventName}</p>
                                   <p className="text-xs text-muted-foreground">
                                     {formatDateTime(activity.eventDate)}
@@ -480,14 +649,14 @@ export function ContactDetailPage() {
         </div>
 
         {/* Coluna direita: Compliance, Métricas, Dívidas */}
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           {/* Compliance */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.compliance")}</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <dl className="space-y-2 text-sm">
+              <dl className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">NPS</dt>
                   <dd>-</dd>
@@ -520,7 +689,7 @@ export function ContactDetailPage() {
               <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.metrics")}</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <dl className="space-y-2 text-sm">
+              <dl className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.conversations")}</dt>
                   <dd>{metrics?.metrics.conversations ?? 0}</dd>
@@ -557,7 +726,7 @@ export function ContactDetailPage() {
               {!Array.isArray(debts) || debts.length === 0 ? (
                 <p className="text-sm text-muted-foreground">-</p>
               ) : (
-                <ul className="space-y-4">
+                <ul className="flex flex-col gap-4">
                   {debts.map((debt, i) => (
                     <li key={i} className="flex flex-col gap-1 text-sm">
                       <span className="font-semibold">
@@ -609,7 +778,7 @@ export function ContactDetailPage() {
               {campaigns.length === 0 ? (
                 <p className="text-sm text-muted-foreground">-</p>
               ) : (
-                <ul className="space-y-2 text-sm text-muted-foreground">
+                <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
                   {campaigns.map((c) => (
                     <li key={c.campaignId}>
                       {c.campaignName}{" "}
@@ -632,14 +801,30 @@ export function ContactDetailPage() {
             </CardHeader>
             <CardContent className="pt-0">
               <p className="text-sm text-muted-foreground">
-                {details?.origin?.trim()
-                  ? details.origin
-                  : t("pages.debtNegotiation.contactDetail.originEmpty")}
+                {formatContactOriginLabel(details?.origin) ||
+                  t("pages.debtNegotiation.contactDetail.originEmpty")}
               </p>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <AddToBlocklistDialog
+        open={addToBlocklistOpen}
+        onOpenChange={setAddToBlocklistOpen}
+        anchorContactId={validId}
+        candidates={blocklistCandidates}
+      />
+
+      {validId != null ? (
+        <EditContactDrawer
+          open={editContactOpen}
+          onOpenChange={setEditContactOpen}
+          contactId={validId}
+          linkedContacts={sortedLinkedContacts}
+          fallbackPhone={details?.phone ?? null}
+        />
+      ) : null}
 
       <ConversationHistoryDialog
         contactId={validId}

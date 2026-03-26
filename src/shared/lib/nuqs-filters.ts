@@ -190,6 +190,51 @@ export function useDebtsPaginationQueryState() {
   };
 }
 
+const contactsBlocklistPaginationParsers = {
+  contactsBlPage: parseAsInteger.withDefault(1),
+  contactsBlPageSize: parseAsInteger.withDefault(10),
+  contactsBlQ: parseAsString.withDefault("").withOptions({
+    history: "replace",
+    scroll: false,
+    limitUrlUpdates: throttle(200),
+  }),
+} as const;
+
+/**
+ * Paginação + busca na URL (`contactsBlPage`, `contactsBlPageSize`, `contactsBlQ`).
+ * Mesmo hook evita corrida ao resetar página: o merge do nuqs usa `location` e pode
+ * perder `contactsBlQ` se ainda estiver no throttle; ao mudar a busca, use `setParams`
+ * com página e `contactsBlQ` juntos (ver ContactBlocklistPage).
+ */
+export function useContactsBlocklistPaginationQueryState() {
+  const [params, setParams] = useQueryStates(contactsBlocklistPaginationParsers);
+  const pageSize = normalizePageSize(params.contactsBlPageSize);
+  const page = normalizePage(params.contactsBlPage);
+  const search = params.contactsBlQ ?? "";
+
+  return {
+    page,
+    pageSize,
+    search,
+    setSearch: (value: string) => void setParams({ contactsBlQ: value || null }),
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    setParams,
+    setPagination: (u: { page?: number; pageSize?: number }) => {
+      const nextSize =
+        u.pageSize !== undefined ? normalizePageSize(u.pageSize) : pageSize;
+      const nextPage =
+        u.page !== undefined
+          ? normalizePage(u.page)
+          : u.pageSize !== undefined
+            ? 1
+            : page;
+      setParams({ contactsBlPage: nextPage, contactsBlPageSize: nextSize });
+    },
+    raw: params,
+  };
+}
+
 const searchOptions = {
   history: "replace" as const,
   scroll: false,
