@@ -14,6 +14,7 @@ export {
   fetchPersonContactQuery,
   fetchPersonDetails,
   setPersonMainContact,
+  unlinkPersonContact,
 } from "./person-contact";
 export {
   fetchContactBlocklistList,
