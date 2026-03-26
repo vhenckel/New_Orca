@@ -12,7 +12,8 @@
 - **Públicas:** `/login`
 - **Protegidas (RouteGuard):** todas as rotas de módulos de negócio:
   - `/` → redirect para `/debt-negotiation`
-  - `/debt-negotiation`, `/debt-negotiation/debts`, `/debt-negotiation/contacts`, `/debt-negotiation/contacts/:id`
+  - `/debt-negotiation`, `/debt-negotiation/debts`
+  - `/contacts`, `/contacts/blocklist`, `/contacts/:id`
   - `/collections`, `/collections/contacts`, `/collections/charges`
   - `/sales`, `/sales/contacts`, `/sales/pipeline`
   - `/settings`

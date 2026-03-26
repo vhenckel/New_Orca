@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 
@@ -16,6 +16,7 @@ import type { PersonContactListItem } from "@/modules/contact/types/person-conta
 import {
   appkeyToLocalDigits,
   digitsOnly,
+  formatLocalPhoneDigits,
   localDigitsToAppkey,
 } from "@/modules/contact/utils/phone-form";
 import { useI18n } from "@/shared/i18n/useI18n";
@@ -452,13 +453,23 @@ export function EditContactDrawer({
                                 watch(`whatsappRows.${index}.isInBlackList` as const),
                               )}
                             />
-                            <Input
-                              className="min-w-0 flex-1"
-                              placeholder={t("pages.contact.editDrawer.phonePlaceholder")}
-                              inputMode="numeric"
-                              autoComplete="tel"
-                              {...register(`whatsappRows.${index}.localDigits` as const)}
-                              disabled={Boolean(watch(`whatsappRows.${index}.isInBlackList` as const))}
+                            <Controller
+                              control={control}
+                              name={`whatsappRows.${index}.localDigits` as const}
+                              render={({ field }) => (
+                                <Input
+                                  className="min-w-0 flex-1"
+                                  placeholder={t("pages.contact.editDrawer.phonePlaceholder")}
+                                  inputMode="numeric"
+                                  autoComplete="tel"
+                                  value={formatLocalPhoneDigits(field.value)}
+                                  onChange={(e) => field.onChange(digitsOnly(e.target.value))}
+                                  onBlur={field.onBlur}
+                                  name={field.name}
+                                  ref={field.ref}
+                                  disabled={Boolean(watch(`whatsappRows.${index}.isInBlackList` as const))}
+                                />
+                              )}
                             />
                             <Button
                               type="button"
@@ -486,12 +497,22 @@ export function EditContactDrawer({
                     ) : (
                       waFields.map((field, index) => (
                         <div key={field.id} className="flex gap-2">
-                          <Input
-                            placeholder={t("pages.contact.editDrawer.phonePlaceholder")}
-                            inputMode="numeric"
-                            autoComplete="tel"
-                            {...register(`whatsappRows.${index}.localDigits` as const)}
-                            disabled={Boolean(watch(`whatsappRows.${index}.isInBlackList` as const))}
+                          <Controller
+                            control={control}
+                            name={`whatsappRows.${index}.localDigits` as const}
+                            render={({ field }) => (
+                              <Input
+                                placeholder={t("pages.contact.editDrawer.phonePlaceholder")}
+                                inputMode="numeric"
+                                autoComplete="tel"
+                                value={formatLocalPhoneDigits(field.value)}
+                                onChange={(e) => field.onChange(digitsOnly(e.target.value))}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                disabled={Boolean(watch(`whatsappRows.${index}.isInBlackList` as const))}
+                              />
+                            )}
                           />
                           <Button
                             type="button"

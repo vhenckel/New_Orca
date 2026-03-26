@@ -89,7 +89,7 @@ export function ContactBlocklistPage() {
         header: () => t("pages.contact.blocklist.col.name"),
         cell: ({ row }) => (
           <Link
-            to={`/debt-negotiation/contacts/${row.original.id}`}
+            to={`/contacts/${row.original.id}`}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
             {row.original.name}

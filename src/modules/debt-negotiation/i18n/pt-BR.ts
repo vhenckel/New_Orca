@@ -30,8 +30,7 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.contacts.col.lastContract": "Último contrato",
   "pages.debtNegotiation.contacts.col.updatedAt": "Última atualização",
   "pages.debtNegotiation.contactDetail.backToContacts": "Voltar para Contatos",
-  "pages.debtNegotiation.contactDetail.viewConversation":
-    "Ver histórico de conversa",
+  "pages.debtNegotiation.contactDetail.viewConversation": "Ver conversas",
   "pages.debtNegotiation.contactDetail.detailsTitle": "Detalhes do Contato",
   "pages.debtNegotiation.contactDetail.detailsDescription":
     "Histórico, dívidas e métricas do contato.",

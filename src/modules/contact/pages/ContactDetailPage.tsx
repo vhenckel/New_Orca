@@ -23,12 +23,7 @@ import { formatWhatsApp } from "@/modules/contact/utils/format-whatsapp";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import {
   Collapsible,
@@ -55,7 +50,7 @@ import { copyTextToClipboard } from "@/shared/lib/copy-to-clipboard";
 import { cn } from "@/shared/lib/utils";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 
-const CONTACT_BLOCKLIST_PATH = "/debt-negotiation/contacts/blocklist";
+const CONTACT_BLOCKLIST_PATH = "/contacts/blocklist";
 
 /** Query `contactsBlQ` na blocklist (dígitos do appkey, mesmo critério da listagem). */
 function blocklistFilteredHref(appkey: string | null | undefined): string {
@@ -161,9 +156,11 @@ export function ContactDetailPage() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const contactId = id != null ? parseInt(id, 10) : NaN;
-  const validId = Number.isInteger(contactId) && contactId > 0 ? contactId : null;
+  const validId =
+    Number.isInteger(contactId) && contactId > 0 ? contactId : null;
 
-  const { data: details, isPending: detailsPending } = useContactDetails(validId);
+  const { data: details, isPending: detailsPending } =
+    useContactDetails(validId);
   const { data: personCluster } = usePersonContactCluster(validId);
   const { data: metrics } = useContactMetrics(validId);
   const { data: debts } = useContactDebts(validId);
@@ -237,13 +234,19 @@ export function ContactDetailPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-12 w-12">
-                <AvatarFallback className="text-base">{getInitials(name)}</AvatarFallback>
+                <AvatarFallback className="text-base">
+                  {getInitials(name)}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">{detailsPending ? "…" : name}</h1>
+                <h1 className="text-xl font-semibold text-foreground">
+                  {detailsPending ? "…" : name}
+                </h1>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   {details?.lastPipelineStage && (
-                    <NegotiationStatusBadge stageName={details.lastPipelineStage} />
+                    <NegotiationStatusBadge
+                      stageName={details.lastPipelineStage}
+                    />
                   )}
                   <span className="text-xs text-muted-foreground">
                     {t("pages.debtNegotiation.contactDetail.lifecycleStage")}
@@ -257,44 +260,69 @@ export function ContactDetailPage() {
                 moduleName="contatos"
                 subModuleName="contatos"
               >
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  aria-label="Editar"
-                  onClick={() => setEditContactOpen(true)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9"
+                      aria-label="Editar"
+                      onClick={() => setEditContactOpen(true)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Editar</TooltipContent>
+                </Tooltip>
               </PermissionGuard>
-              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Documento">
-                <FileText className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Instagram">
-                <MessageCircle className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Enviar">
-                <Send className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    aria-label="Enviar"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Enviar</TooltipContent>
+              </Tooltip>
               <PermissionGuard
                 permissionNames={["mover_para_blocklist"]}
                 moduleName="contatos"
                 subModuleName="contatos"
               >
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => setAddToBlocklistOpen(true)}
-                >
-                  <Ban className="h-4 w-4" />
-                  {t("pages.contact.addToBlocklist.button")}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => setAddToBlocklistOpen(true)}
+                    >
+                      <Ban className="h-4 w-4" />
+                      {t("pages.contact.addToBlocklist.button")}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {t("pages.contact.addToBlocklist.button")}
+                  </TooltipContent>
+                </Tooltip>
               </PermissionGuard>
-              <Button onClick={() => setConversationOpen(true)}>
-                {t("pages.debtNegotiation.contactDetail.viewConversation")}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={() => setConversationOpen(true)}>
+                    <MessageCircle className="h-4 w-4" />
+
+                    {t("pages.debtNegotiation.contactDetail.viewConversation")}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t("pages.debtNegotiation.contactDetail.viewConversation")}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
@@ -308,14 +336,21 @@ export function ContactDetailPage() {
               <span className="flex items-center gap-2 font-medium text-foreground">
                 {mainContactForHeader.isInBlackList ? (
                   <PermissionGuard
-                    permissionNames={["mover_para_blocklist", "retirar_da_blocklist"]}
+                    permissionNames={[
+                      "mover_para_blocklist",
+                      "retirar_da_blocklist",
+                    ]}
                   >
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Link
-                          to={blocklistFilteredHref(mainContactForHeader.appkey)}
+                          to={blocklistFilteredHref(
+                            mainContactForHeader.appkey,
+                          )}
                           className="inline-flex shrink-0 items-center justify-center rounded-full p-0.5 text-destructive hover:bg-muted"
-                          aria-label={t("pages.debtNegotiation.contactDetail.blocklist")}
+                          aria-label={t(
+                            "pages.debtNegotiation.contactDetail.blocklist",
+                          )}
                         >
                           <Ban className="h-4 w-4" />
                         </Link>
@@ -360,11 +395,16 @@ export function ContactDetailPage() {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.detailsTitle")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("pages.debtNegotiation.contactDetail.detailsTitle")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               {/* Informações Gerais */}
-              <Collapsible defaultOpen className="group border-b last:border-b-0">
+              <Collapsible
+                defaultOpen
+                className="group border-b last:border-b-0"
+              >
                 <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
                   <span className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
@@ -379,23 +419,36 @@ export function ContactDetailPage() {
                       <dd>{details?.id ?? "-"}</dd>
                     </div>
                     <div>
-                      <dt className="font-medium text-foreground">{t("pages.debtNegotiation.contactDetail.contactOwner")}</dt>
-                      <dd>{details?.ownerUserName ?? details?.createdByUser ?? "-"}</dd>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.contactOwner")}
+                      </dt>
+                      <dd>
+                        {details?.ownerUserName ??
+                          details?.createdByUser ??
+                          "-"}
+                      </dd>
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">Persona</dt>
                       <dd>{details?.persona ?? "-"}</dd>
                     </div>
                     <div>
-                      <dt className="font-medium text-foreground">{t("pages.debtNegotiation.contactDetail.contactOrigin")}</dt>
-                      <dd>{formatContactOriginLabel(details?.origin) || "-"}</dd>
+                      <dt className="font-medium text-foreground">
+                        {t("pages.debtNegotiation.contactDetail.contactOrigin")}
+                      </dt>
+                      <dd>
+                        {formatContactOriginLabel(details?.origin) || "-"}
+                      </dd>
                     </div>
                   </dl>
                 </CollapsibleContent>
               </Collapsible>
 
               {/* WhatsApp(s) — principal no topo da lista */}
-              <Collapsible defaultOpen className="group border-b last:border-b-0">
+              <Collapsible
+                defaultOpen
+                className="group border-b last:border-b-0"
+              >
                 <CollapsibleTrigger className="flex w-full items-center justify-between py-3 text-left text-sm font-medium hover:opacity-80">
                   <span className="flex items-center gap-2">
                     <MessageCircle className="h-4 w-4 text-muted-foreground" />
@@ -407,23 +460,36 @@ export function ContactDetailPage() {
                   {sortedLinkedContacts.length > 0 ? (
                     <div className="flex flex-col gap-2 pb-4">
                       {sortedLinkedContacts.map((c, idx) => (
-                        <div key={`${c.id}-${idx}`} className="flex items-center gap-2">
+                        <div
+                          key={`${c.id}-${idx}`}
+                          className="flex items-center gap-2"
+                        >
                           {c.isInBlackList ? (
                             <PermissionGuard
-                              permissionNames={["mover_para_blocklist", "retirar_da_blocklist"]}
+                              permissionNames={[
+                                "mover_para_blocklist",
+                                "retirar_da_blocklist",
+                              ]}
                             >
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Link
                                     to={blocklistFilteredHref(c.appkey)}
                                     className="inline-flex shrink-0 items-center justify-center rounded-full p-0.5 text-destructive hover:bg-muted"
-                                    aria-label={t("pages.debtNegotiation.contactDetail.blocklist")}
+                                    aria-label={t(
+                                      "pages.debtNegotiation.contactDetail.blocklist",
+                                    )}
                                   >
                                     <Ban className="h-4 w-4" />
                                   </Link>
                                 </TooltipTrigger>
-                                <TooltipContent side="right" className="max-w-xs">
-                                  {t("pages.debtNegotiation.contactDetail.blocklist")}
+                                <TooltipContent
+                                  side="right"
+                                  className="max-w-xs"
+                                >
+                                  {t(
+                                    "pages.debtNegotiation.contactDetail.blocklist",
+                                  )}
                                 </TooltipContent>
                               </Tooltip>
                             </PermissionGuard>
@@ -478,49 +544,65 @@ export function ContactDetailPage() {
                   <dl className="grid grid-cols-1 gap-2 pb-4 text-sm text-muted-foreground sm:grid-cols-2">
                     <div>
                       <dt className="font-medium text-foreground">
-                        {t("pages.debtNegotiation.contactDetail.qualification.birthDate")}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.qualification.birthDate",
+                        )}
                       </dt>
                       <dd>{formatDate(details?.birthDate ?? null)}</dd>
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">
-                        {t("pages.debtNegotiation.contactDetail.qualification.gender")}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.qualification.gender",
+                        )}
                       </dt>
                       <dd>{details?.genre ?? "-"}</dd>
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">
-                        {t("pages.debtNegotiation.contactDetail.qualification.maritalStatus")}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.qualification.maritalStatus",
+                        )}
                       </dt>
                       <dd>{details?.maritalStatus ?? "-"}</dd>
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">
-                        {t("pages.debtNegotiation.contactDetail.qualification.schooling")}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.qualification.schooling",
+                        )}
                       </dt>
                       <dd>{details?.schooling ?? "-"}</dd>
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">
-                        {t("pages.debtNegotiation.contactDetail.qualification.profession")}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.qualification.profession",
+                        )}
                       </dt>
                       <dd>{details?.profession ?? "-"}</dd>
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">
-                        {t("pages.debtNegotiation.contactDetail.qualification.professionalSituation")}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.qualification.professionalSituation",
+                        )}
                       </dt>
                       <dd>{details?.professionalSituation ?? "-"}</dd>
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">
-                        {t("pages.debtNegotiation.contactDetail.qualification.companyGroup")}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.qualification.companyGroup",
+                        )}
                       </dt>
                       <dd>-</dd>
                     </div>
                     <div>
                       <dt className="font-medium text-foreground">
-                        {t("pages.debtNegotiation.contactDetail.qualification.income")}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.qualification.income",
+                        )}
                       </dt>
                       <dd>
                         {details?.income != null
@@ -546,7 +628,8 @@ export function ContactDetailPage() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <p className="pb-4 text-sm text-muted-foreground">
-                    {addressLine || t("pages.debtNegotiation.contactDetail.addressEmpty")}
+                    {addressLine ||
+                      t("pages.debtNegotiation.contactDetail.addressEmpty")}
                   </p>
                 </CollapsibleContent>
               </Collapsible>
@@ -571,78 +654,110 @@ export function ContactDetailPage() {
 
           {/* Atividades */}
           <Card>
-            <Tabs value={activityFilter} onValueChange={(v) => setActivityFilter(v as ActivityFilter)}>
+            <Tabs
+              value={activityFilter}
+              onValueChange={(v) => setActivityFilter(v as ActivityFilter)}
+            >
               <CardHeader className="pb-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-base">
-                    {t("pages.debtNegotiation.contactDetail.activities")} ({activitiesTotal})
+                    {t("pages.debtNegotiation.contactDetail.activities")} (
+                    {activitiesTotal})
                   </CardTitle>
                   <TabsList className="h-9">
                     <TabsTrigger value="all" className="px-2 text-xs sm:px-3">
-                      {t("pages.debtNegotiation.contactDetail.activitiesFilterAll")}
+                      {t(
+                        "pages.debtNegotiation.contactDetail.activitiesFilterAll",
+                      )}
                     </TabsTrigger>
-                    <TabsTrigger value="campaigns" className="px-2 text-xs sm:px-3">
-                      {t("pages.debtNegotiation.contactDetail.activitiesFilterCampaigns")}
+                    <TabsTrigger
+                      value="campaigns"
+                      className="px-2 text-xs sm:px-3"
+                    >
+                      {t(
+                        "pages.debtNegotiation.contactDetail.activitiesFilterCampaigns",
+                      )}
                     </TabsTrigger>
-                    <TabsTrigger value="collection" className="px-2 text-xs sm:px-3">
-                      {t("pages.debtNegotiation.contactDetail.activitiesFilterCollection")}
+                    <TabsTrigger
+                      value="collection"
+                      className="px-2 text-xs sm:px-3"
+                    >
+                      {t(
+                        "pages.debtNegotiation.contactDetail.activitiesFilterCollection",
+                      )}
                     </TabsTrigger>
                     <TabsTrigger value="bot" className="px-2 text-xs sm:px-3">
-                      {t("pages.debtNegotiation.contactDetail.activitiesFilterBot")}
+                      {t(
+                        "pages.debtNegotiation.contactDetail.activitiesFilterBot",
+                      )}
                     </TabsTrigger>
                   </TabsList>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                {(["all", "campaigns", "collection", "bot"] as const).map((tab) => {
-                  const list =
-                    tab === "all" ? activities : activities.filter((a) => getActivityFilter(a) === tab);
-                  return (
-                    <TabsContent key={tab} value={tab} className="mt-0">
-                      {list.length === 0 ? (
-                        <p className="py-4 text-sm text-muted-foreground">-</p>
-                      ) : (
-                        <ul className="divide-y">
-                          {list.map((activity, i) => {
-                            const filter = getActivityFilter(activity);
-                            const Icon =
-                              filter === "campaigns"
-                                ? Megaphone
-                                : filter === "collection"
-                                  ? Clock
-                                  : filter === "bot"
-                                    ? Bot
-                                    : FileText;
-                            return (
-                              <li
-                                key={`${activity.eventDate}-${i}`}
-                                className="flex items-start gap-3 py-3 first:pt-0"
-                              >
-                                <span
-                                  className={cn(
-                                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                                    filter === "campaigns" && "bg-primary/15 text-primary",
-                                    filter === "collection" && "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-                                    filter === "bot" && "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-                                    filter === "all" && "bg-muted text-muted-foreground",
-                                  )}
+                {(["all", "campaigns", "collection", "bot"] as const).map(
+                  (tab) => {
+                    const list =
+                      tab === "all"
+                        ? activities
+                        : activities.filter(
+                            (a) => getActivityFilter(a) === tab,
+                          );
+                    return (
+                      <TabsContent key={tab} value={tab} className="mt-0">
+                        {list.length === 0 ? (
+                          <p className="py-4 text-sm text-muted-foreground">
+                            -
+                          </p>
+                        ) : (
+                          <ul className="divide-y">
+                            {list.map((activity, i) => {
+                              const filter = getActivityFilter(activity);
+                              const Icon =
+                                filter === "campaigns"
+                                  ? Megaphone
+                                  : filter === "collection"
+                                    ? Clock
+                                    : filter === "bot"
+                                      ? Bot
+                                      : FileText;
+                              return (
+                                <li
+                                  key={`${activity.eventDate}-${i}`}
+                                  className="flex items-start gap-3 py-3 first:pt-0"
                                 >
-                                  <Icon className="h-4 w-4" />
-                                </span>
-                                <div className="min-w-0 flex flex-1 flex-col gap-0.5">
-                                  <p className="text-sm text-foreground">{activity.eventName}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatDateTime(activity.eventDate)}
-                                  </p>
-                                </div>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
-                    </TabsContent>
-                  );
-                })}
+                                  <span
+                                    className={cn(
+                                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                                      filter === "campaigns" &&
+                                        "bg-primary/15 text-primary",
+                                      filter === "collection" &&
+                                        "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+                                      filter === "bot" &&
+                                        "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+                                      filter === "all" &&
+                                        "bg-muted text-muted-foreground",
+                                    )}
+                                  >
+                                    <Icon className="h-4 w-4" />
+                                  </span>
+                                  <div className="min-w-0 flex flex-1 flex-col gap-0.5">
+                                    <p className="text-sm text-foreground">
+                                      {activity.eventName}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatDateTime(activity.eventDate)}
+                                    </p>
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </TabsContent>
+                    );
+                  },
+                )}
               </CardContent>
             </Tabs>
           </Card>
@@ -653,7 +768,9 @@ export function ContactDetailPage() {
           {/* Compliance */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.compliance")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("pages.debtNegotiation.contactDetail.compliance")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <dl className="flex flex-col gap-2 text-sm">
@@ -662,7 +779,10 @@ export function ContactDetailPage() {
                   <dd>-</dd>
                 </div>
                 {details?.optin?.map((o) => (
-                  <div key={o.label} className="flex items-center justify-between gap-2">
+                  <div
+                    key={o.label}
+                    className="flex items-center justify-between gap-2"
+                  >
                     <dt className="text-muted-foreground">{o.label}</dt>
                     <dd className="flex items-center gap-1">
                       {o.validated ? (
@@ -686,28 +806,40 @@ export function ContactDetailPage() {
           {/* Métricas */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">{t("pages.debtNegotiation.contactDetail.metrics")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("pages.debtNegotiation.contactDetail.metrics")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <dl className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.conversations")}</dt>
+                  <dt className="text-muted-foreground">
+                    {t("pages.debtNegotiation.contactDetail.conversations")}
+                  </dt>
                   <dd>{metrics?.metrics.conversations ?? 0}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.simulations")}</dt>
+                  <dt className="text-muted-foreground">
+                    {t("pages.debtNegotiation.contactDetail.simulations")}
+                  </dt>
                   <dd>{metrics?.metrics.simulations ?? 0}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.humanServices")}</dt>
+                  <dt className="text-muted-foreground">
+                    {t("pages.debtNegotiation.contactDetail.humanServices")}
+                  </dt>
                   <dd>{metrics?.metrics.services ?? 0}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.contracts")}</dt>
+                  <dt className="text-muted-foreground">
+                    {t("pages.debtNegotiation.contactDetail.contracts")}
+                  </dt>
                   <dd>{metrics?.metrics.contracts ?? 0}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">{t("pages.debtNegotiation.contactDetail.products")}</dt>
+                  <dt className="text-muted-foreground">
+                    {t("pages.debtNegotiation.contactDetail.products")}
+                  </dt>
                   <dd>{metrics?.metrics.products ?? 0}</dd>
                 </div>
               </dl>
@@ -719,7 +851,9 @@ export function ContactDetailPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-base">
                 {t("pages.debtNegotiation.contactDetail.debts")}
-                {Array.isArray(debts) && debts.length > 0 ? ` (${debts.length})` : ""}
+                {Array.isArray(debts) && debts.length > 0
+                  ? ` (${debts.length})`
+                  : ""}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
@@ -736,10 +870,15 @@ export function ContactDetailPage() {
                         }).format(debt.totalAmount)}
                       </span>
                       <div className="flex items-center gap-2">
-                        <NegotiationStatusBadge stageName={debtStatusToStageName(debt.status)} />
+                        <NegotiationStatusBadge
+                          stageName={debtStatusToStageName(debt.status)}
+                        />
                       </div>
                       <span className="text-muted-foreground">
-                        {t("pages.debtNegotiation.contactDetail.renegotiationDate")}: {formatDate(debt.updatedAt)}
+                        {t(
+                          "pages.debtNegotiation.contactDetail.renegotiationDate",
+                        )}
+                        : {formatDate(debt.updatedAt)}
                       </span>
                     </li>
                   ))}

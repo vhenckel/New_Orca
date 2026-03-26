@@ -8,8 +8,8 @@ import { cn } from "@/shared/lib/utils";
 /** Evita que `/debt-negotiation/contatos` marque também o módulo Renegociação (`/debt-negotiation`). */
 function isModuleNavActive(module: AppModuleDefinition, pathname: string): boolean {
   const isContacts = Boolean(
-    matchPath({ path: "/debt-negotiation/contacts/*", end: false }, pathname) ||
-      matchPath({ path: "/debt-negotiation/contacts", end: true }, pathname),
+    matchPath({ path: "/contacts/*", end: false }, pathname) ||
+      matchPath({ path: "/contacts", end: true }, pathname),
   );
 
   if (module.key === "contact") return isContacts;

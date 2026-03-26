@@ -31,6 +31,20 @@ export function AppShell({ children, modules }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
 
+  const sidebarModules = useMemo(() => {
+    const desiredOrder: Array<AppModuleDefinition["key"]> = [
+      "debt-negotiation",
+      "contact",
+      "finance",
+      "agent",
+    ];
+
+    const byKey = new Map(modules.map((m) => [m.key, m] as const));
+    const ordered = desiredOrder.map((k) => byKey.get(k)).filter(Boolean) as AppModuleDefinition[];
+    const rest = modules.filter((m) => !desiredOrder.includes(m.key));
+    return [...ordered, ...rest];
+  }, [modules]);
+
   const currentModule = useMemo(
     () =>
       modules.find((module) => location.pathname.startsWith(module.basePath)) ?? modules[0],
@@ -51,7 +65,7 @@ export function AppShell({ children, modules }: AppShellProps) {
       <AppSidebar
         collapsed={sidebarCollapsed}
         currentModule={currentModule}
-        modules={modules}
+        modules={sidebarModules}
         onToggle={() => setSidebarCollapsed((currentValue) => !currentValue)}
       />
 

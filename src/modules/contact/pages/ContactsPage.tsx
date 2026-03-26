@@ -1,12 +1,27 @@
-import { useEffect, useMemo, useRef } from "react";
-import { AlertCircle, Check, Clock } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  AlertCircle,
+  Ban,
+  Check,
+  Clock,
+  MessageCircle,
+  Pencil,
+  Send,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { parseAsString, throttle, useQueryState } from "nuqs";
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { useContactList } from "@/modules/contact/hooks";
+import { AddToBlocklistDialog } from "@/modules/contact/components/AddToBlocklistDialog";
+import { EditContactDrawer } from "@/modules/contact/components/EditContactDrawer";
+import {
+  useContactList,
+  usePersonContactCluster,
+} from "@/modules/contact/hooks";
 import type { ContactListItem } from "@/modules/contact/types/contact-list";
 import { formatWhatsApp } from "@/modules/contact/utils/format-whatsapp";
+import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
+import { PermissionGuard } from "@/shared/auth/PermissionGuard";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { DataTable } from "@/shared/components/data-table";
 import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
@@ -15,10 +30,12 @@ import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { usePaginationQueryState } from "@/shared/lib/nuqs-filters";
 import { cn } from "@/shared/lib/utils";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import type {
   AppliedFilter,
   FilterConfig,
 } from "@/shared/components/dynamic-filters/types";
+import type { PersonContactListItem } from "@/modules/contact/types/person-contact";
 
 function formatContactDate(iso: string): string {
   if (!iso || iso === "-") return "-";
@@ -52,6 +69,17 @@ function OptStatusIcon({ optStatus }: { optStatus: number }) {
 export function ContactsPage() {
   const { t } = useI18n();
   const { page, pageSize, setPagination } = usePaginationQueryState();
+  const [selectedContact, setSelectedContact] = useState<{
+    id: number;
+    name: string;
+    whatsapp: string;
+  } | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [blocklistOpen, setBlocklistOpen] = useState(false);
+  const [conversationOpen, setConversationOpen] = useState(false);
+  const { data: personCluster } = usePersonContactCluster(
+    selectedContact?.id ?? null,
+  );
 
   const [search, setSearch] = useQueryState(
     "q",
@@ -79,8 +107,138 @@ export function ContactsPage() {
   const filters = useMemo<FilterConfig[]>(() => [], []);
   const appliedFilters = useMemo<AppliedFilter[]>(() => [], []);
 
+  const linkedContacts = personCluster?.contacts ?? [];
+  const blocklistCandidates = useMemo<PersonContactListItem[]>(() => {
+    if (linkedContacts.length > 0) return linkedContacts;
+    if (!selectedContact) return [];
+    return [
+      {
+        id: selectedContact.id,
+        name: selectedContact.name,
+        appkey: selectedContact.whatsapp || null,
+        main: true,
+        isInBlackList: false,
+      },
+    ];
+  }, [linkedContacts, selectedContact]);
+
   const columns = useMemo<ColumnDef<ContactListItem>[]>(
     () => [
+      {
+        id: "actions",
+        header: () => <span className="block w-full">Ações</span>,
+        cell: ({ row }) => {
+          const contactId = Number(row.original.id);
+          const contactName = row.original.name;
+          const contactWhatsapp = row.original.whatsapp;
+          const canOpen = Number.isFinite(contactId) && contactId > 0;
+
+          const select = () => {
+            if (!canOpen) return;
+            setSelectedContact({
+              id: contactId,
+              name: contactName,
+              whatsapp: contactWhatsapp,
+            });
+          };
+
+          return (
+            <div className="flex w-full gap-1">
+              <PermissionGuard
+                permissionNames={["editar"]}
+                moduleName="contatos"
+                subModuleName="contatos"
+              >
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                      aria-label="Editar"
+                      disabled={!canOpen}
+                      onClick={() => {
+                        select();
+                        setEditOpen(true);
+                      }}
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Editar</TooltipContent>
+                </Tooltip>
+              </PermissionGuard>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <button
+                      type="button"
+                      className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                      aria-label="Enviar"
+                      disabled
+                      onClick={() => {}}
+                    >
+                      <Send className="size-4" />
+                    </button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Enviar (em breve)</TooltipContent>
+              </Tooltip>
+
+              <PermissionGuard
+                permissionNames={["mover_para_blocklist"]}
+                moduleName="contatos"
+                subModuleName="contatos"
+              >
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                      aria-label={t("pages.contact.addToBlocklist.button")}
+                      disabled={!canOpen}
+                      onClick={() => {
+                        select();
+                        setBlocklistOpen(true);
+                      }}
+                    >
+                      <Ban className="size-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t("pages.contact.addToBlocklist.button")}
+                  </TooltipContent>
+                </Tooltip>
+              </PermissionGuard>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                    aria-label={t(
+                      "pages.debtNegotiation.contactDetail.viewConversation",
+                    )}
+                    disabled={!canOpen}
+                    onClick={() => {
+                      select();
+                      setConversationOpen(true);
+                    }}
+                  >
+                    <MessageCircle className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t("pages.debtNegotiation.contactDetail.viewConversation")}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          );
+        },
+        size: 72,
+        minSize: 64,
+        maxSize: 80,
+      },
       {
         id: "name",
         accessorKey: "name",
@@ -89,7 +247,7 @@ export function ContactsPage() {
           <div className="flex items-center gap-2">
             <OptStatusIcon optStatus={row.original.optStatus} />
             <Link
-              to={`/debt-negotiation/contacts/${row.original.id}`}
+              to={`/contacts/${row.original.id}`}
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
               {row.original.name}
@@ -184,6 +342,32 @@ export function ContactsPage() {
           }}
         />
       </div>
+
+      {selectedContact ? (
+        <>
+          <EditContactDrawer
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            contactId={selectedContact.id}
+            linkedContacts={linkedContacts}
+            fallbackPhone={selectedContact.whatsapp || null}
+          />
+
+          <AddToBlocklistDialog
+            open={blocklistOpen}
+            onOpenChange={setBlocklistOpen}
+            anchorContactId={selectedContact.id}
+            candidates={blocklistCandidates}
+          />
+
+          <ConversationHistoryDialog
+            contactId={selectedContact.id}
+            contactName={selectedContact.name}
+            open={conversationOpen}
+            onOpenChange={setConversationOpen}
+          />
+        </>
+      ) : null}
     </DashboardPageLayout>
   );
 }
