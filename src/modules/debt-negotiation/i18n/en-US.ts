@@ -19,6 +19,8 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.contacts.action": "Import contacts",
   "pages.debtNegotiation.contacts.records": "{count} records",
   "pages.debtNegotiation.contacts.search": "Search",
+  "pages.debtNegotiation.contacts.emptyList": "No contacts found.",
+  "pages.debtNegotiation.contacts.errors.loadList": "Failed to load contacts.",
   "pages.debtNegotiation.contacts.allFilters": "All filters ({count})",
   "pages.debtNegotiation.contacts.col.name": "Name",
   "pages.debtNegotiation.contacts.col.nps": "NPS",
@@ -31,6 +33,8 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.contactDetail.detailsTitle": "Contact Details",
   "pages.debtNegotiation.contactDetail.detailsDescription":
     "Debts, metrics and activity for this contact.",
+  "pages.debtNegotiation.contactDetail.linkedContacts": "Linked contacts (same person)",
+  "pages.debtNegotiation.contactDetail.mainContact": "main",
   "pages.debtNegotiation.contactDetail.generalInfo": "General Information",
   "pages.debtNegotiation.contactDetail.contactOwner": "Contact owner",
   "pages.debtNegotiation.contactDetail.contactOrigin": "Contact origin",

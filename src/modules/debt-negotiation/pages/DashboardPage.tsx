@@ -32,7 +32,8 @@ import {
   useDebtNegotiationDateRangeQueryState,
 } from "@/shared/lib/nuqs-filters";
 
-function trendFromChange(percentageChange: number): "up" | "down" {
+function trendFromChange(percentageChange: number | null | undefined): "up" | "down" {
+  if (percentageChange == null || Number.isNaN(percentageChange)) return "up";
   return percentageChange >= 0 ? "up" : "down";
 }
 

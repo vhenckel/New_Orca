@@ -1,6 +1,6 @@
 import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import { spotJson } from "@/shared/api/http-client";
-import type { ContactMetricsResponse } from "@/modules/debt-negotiation/types";
+import type { ContactMetricsResponse } from "@/modules/contact/types";
 
 export async function fetchContactMetrics(contactId: number): Promise<ContactMetricsResponse> {
   const search = new URLSearchParams();

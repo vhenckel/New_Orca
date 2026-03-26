@@ -1,9 +1,32 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, matchPath, useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition } from "@/app/router/types";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
+
+/** Evita que `/debt-negotiation/contatos` marque também o módulo Renegociação (`/debt-negotiation`). */
+function isModuleNavActive(module: AppModuleDefinition, pathname: string): boolean {
+  const isContacts = Boolean(
+    matchPath({ path: "/contacts/*", end: false }, pathname) ||
+      matchPath({ path: "/contacts", end: true }, pathname),
+  );
+
+  if (module.key === "contact") return isContacts;
+
+  if (module.key === "debt-negotiation") {
+    const isDebtNegotiation = Boolean(
+      matchPath({ path: "/debt-negotiation/*", end: false }, pathname) ||
+        matchPath({ path: "/debt-negotiation", end: true }, pathname),
+    );
+    return isDebtNegotiation && !isContacts;
+  }
+
+  return Boolean(
+    matchPath({ path: `${module.basePath}/*`, end: false }, pathname) ||
+      matchPath({ path: module.basePath, end: true }, pathname),
+  );
+}
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -19,6 +42,7 @@ export function AppSidebar({
   onToggle,
 }: AppSidebarProps) {
   const { t } = useI18n();
+  const { pathname } = useLocation();
 
   return (
     <aside
@@ -57,11 +81,11 @@ export function AppSidebar({
                 key={module.key}
                 to={module.basePath}
                 title={collapsed ? t(module.titleKey) : undefined}
-                className={({ isActive }) =>
+                className={() =>
                   cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
                     collapsed && "justify-center px-0",
-                    (isActive || currentModule.key === module.key) &&
+                    isModuleNavActive(module, pathname) &&
                       "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
                   )
                 }

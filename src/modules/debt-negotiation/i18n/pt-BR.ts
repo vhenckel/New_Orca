@@ -19,6 +19,9 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.contacts.action": "Importar contatos",
   "pages.debtNegotiation.contacts.records": "{count} registros",
   "pages.debtNegotiation.contacts.search": "Pesquisar",
+  "pages.debtNegotiation.contacts.emptyList": "Nenhum contato encontrado.",
+  "pages.debtNegotiation.contacts.errors.loadList":
+    "Erro ao carregar contatos.",
   "pages.debtNegotiation.contacts.allFilters": "Todos os filtros ({count})",
   "pages.debtNegotiation.contacts.col.name": "Nome",
   "pages.debtNegotiation.contacts.col.nps": "NPS",
@@ -27,36 +30,48 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.contacts.col.lastContract": "Último contrato",
   "pages.debtNegotiation.contacts.col.updatedAt": "Última atualização",
   "pages.debtNegotiation.contactDetail.backToContacts": "Voltar para Contatos",
-  "pages.debtNegotiation.contactDetail.viewConversation": "Ver histórico de conversa",
+  "pages.debtNegotiation.contactDetail.viewConversation": "Ver conversas",
   "pages.debtNegotiation.contactDetail.detailsTitle": "Detalhes do Contato",
   "pages.debtNegotiation.contactDetail.detailsDescription":
     "Histórico, dívidas e métricas do contato.",
+  "pages.debtNegotiation.contactDetail.linkedContacts":
+    "Contatos da mesma pessoa",
+  "pages.debtNegotiation.contactDetail.mainContact": "principal",
   "pages.debtNegotiation.contactDetail.generalInfo": "Informações Gerais",
   "pages.debtNegotiation.contactDetail.contactOwner": "Proprietário do contato",
   "pages.debtNegotiation.contactDetail.contactOrigin": "Origem do contato",
   "pages.debtNegotiation.contactDetail.pix": "Pix",
-  "pages.debtNegotiation.contactDetail.pixEmpty": "Nenhuma chave Pix cadastrada.",
-  "pages.debtNegotiation.contactDetail.qualification": "Qualificação do contato",
-  "pages.debtNegotiation.contactDetail.qualification.birthDate": "Data de nascimento",
+  "pages.debtNegotiation.contactDetail.pixEmpty":
+    "Nenhuma chave Pix cadastrada.",
+  "pages.debtNegotiation.contactDetail.qualification":
+    "Qualificação do contato",
+  "pages.debtNegotiation.contactDetail.qualification.birthDate":
+    "Data de nascimento",
   "pages.debtNegotiation.contactDetail.whatsapps": "WhatsApp(s)",
-  "pages.debtNegotiation.contactDetail.blocklist": "Blocklist",
+  "pages.debtNegotiation.contactDetail.blocklist": "Número na Blocklist",
   "pages.debtNegotiation.contactDetail.qualification.gender": "Gênero",
-  "pages.debtNegotiation.contactDetail.qualification.maritalStatus": "Estado civil",
+  "pages.debtNegotiation.contactDetail.qualification.maritalStatus":
+    "Estado civil",
   "pages.debtNegotiation.contactDetail.qualification.schooling": "Escolaridade",
   "pages.debtNegotiation.contactDetail.qualification.profession": "Profissão",
-  "pages.debtNegotiation.contactDetail.qualification.professionalSituation": "Situação profissional",
-  "pages.debtNegotiation.contactDetail.qualification.companyGroup": "Empresa / Grupo",
+  "pages.debtNegotiation.contactDetail.qualification.professionalSituation":
+    "Situação profissional",
+  "pages.debtNegotiation.contactDetail.qualification.companyGroup":
+    "Empresa / Grupo",
   "pages.debtNegotiation.contactDetail.qualification.income": "Renda",
   "pages.debtNegotiation.contactDetail.address": "Endereço",
-  "pages.debtNegotiation.contactDetail.addressEmpty": "Nenhum endereço cadastrado.",
+  "pages.debtNegotiation.contactDetail.addressEmpty":
+    "Nenhum endereço cadastrado.",
   "pages.debtNegotiation.contactDetail.recordList": "Lista de registros",
   "pages.debtNegotiation.contactDetail.compliance": "Compliance",
   "pages.debtNegotiation.contactDetail.metrics": "Métricas",
   "pages.debtNegotiation.contactDetail.debts": "Dívidas",
-  "pages.debtNegotiation.contactDetail.renegotiationDate": "Data da renegociação",
+  "pages.debtNegotiation.contactDetail.renegotiationDate":
+    "Data da renegociação",
   "pages.debtNegotiation.contactDetail.conversations": "Conversas",
   "pages.debtNegotiation.contactDetail.simulations": "Simulações",
-  "pages.debtNegotiation.contactDetail.humanServices": "Atendimentos por humanos",
+  "pages.debtNegotiation.contactDetail.humanServices":
+    "Atendimentos por humanos",
   "pages.debtNegotiation.contactDetail.contracts": "Contratos",
   "pages.debtNegotiation.contactDetail.products": "Produtos",
   "pages.debtNegotiation.contactDetail.validated": "Validado",
@@ -64,10 +79,12 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.contactDetail.lastConversation": "Última conversa",
   "pages.debtNegotiation.contactDetail.lifecycleStage": "Fase do ciclo de vida",
   "pages.debtNegotiation.contactDetail.deals": "Negócios",
-  "pages.debtNegotiation.contactDetail.dealsEmpty": "Nenhum negócio registrado.",
+  "pages.debtNegotiation.contactDetail.dealsEmpty":
+    "Nenhum negócio registrado.",
   "pages.debtNegotiation.contactDetail.campaigns": "Campanhas",
   "pages.debtNegotiation.contactDetail.origin": "Origem",
-  "pages.debtNegotiation.contactDetail.originEmpty": "Sem informação de origem.",
+  "pages.debtNegotiation.contactDetail.originEmpty":
+    "Sem informação de origem.",
   "pages.debtNegotiation.contactDetail.activities": "Atividades",
   "pages.debtNegotiation.contactDetail.activitiesFilterAll": "Todos",
   "pages.debtNegotiation.contactDetail.activitiesFilterCampaigns": "Campanhas",
@@ -88,11 +105,13 @@ export const debtNegotiationPtBR = {
     "Estrutura inicial para lista, filtros e ações operacionais de dívidas.",
   "pages.debtNegotiation.debts.action": "Nova importação",
   "pages.debtNegotiation.debts.pageTitle": "Renegociação de Dívidas",
-  "pages.debtNegotiation.debts.subtitle": "Rastreie, gerencie e preveja suas negociações.",
+  "pages.debtNegotiation.debts.subtitle":
+    "Rastreie, gerencie e preveja suas negociações.",
   "pages.debtNegotiation.debts.totalDebt": "Total de Dívidas",
   "pages.debtNegotiation.debts.debtCount": "Quantidade de Dívidas",
   "pages.debtNegotiation.debts.search": "Pesquisar",
-  "pages.debtNegotiation.debts.searchPlaceholder": "Pesquise por nome, CPF, CNPJ ou Contrato...",
+  "pages.debtNegotiation.debts.searchPlaceholder":
+    "Pesquise por nome, CPF, CNPJ ou Contrato...",
   "pages.debtNegotiation.debts.errors.loadList": "Erro ao carregar dívidas.",
   "pages.debtNegotiation.debts.errors.loadDashboard":
     "Erro ao carregar indicadores. Verifique a conexão ou tente mais tarde.",
@@ -112,12 +131,15 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.action.details": "Detalhes da dívida",
   "pages.debtNegotiation.debts.action.addPayment": "Adicionar pagamento",
   "pages.debtNegotiation.debts.action.viewConversation": "Ver conversa",
-  "pages.debtNegotiation.debts.conversationHistory.title": "Histórico de conversa",
+  "pages.debtNegotiation.debts.conversationHistory.title":
+    "Histórico de conversa",
   "pages.debtNegotiation.debts.conversationHistory.loading": "Carregando…",
-  "pages.debtNegotiation.debts.conversationHistory.error": "Erro ao carregar o histórico.",
+  "pages.debtNegotiation.debts.conversationHistory.error":
+    "Erro ao carregar o histórico.",
   "pages.debtNegotiation.debts.conversationHistory.botLabel": "Agente de IA",
   "pages.debtNegotiation.debts.conversationHistory.userLabel": "Usuário",
-  "pages.debtNegotiation.debts.conversationHistory.empty": "Nenhuma mensagem no histórico.",
+  "pages.debtNegotiation.debts.conversationHistory.empty":
+    "Nenhuma mensagem no histórico.",
   "pages.debtNegotiation.pendingBanner.message":
     "Um ou mais devedores informaram que realizaram o pagamento. Precisamos que você confirme o recebimento com urgência para prosseguirmos.",
   "pages.debtNegotiation.pendingBanner.viewDebts": "Ver dívidas",
@@ -128,19 +150,26 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.detail.status": "Status",
   "pages.debtNegotiation.debts.detail.statusInfo":
     "Estágio atual da negociação no funil; o selo colorido é o status oficial.",
-  "pages.debtNegotiation.debts.detail.originalDebtDate": "Data da dívida (original)",
-  "pages.debtNegotiation.debts.detail.originalDebtAmount": "Valor da dívida (original)",
-  "pages.debtNegotiation.debts.detail.platformRegistrationDate": "Data de registro na plataforma",
-  "pages.debtNegotiation.debts.detail.debtAgeOnPlatform": "Idade da dívida na plataforma",
-  "pages.debtNegotiation.debts.detail.updatedDebtAmount": "Valor da dívida (atualizado)",
+  "pages.debtNegotiation.debts.detail.originalDebtDate":
+    "Data da dívida (original)",
+  "pages.debtNegotiation.debts.detail.originalDebtAmount":
+    "Valor da dívida (original)",
+  "pages.debtNegotiation.debts.detail.platformRegistrationDate":
+    "Data de registro na plataforma",
+  "pages.debtNegotiation.debts.detail.debtAgeOnPlatform":
+    "Idade da dívida na plataforma",
+  "pages.debtNegotiation.debts.detail.updatedDebtAmount":
+    "Valor da dívida (atualizado)",
   "pages.debtNegotiation.debts.detail.negotiatedValue": "Valor Negociado",
   "pages.debtNegotiation.debts.detail.recoveredValue": "Valor Recuperado",
   "pages.debtNegotiation.debts.detail.additionalInfo": "Informação adicional",
-  "pages.debtNegotiation.debts.detail.recoveredProgress": "{percent}% recuperado",
+  "pages.debtNegotiation.debts.detail.recoveredProgress":
+    "{percent}% recuperado",
   "pages.debtNegotiation.debts.detail.installmentsPaid": "{paid}/{total} pagas",
   "pages.debtNegotiation.debts.detail.partialPaidOverdueAlert":
     "Há parcelas pagas, mas ainda existem parcelas em atraso.",
-  "pages.debtNegotiation.debts.detail.negotiationSummary": "Resumo da negociação",
+  "pages.debtNegotiation.debts.detail.negotiationSummary":
+    "Resumo da negociação",
   "pages.debtNegotiation.debts.detail.back": "Voltar",
   "pages.debtNegotiation.debts.detail.updateDebt": "Atualizar dívida",
   "pages.debtNegotiation.debts.addPayment.title": "Adicionar pagamento",
@@ -148,20 +177,27 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.addPayment.debtSettledNo": "Não",
   "pages.debtNegotiation.debts.addPayment.debtSettledYes": "Sim",
   "pages.debtNegotiation.debts.addPayment.observations": "Observações",
-  "pages.debtNegotiation.debts.addPayment.observationsPlaceholder": "Digite as observações",
+  "pages.debtNegotiation.debts.addPayment.observationsPlaceholder":
+    "Digite as observações",
   "pages.debtNegotiation.debts.addPayment.confirm": "Confirmar",
-  "pages.debtNegotiation.debts.addPayment.confirmPayment": "Confirmar pagamento",
+  "pages.debtNegotiation.debts.addPayment.confirmPayment":
+    "Confirmar pagamento",
   "pages.debtNegotiation.debts.addPayment.paymentDate": "Data de pagamento",
   "pages.debtNegotiation.debts.addPayment.paymentType": "Tipo de pagamento",
   "pages.debtNegotiation.debts.addPayment.paymentTypeCash": "À vista",
   "pages.debtNegotiation.debts.addPayment.paymentTypeInstallment": "Parcelado",
   "pages.debtNegotiation.debts.addPayment.paidAmount": "Valor pago",
   "pages.debtNegotiation.debts.addPayment.downPayment": "Valor de entrada",
-  "pages.debtNegotiation.debts.addPayment.nextInstallmentDue": "Vencimento da próxima parcela",
-  "pages.debtNegotiation.debts.addPayment.installmentCount": "Quantidade de parcelas",
-  "pages.debtNegotiation.debts.addPayment.selectInstallmentsPlaceholder": "Selecione a quantidade",
-  "pages.debtNegotiation.debts.addPayment.installmentOption": "{count}x — {amount}",
-  "pages.debtNegotiation.debts.addPayment.installmentSummary": "Resumo das parcelas",
+  "pages.debtNegotiation.debts.addPayment.nextInstallmentDue":
+    "Vencimento da próxima parcela",
+  "pages.debtNegotiation.debts.addPayment.installmentCount":
+    "Quantidade de parcelas",
+  "pages.debtNegotiation.debts.addPayment.selectInstallmentsPlaceholder":
+    "Selecione a quantidade",
+  "pages.debtNegotiation.debts.addPayment.installmentOption":
+    "{count}x — {amount}",
+  "pages.debtNegotiation.debts.addPayment.installmentSummary":
+    "Resumo das parcelas",
   "pages.debtNegotiation.debts.addPayment.col.installment": "Parcela",
   "pages.debtNegotiation.debts.addPayment.col.dueDate": "Vencimento",
   "pages.debtNegotiation.debts.addPayment.col.amount": "Valor",
@@ -170,7 +206,8 @@ export const debtNegotiationPtBR = {
     "Não foi possível simular o parcelamento. Verifique o valor de entrada e tente novamente.",
   "pages.debtNegotiation.debts.addPayment.validationFillFields":
     "Preencha os campos obrigatórios para confirmar a quitação.",
-  "pages.debtNegotiation.debts.addPayment.validationPaymentDate": "Informe a data de pagamento.",
+  "pages.debtNegotiation.debts.addPayment.validationPaymentDate":
+    "Informe a data de pagamento.",
   "pages.debtNegotiation.debts.addPayment.toast.sending":
     "Enviando atualização da dívida…",
   "pages.debtNegotiation.debts.addPayment.toast.success":
@@ -183,19 +220,23 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.informPayment.title": "Informar pagamento",
   "pages.debtNegotiation.debts.informPayment.instruction":
     "Marque a dívida como paga após a quitação do cliente",
-  "pages.debtNegotiation.debts.informPayment.selectedCount": "{count} parcelas selecionadas",
-  "pages.debtNegotiation.debts.informPayment.selectAll": "Selecionar todas parcelas",
+  "pages.debtNegotiation.debts.informPayment.selectedCount":
+    "{count} parcelas selecionadas",
+  "pages.debtNegotiation.debts.informPayment.selectAll":
+    "Selecionar todas parcelas",
   "pages.debtNegotiation.debts.informPayment.clearSelection": "Limpar seleção",
   "pages.debtNegotiation.debts.informPayment.col.installment": "Parcela",
   "pages.debtNegotiation.debts.informPayment.col.dueDate": "Data de vencimento",
-  "pages.debtNegotiation.debts.informPayment.col.paymentDate": "Data do pagamento",
+  "pages.debtNegotiation.debts.informPayment.col.paymentDate":
+    "Data do pagamento",
   "pages.debtNegotiation.debts.informPayment.col.amount": "Valor da parcela",
   "pages.debtNegotiation.debts.informPayment.col.status": "Status",
   "pages.debtNegotiation.debts.informPayment.status.paid": "Pago",
   "pages.debtNegotiation.debts.informPayment.status.onTime": "No prazo",
   "pages.debtNegotiation.debts.informPayment.status.overdue": "Atrasado",
   "pages.debtNegotiation.debts.informPayment.close": "Fechar",
-  "pages.debtNegotiation.debts.informPayment.processPayment": "Realizar pagamento",
+  "pages.debtNegotiation.debts.informPayment.processPayment":
+    "Realizar pagamento",
   "pages.debtNegotiation.debts.informPayment.toast.sending":
     "Enviando atualização da dívida...",
   "pages.debtNegotiation.debts.informPayment.toast.success":
@@ -204,13 +245,15 @@ export const debtNegotiationPtBR = {
     "Falha ao informar pagamento. Tente novamente.",
   "pages.debtNegotiation.debts.informPayment.toast.selectOne":
     "Selecione ao menos uma parcela.",
-  "pages.debtNegotiation.debts.informPayment.confirmTitle": "Confirmar pagamento",
+  "pages.debtNegotiation.debts.informPayment.confirmTitle":
+    "Confirmar pagamento",
   "pages.debtNegotiation.debts.informPayment.continue": "Continuar",
   "pages.debtNegotiation.debts.informPayment.selectedInstallmentsHeading":
     "Parcelas selecionadas",
   "pages.debtNegotiation.debts.informPayment.amountPerInstallment":
     "Valor por parcela",
-  "pages.debtNegotiation.debts.informPayment.totalToPay": "Valor total a ser pago",
+  "pages.debtNegotiation.debts.informPayment.totalToPay":
+    "Valor total a ser pago",
   "pages.debtNegotiation.debts.informPayment.paymentDateLabel":
     "Data do pagamento",
   "pages.debtNegotiation.debts.informPayment.paymentDateRequiredHint":
@@ -221,32 +264,44 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.status.cancelado": "Cancelado",
   "pages.debtNegotiation.debts.status.ignorado": "Ignorado",
   "pages.debtNegotiation.debts.status.emNegociacao": "Em negociação",
-  "pages.debtNegotiation.debts.status.recuperadoParcialmente": "Recuperado parcialmente",
+  "pages.debtNegotiation.debts.status.recuperadoParcialmente":
+    "Recuperado parcialmente",
   "pages.debtNegotiation.debts.status.recuperado": "Pago",
   "pages.debtNegotiation.debts.status.pagoDiretamente": "Pago diretamente",
-  "pages.debtNegotiation.debts.status.confirmacaoPagamento": "Confirmação de pagamento",
+  "pages.debtNegotiation.debts.status.confirmacaoPagamento":
+    "Confirmação de pagamento",
   "pages.debtNegotiation.debts.status.emCobranca": "Em cobrança",
-  "pages.debtNegotiation.debts.status.negociadoSemPagamento": "Negociado sem pagamento",
+  "pages.debtNegotiation.debts.status.negociadoSemPagamento":
+    "Negociado sem pagamento",
   "pages.debtNegotiation.debts.status.pago": "Pago",
   "pages.debtNegotiation.debts.status.dividaRegistrada": "Dívida registrada",
   "pages.debtNegotiation.debts.status.negociado": "Negociado",
-  "pages.debtNegotiation.debts.status.promessaPagamento": "Promessa de pagamento",
+  "pages.debtNegotiation.debts.status.promessaPagamento":
+    "Promessa de pagamento",
   "pages.debtNegotiation.debts.status.pausado": "Pausado",
   "pages.debtNegotiation.debts.status.prescrita": "Prescrita",
   "pages.debtNegotiation.debts.status.atrasado": "Atrasado",
   "pages.debtNegotiation.debts.status.outros": "Outros",
-  "pages.debtNegotiation.debts.manageStatus.title": "Gerenciar status da dívida",
+  "pages.debtNegotiation.debts.manageStatus.title":
+    "Gerenciar status da dívida",
   "pages.debtNegotiation.debts.manageStatus.alter": "Alterar",
   "pages.debtNegotiation.debts.manageStatus.currentStatus": "Status atual",
   "pages.debtNegotiation.debts.manageStatus.newStatus": "Novo status",
-  "pages.debtNegotiation.debts.manageStatus.reasonOptional": "Motivo (opcional)",
-  "pages.debtNegotiation.debts.manageStatus.reasonPlaceholder": "Informe o motivo da alteração (opcional)",
-  "pages.debtNegotiation.debts.manageStatus.selectPlaceholder": "Selecione um status",
+  "pages.debtNegotiation.debts.manageStatus.reasonOptional":
+    "Motivo (opcional)",
+  "pages.debtNegotiation.debts.manageStatus.reasonPlaceholder":
+    "Informe o motivo da alteração (opcional)",
+  "pages.debtNegotiation.debts.manageStatus.selectPlaceholder":
+    "Selecione um status",
   "pages.debtNegotiation.debts.manageStatus.save": "Salvar",
-  "pages.debtNegotiation.debts.manageStatus.toast.success": "Status da dívida atualizado com sucesso.",
-  "pages.debtNegotiation.debts.manageStatus.toast.noChange": "Nenhuma alteração foi aplicada.",
-  "pages.debtNegotiation.debts.manageStatus.toast.error": "Falha ao atualizar o status da dívida. Tente novamente.",
-  "pages.debtNegotiation.importDebts.breadcrumb": "Renegociação de Dívidas / Importar Dívidas",
+  "pages.debtNegotiation.debts.manageStatus.toast.success":
+    "Status da dívida atualizado com sucesso.",
+  "pages.debtNegotiation.debts.manageStatus.toast.noChange":
+    "Nenhuma alteração foi aplicada.",
+  "pages.debtNegotiation.debts.manageStatus.toast.error":
+    "Falha ao atualizar o status da dívida. Tente novamente.",
+  "pages.debtNegotiation.importDebts.breadcrumb":
+    "Renegociação de Dívidas / Importar Dívidas",
   "pages.debtNegotiation.importDebts.title": "Importar Dívidas",
   "pages.debtNegotiation.importDebts.subtitle":
     "Faça upload e configure os dados para importação de dívidas.",
@@ -258,11 +313,15 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.importDebts.uploadLimitHint":
     "Suporta arquivos CSV com até 1.000 linhas por importação.",
   "pages.debtNegotiation.importDebts.selectFile": "Selecionar arquivo",
-  "pages.debtNegotiation.importDebts.downloadTemplate": "Baixar arquivo de exemplo",
-  "pages.debtNegotiation.importDebts.selectedFile": "Arquivo selecionado: {name}",
+  "pages.debtNegotiation.importDebts.downloadTemplate":
+    "Baixar arquivo de exemplo",
+  "pages.debtNegotiation.importDebts.selectedFile":
+    "Arquivo selecionado: {name}",
   "pages.debtNegotiation.importDebts.mappingTitle": "Mapeamento de Colunas",
-  "pages.debtNegotiation.importDebts.loadingFields": "Carregando campos de mapeamento…",
-  "pages.debtNegotiation.importDebts.errorFields": "Erro ao carregar campos de mapeamento. Tente novamente.",
+  "pages.debtNegotiation.importDebts.loadingFields":
+    "Carregando campos de mapeamento…",
+  "pages.debtNegotiation.importDebts.errorFields":
+    "Erro ao carregar campos de mapeamento. Tente novamente.",
   "pages.debtNegotiation.importDebts.autoMappingHint":
     "Mapeamento automático aplicado: {mapped} de {total} campos mapeados. Revise antes de continuar.",
   "pages.debtNegotiation.importDebts.systemField": "Campo do Sistema",
@@ -274,8 +333,10 @@ export const debtNegotiationPtBR = {
     "Encontramos problemas no arquivo. Revise as linhas destacadas em vermelho antes de continuar.",
   "pages.debtNegotiation.importDebts.validationAllGood":
     "Parabéns! Todos os dados foram validados. Você pode prosseguir com a importação.",
-  "pages.debtNegotiation.importDebts.showOnlyInvalid": "Exibir apenas linhas com problemas",
-  "pages.debtNegotiation.importDebts.noRowsToShow": "Nenhuma linha para exibir.",
+  "pages.debtNegotiation.importDebts.showOnlyInvalid":
+    "Exibir apenas linhas com problemas",
+  "pages.debtNegotiation.importDebts.noRowsToShow":
+    "Nenhuma linha para exibir.",
   "pages.debtNegotiation.importDebts.importAction": "Importar",
   "pages.debtNegotiation.importDebts.resultTitle": "Resultado",
   "pages.debtNegotiation.importDebts.resultSuccess":
@@ -283,7 +344,8 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.importDebts.resultImported": "Dívidas importadas",
   "pages.debtNegotiation.importDebts.resultIgnored": "Dívidas ignoradas",
   "pages.debtNegotiation.importDebts.backToDashboard": "Voltar para Dívidas",
-  "pages.debtNegotiation.importDebts.stepLabel": "Etapa {step} de {total} · {label}",
+  "pages.debtNegotiation.importDebts.stepLabel":
+    "Etapa {step} de {total} · {label}",
   "dashboard.kpis.totalDebts": "Total de dívidas",
   "dashboard.kpis.totalNegotiated": "Total negociado",
   "dashboard.kpis.totalRecovered": "Total recuperado",

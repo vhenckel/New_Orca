@@ -1,8 +1,6 @@
-import { FileText, Handshake, LayoutDashboard, Users } from "lucide-react";
+import { FileText, Handshake, LayoutDashboard } from "lucide-react";
 
 import type { AppModuleDefinition } from "@/app/router/types";
-import { ContactDetailPage } from "@/modules/debt-negotiation/pages/ContactDetailPage";
-import { ContactsPage } from "@/modules/debt-negotiation/pages/ContactsPage";
 import { DashboardPage } from "@/modules/debt-negotiation/pages/DashboardPage";
 import { DebtsPage } from "@/modules/debt-negotiation/pages/DebtsPage";
 import { ImportDebtsWizardPage } from "@/modules/debt-negotiation/pages/ImportDebtsWizardPage";
@@ -50,31 +48,6 @@ export const debtNegotiationModule: AppModuleDefinition = {
       topBarParent: {
         labelKey: "modules.debtNegotiation.routes.debts.label",
         path: "/debt-negotiation/debts",
-        preserveSearch: true,
-      },
-    },
-    {
-      path: "/debt-negotiation/contacts",
-      labelKey: "modules.debtNegotiation.routes.contacts.label",
-      descriptionKey: "modules.debtNegotiation.routes.contacts.description",
-      icon: Users,
-      element: <ContactsPage />,
-      topBarParent: {
-        labelKey: "modules.debtNegotiation.routes.dashboard.label",
-        path: "/debt-negotiation",
-        preserveSearch: true,
-      },
-    },
-    {
-      path: "/debt-negotiation/contacts/:id",
-      labelKey: "pages.debtNegotiation.contactDetail.detailsTitle",
-      descriptionKey: "pages.debtNegotiation.contactDetail.detailsTitle",
-      icon: Users,
-      element: <ContactDetailPage />,
-      hideInSidebar: true,
-      topBarParent: {
-        labelKey: "modules.debtNegotiation.routes.contacts.label",
-        path: "/debt-negotiation/contacts",
         preserveSearch: true,
       },
     },
