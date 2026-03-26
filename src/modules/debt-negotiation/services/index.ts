@@ -2,6 +2,7 @@ export { fetchRenegotiationBoxes } from "./renegotiation-boxes";
 export { fetchRenegotiationDetails } from "./renegotiation-details";
 export { fetchRenegotiationGraphics } from "./renegotiation-graphics";
 export { fetchRenegotiationNps } from "./renegotiation-nps";
+export { fetchRenegotiationPlanUsage } from "./renegotiation-plan-usage";
 export {
   fetchContactList,
   fetchContactDetails,

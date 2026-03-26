@@ -27,6 +27,12 @@ export type {
   RenegotiationBoxesParams,
 } from "./renegotiation-boxes";
 export type {
+  RenegotiationPlanUsageResponse,
+  RenegotiationPlanUsageParams,
+  RenegotiationPlanUsageLimit,
+  RenegotiationPlanUsageIssues,
+} from "./renegotiation-plan-usage";
+export type {
   ContactListItem,
   ContactListResponse,
   ContactListParams,
