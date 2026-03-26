@@ -13,16 +13,12 @@ import {
   MapPin,
   Megaphone,
   MessageCircle,
-  Pencil,
-  Send,
   User,
 } from "lucide-react";
 import { formatCpf } from "@/shared/lib/format";
 import { formatContactOriginLabel } from "@/modules/contact/utils/format-contact-origin";
 import { formatWhatsApp } from "@/modules/contact/utils/format-whatsapp";
 import { useI18n } from "@/shared/i18n/useI18n";
-import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
-import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import {
@@ -49,6 +45,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { copyTextToClipboard } from "@/shared/lib/copy-to-clipboard";
 import { cn } from "@/shared/lib/utils";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
+import { ContactDetailHeader } from "@/modules/contact/components/ContactDetailHeader";
 
 const CONTACT_BLOCKLIST_PATH = "/contacts/blocklist";
 
@@ -178,7 +175,10 @@ export function ContactDetailPage() {
 
   const name = details?.name ?? "-";
   const addressLine = details ? formatAddress(details) : "";
-  const linkedContacts = personCluster?.contacts ?? [];
+  const linkedContacts = useMemo(
+    () => personCluster?.contacts ?? [],
+    [personCluster?.contacts],
+  );
   /** Principal primeiro, depois demais por id. */
   const sortedLinkedContacts = useMemo(() => {
     if (linkedContacts.length === 0) return [];
@@ -193,6 +193,15 @@ export function ContactDetailPage() {
     if (sortedLinkedContacts.length === 0) return null;
     return sortedLinkedContacts.find((c) => c.main) ?? sortedLinkedContacts[0];
   }, [sortedLinkedContacts]);
+  const headerPhoneRaw = mainContactForHeader?.appkey ?? details?.phone ?? null;
+  const headerPhoneDisplay = headerPhoneRaw ? formatWhatsApp(headerPhoneRaw) : null;
+  const headerPhoneInBlackList = Boolean(mainContactForHeader?.isInBlackList);
+  const headerPhoneBlocklistHref =
+    mainContactForHeader?.appkey && mainContactForHeader.isInBlackList
+      ? blocklistFilteredHref(mainContactForHeader.appkey)
+      : null;
+  const headerDocumentRaw = details?.cpf ?? null;
+  const headerDocumentDisplay = details?.cpf ? formatCpf(details.cpf) : null;
 
   /** Candidatos ao modal de blocklist: cluster da pessoa ou contato único (fallback). */
   const blocklistCandidates = useMemo((): PersonContactListItem[] => {
@@ -229,166 +238,36 @@ export function ContactDetailPage() {
       title={t("pages.debtNegotiation.contactDetail.detailsTitle")}
       subtitle={t("pages.debtNegotiation.contactDetail.detailsDescription")}
     >
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12">
-                <AvatarFallback className="text-base">
-                  {getInitials(name)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h1 className="text-xl font-semibold text-foreground">
-                  {detailsPending ? "…" : name}
-                </h1>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  {details?.lastPipelineStage && (
-                    <NegotiationStatusBadge
-                      stageName={details.lastPipelineStage}
-                    />
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {t("pages.debtNegotiation.contactDetail.lifecycleStage")}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <PermissionGuard
-                permissionNames={["editar"]}
-                moduleName="contatos"
-                subModuleName="contatos"
-              >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9"
-                      aria-label="Editar"
-                      onClick={() => setEditContactOpen(true)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Editar</TooltipContent>
-                </Tooltip>
-              </PermissionGuard>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9"
-                    aria-label="Enviar"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Enviar</TooltipContent>
-              </Tooltip>
-              <PermissionGuard
-                permissionNames={["mover_para_blocklist"]}
-                moduleName="contatos"
-                subModuleName="contatos"
-              >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="gap-2"
-                      onClick={() => setAddToBlocklistOpen(true)}
-                    >
-                      <Ban className="h-4 w-4" />
-                      {t("pages.contact.addToBlocklist.button")}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {t("pages.contact.addToBlocklist.button")}
-                  </TooltipContent>
-                </Tooltip>
-              </PermissionGuard>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button onClick={() => setConversationOpen(true)}>
-                    <MessageCircle className="h-4 w-4" />
-
-                    {t("pages.debtNegotiation.contactDetail.viewConversation")}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {t("pages.debtNegotiation.contactDetail.viewConversation")}
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-            {details?.email && (
-              <span className="flex items-center gap-1">
-                {details.email}
-                <CopyButton value={details.email} />
-              </span>
-            )}
-            {mainContactForHeader?.appkey ? (
-              <span className="flex items-center gap-2 font-medium text-foreground">
-                {mainContactForHeader.isInBlackList ? (
-                  <PermissionGuard
-                    permissionNames={[
-                      "mover_para_blocklist",
-                      "retirar_da_blocklist",
-                    ]}
-                  >
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          to={blocklistFilteredHref(
-                            mainContactForHeader.appkey,
-                          )}
-                          className="inline-flex shrink-0 items-center justify-center rounded-full p-0.5 text-destructive hover:bg-muted"
-                          aria-label={t(
-                            "pages.debtNegotiation.contactDetail.blocklist",
-                          )}
-                        >
-                          <Ban className="h-4 w-4" />
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="max-w-xs">
-                        {t("pages.debtNegotiation.contactDetail.blocklist")}
-                      </TooltipContent>
-                    </Tooltip>
-                  </PermissionGuard>
-                ) : null}
-                {formatWhatsApp(mainContactForHeader.appkey)}
-                <CopyButton value={mainContactForHeader.appkey} />
-              </span>
-            ) : linkedContacts.length === 0 && details?.phone ? (
-              <span className="flex items-center gap-1">
-                {details.phone}
-                <CopyButton value={details.phone} />
-              </span>
-            ) : null}
-            {details?.cpf && (
-              <span className="flex items-center gap-1 font-mono">
-                {formatCpf(details.cpf)}
-                <CopyButton value={details.cpf} />
-              </span>
-            )}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-6 text-sm text-muted-foreground">
-            <span>
-              {t("pages.debtNegotiation.contactDetail.firstConversation")}:{" "}
-              {formatDateTime(metrics?.dateFirstConversation ?? null)}
-            </span>
-            <span>
-              {t("pages.debtNegotiation.contactDetail.lastConversation")}:{" "}
-              {formatDateTime(metrics?.dateLastConversation ?? null)}
-            </span>
-          </div>
-        </CardHeader>
-      </Card>
+      <ContactDetailHeader
+        isPending={detailsPending}
+        name={name}
+        initials={getInitials(name)}
+        lastPipelineStage={details?.lastPipelineStage}
+        email={details?.email}
+        phoneDisplay={headerPhoneDisplay}
+        phoneRaw={headerPhoneRaw}
+        phoneInBlackList={headerPhoneInBlackList}
+        phoneBlocklistHref={headerPhoneBlocklistHref}
+        documentDisplay={headerDocumentDisplay}
+        documentRaw={headerDocumentRaw}
+        firstConversationDate={formatDateTime(metrics?.dateFirstConversation ?? null)}
+        lastConversationDate={formatDateTime(metrics?.dateLastConversation ?? null)}
+        texts={{
+          addToBlocklist: t("pages.contact.addToBlocklist.button"),
+          blocklist: t("pages.debtNegotiation.contactDetail.blocklist"),
+          viewConversation: t("pages.debtNegotiation.contactDetail.viewConversation"),
+          firstConversation: t("pages.debtNegotiation.contactDetail.firstConversation"),
+          lastConversation: t("pages.debtNegotiation.contactDetail.lastConversation"),
+          emailLabel: "E-mail",
+          phoneLabel: "Telefone",
+          documentLabel: "CPF / CNPJ",
+          edit: "Editar",
+          send: "Enviar",
+        }}
+        onOpenEdit={() => setEditContactOpen(true)}
+        onAddToBlocklist={() => setAddToBlocklistOpen(true)}
+        onOpenConversation={() => setConversationOpen(true)}
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Coluna esquerda: Detalhes do Contato + Atividades */}
