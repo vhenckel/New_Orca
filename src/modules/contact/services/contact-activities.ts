@@ -1,6 +1,6 @@
 import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import { spotJson } from "@/shared/api/http-client";
-import type { ContactActivitiesResponse } from "@/modules/debt-negotiation/types";
+import type { ContactActivitiesResponse } from "@/modules/contact/types";
 
 export interface ContactActivitiesParams {
   take: number;

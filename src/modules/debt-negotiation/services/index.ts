@@ -2,12 +2,17 @@ export { fetchRenegotiationBoxes } from "./renegotiation-boxes";
 export { fetchRenegotiationDetails } from "./renegotiation-details";
 export { fetchRenegotiationGraphics } from "./renegotiation-graphics";
 export { fetchRenegotiationNps } from "./renegotiation-nps";
-export { fetchContactList } from "./contact-list";
-export { fetchContactDetails } from "./contact-detail";
-export { fetchContactMetrics } from "./contact-metrics";
-export { fetchContactDebts } from "./contact-debts";
-export { fetchContactActivities } from "./contact-activities";
-export { fetchContactCampaigns } from "./contact-campaigns";
+export { fetchRenegotiationPlanUsage } from "./renegotiation-plan-usage";
+export {
+  fetchContactList,
+  fetchContactDetails,
+  fetchContactMetrics,
+  fetchContactDebts,
+  fetchContactActivities,
+  fetchContactCampaigns,
+  fetchPersonContactQuery,
+  fetchPersonDetails,
+} from "@/modules/contact/services";
 export { fetchDebtDetails } from "./debt-details";
 export {
   fetchRenegotiationViewList,

@@ -2,12 +2,18 @@ export { useRenegotiationBoxes } from "./useRenegotiationBoxes";
 export { useRenegotiationDetails } from "./useRenegotiationDetails";
 export { useRenegotiationGraphics } from "./useRenegotiationGraphics";
 export { useRenegotiationNps } from "./useRenegotiationNps";
-export { useContactList, CONTACT_LIST_PAGE_SIZE } from "./useContactList";
-export { useContactDetails } from "./useContactDetails";
-export { useContactMetrics } from "./useContactMetrics";
-export { useContactDebts } from "./useContactDebts";
-export { useContactActivities, CONTACT_ACTIVITIES_PAGE_SIZE } from "./useContactActivities";
-export { useContactCampaigns } from "./useContactCampaigns";
+export { useRenegotiationPlanUsage } from "./useRenegotiationPlanUsage";
+export {
+  useContactList,
+  CONTACT_LIST_PAGE_SIZE,
+  useContactDetails,
+  usePersonContactCluster,
+  useContactMetrics,
+  useContactDebts,
+  useContactActivities,
+  CONTACT_ACTIVITIES_PAGE_SIZE,
+  useContactCampaigns,
+} from "@/modules/contact/hooks";
 export { useDebtDetails, DEBT_DETAILS_PAGE_SIZE } from "./useDebtDetails";
 export { useRenegotiationDrilldownList } from "./useRenegotiationDrilldownList";
 export { useDebtDetail } from "./useDebtDetail";

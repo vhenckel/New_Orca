@@ -27,15 +27,29 @@ export type {
   RenegotiationBoxesParams,
 } from "./renegotiation-boxes";
 export type {
+  RenegotiationPlanUsageResponse,
+  RenegotiationPlanUsageParams,
+  RenegotiationPlanUsageLimit,
+  RenegotiationPlanUsageIssues,
+} from "./renegotiation-plan-usage";
+export type {
   ContactListItem,
   ContactListResponse,
   ContactListParams,
-} from "./contact-list";
-export type { ContactDetails } from "./contact-detail";
-export type { ContactMetricsResponse } from "./contact-metrics";
-export type { ContactDebtsResponse, ContactDebtItem } from "./contact-debts";
-export type { ContactActivitiesResponse, ContactActivity } from "./contact-activities";
-export type { ContactCampaignsResponse, ContactCampaign } from "./contact-campaigns";
+  PersonContactClusterResponse,
+  PersonContactListItem,
+  PersonDetailsPayload,
+  PersonDetailsResponse,
+  PersonContactQueryParams,
+  ContactDetails,
+  ContactMetricsResponse,
+  ContactDebtsResponse,
+  ContactDebtItem,
+  ContactActivitiesResponse,
+  ContactActivity,
+  ContactCampaignsResponse,
+  ContactCampaign,
+} from "@/modules/contact/types";
 export type {
   DebtDetailsItem,
   DebtDetailsResponse,

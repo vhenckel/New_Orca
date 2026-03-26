@@ -12,12 +12,15 @@ import { settingsEnUS } from "@/modules/settings/i18n/en-US";
 import { settingsPtBR } from "@/modules/settings/i18n/pt-BR";
 import { agentEnUS } from "@/modules/agent/i18n/en-US";
 import { agentPtBR } from "@/modules/agent/i18n/pt-BR";
+import { contactEnUS } from "@/modules/contact/i18n/en-US";
+import { contactPtBR } from "@/modules/contact/i18n/pt-BR";
 
 export const localeStorageKey = "o2ospot-locale";
 export const defaultLocale = "pt-BR";
 
 const ptBRMessages = {
   ...basePtBR,
+  ...contactPtBR,
   ...debtNegotiationPtBR,
   ...financePtBR,
   ...collectionsPtBR,
@@ -28,6 +31,7 @@ const ptBRMessages = {
 
 const enUSMessages = {
   ...baseEnUS,
+  ...contactEnUS,
   ...debtNegotiationEnUS,
   ...financeEnUS,
   ...collectionsEnUS,

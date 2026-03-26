@@ -2,7 +2,7 @@ import { spotJson } from "@/shared/api/http-client";
 import type {
   ContactListParams,
   ContactListResponse,
-} from "@/modules/debt-negotiation/types/contact-list";
+} from "@/modules/contact/types/contact-list";
 
 const CONTACT_QUERY_PATH = "/contact/query";
 

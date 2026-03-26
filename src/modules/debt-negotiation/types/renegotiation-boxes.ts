@@ -6,6 +6,11 @@ export interface RenegotiationBoxItem {
   percentage?: number;
 }
 
+export interface RenegotiationPlanLimit {
+  used: number;
+  total: number;
+}
+
 export interface RenegotiationBoxesResponse {
   totalDebt: RenegotiationBoxItem;
   totalDebtOriginal?: RenegotiationBoxItem;
@@ -17,6 +22,10 @@ export interface RenegotiationBoxesResponse {
   totalDebtCount: RenegotiationBoxItem;
   totalNegotiatedCount: RenegotiationBoxItem;
   totalRecoveredCount: RenegotiationBoxItem;
+  planType?: string;
+  endDate?: string | null;
+  dailyConversationLimit?: RenegotiationPlanLimit;
+  debtsLimit?: RenegotiationPlanLimit;
 }
 
 export interface RenegotiationBoxesParams {

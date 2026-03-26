@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchContactDebts } from "@/modules/debt-negotiation/services";
-import type { ContactDebtsResponse } from "@/modules/debt-negotiation/types";
+import { fetchContactDebts } from "@/modules/contact/services";
+import type { ContactDebtsResponse } from "@/modules/contact/types";
 
 export function useContactDebts(contactId: number | null) {
   return useQuery<ContactDebtsResponse>({

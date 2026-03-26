@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchContactActivities } from "@/modules/debt-negotiation/services";
-import type { ContactActivitiesResponse } from "@/modules/debt-negotiation/types";
+import { fetchContactActivities } from "@/modules/contact/services";
+import type { ContactActivitiesResponse } from "@/modules/contact/types";
 
 const PAGE_SIZE = 20;
 
