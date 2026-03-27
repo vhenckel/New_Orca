@@ -25,7 +25,14 @@ import {
   type DataTablePaginationChange,
   type DataTablePaginationLabels,
 } from "./DataTablePagination";
-import type { DataTableResult } from "./types";
+import type { DataTableColumnMeta, DataTableResult } from "./types";
+
+function getColumnMeta(meta: unknown): DataTableColumnMeta {
+  if (meta && typeof meta === "object") {
+    return meta as DataTableColumnMeta;
+  }
+  return {};
+}
 
 export type DataTableProps<T> = {
   columns: ColumnDef<T, unknown>[];
@@ -41,6 +48,8 @@ export type DataTableProps<T> = {
   emptyMessage?: string;
   /** Ex.: `border-0` quando a tabela já está dentro de um card (evita caixa dentro da caixa). */
   tableContainerClassName?: string;
+  /** `table-fixed` faz as larguras das colunas (TanStack `size`) serem respeitadas. */
+  tableLayoutFixed?: boolean;
   paginationLabels?: Partial<DataTablePaginationLabels>;
 };
 
@@ -64,6 +73,7 @@ export function DataTable<T>({
   getRowId,
   emptyMessage = "Nenhum registro.",
   tableContainerClassName,
+  tableLayoutFixed = false,
   paginationLabels,
 }: DataTableProps<T>) {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
@@ -134,17 +144,31 @@ export function DataTable<T>({
   return (
     <div className="flex flex-col gap-4" data-testid="data-table">
       <div className={cn("rounded-md border", tableContainerClassName)}>
-        <Table>
+        <Table className={tableLayoutFixed ? "table-fixed" : undefined}>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
-                {hg.headers.map((header) => (
-                  <TableHead key={header.id} style={{ width: header.getSize() }}>
+                {hg.headers.map((header) => {
+                  const meta = getColumnMeta(header.column.columnDef.meta);
+                  return (
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      tableLayoutFixed ? "min-w-0 align-top" : undefined,
+                      meta.headerClassName,
+                    )}
+                    style={
+                      tableLayoutFixed
+                        ? { width: header.getSize(), maxWidth: header.getSize() }
+                        : { width: header.getSize() }
+                    }
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
-                ))}
+                );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -162,11 +186,28 @@ export function DataTable<T>({
             ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                  {row.getVisibleCells().map((cell) => {
+                    const meta = getColumnMeta(cell.column.columnDef.meta);
+                    return (
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        tableLayoutFixed ? "min-w-0 align-top" : undefined,
+                        meta.cellClassName,
+                      )}
+                      style={
+                        tableLayoutFixed
+                          ? {
+                              width: cell.column.getSize(),
+                              maxWidth: cell.column.getSize(),
+                            }
+                          : undefined
+                      }
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
-                  ))}
+                  );
+                  })}
                 </TableRow>
               ))
             ) : (

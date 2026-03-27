@@ -23,6 +23,9 @@ export async function fetchContactBlocklistList(
   if (params.keyword?.trim()) {
     body.where = { keyword: params.keyword.trim() };
   }
+  if (params.orderBy) body.orderBy = String(params.orderBy);
+  /** DynamicQuery no spot-api usa `orderByDirection`, não `orderDirection`. */
+  if (params.orderDirection) body.orderByDirection = params.orderDirection;
 
   return spotJson<ContactBlocklistListResponse>("/contact-black-list/list-grid", {
     method: "POST",

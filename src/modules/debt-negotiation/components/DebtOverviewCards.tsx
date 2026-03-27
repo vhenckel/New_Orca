@@ -1,4 +1,4 @@
-import { Ban, Info, Pencil } from "lucide-react";
+import { Ban, Info, Pencil, Smartphone } from "lucide-react";
 
 import type { DebtDetailResponse } from "@/modules/debt-negotiation/types/debt-detail";
 import { NegotiationStatusBadge } from "@/modules/debt-negotiation/components/NegotiationStatusBadge";
@@ -65,13 +65,9 @@ function Row({
 
 interface DebtContactCardProps {
   debtData: DebtDetailResponse;
-  showBlacklistIcon?: boolean;
 }
 
-export function DebtContactCard({
-  debtData,
-  showBlacklistIcon = false,
-}: DebtContactCardProps) {
+export function DebtContactCard({ debtData }: DebtContactCardProps) {
   const { t } = useI18n();
 
   const contactDocLabel =
@@ -113,11 +109,13 @@ export function DebtContactCard({
               <div className="flex flex-col gap-1">
                 {debtData.contactWhatsapps.map((w, idx) => (
                   <div key={`${w.originalNumber}-${idx}`} className="flex items-center gap-2">
-                    {showBlacklistIcon && w.isInBlacklist ? (
-                      <span className="inline-flex shrink-0">
-                        <Ban className="h-4 w-4 text-destructive" />
-                      </span>
-                    ) : null}
+                    <span className="inline-flex shrink-0 text-muted-foreground">
+                      {w.isInBlacklist ? (
+                        <Ban className="size-4 text-destructive" />
+                      ) : (
+                        <Smartphone className="size-4" />
+                      )}
+                    </span>
                     <span className="text-sm font-medium text-foreground">
                       {w.formattedNumber ?? w.originalNumber}
                     </span>

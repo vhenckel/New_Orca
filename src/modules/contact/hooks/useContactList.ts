@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchContactList } from "@/modules/contact/services/contact-list";
 import { getCurrentCompanyId } from "@/shared/auth/current-company";
+import type { ContactListOrderDirection } from "@/modules/contact/types/contact-list";
 
 /** Padrão alinhado a `usePaginationQueryState` (DataTable). */
 const DEFAULT_PAGE_SIZE = 10;
@@ -11,6 +12,8 @@ interface UseContactListParams {
   companyId?: number;
   /** Texto digitado no campo de busca (keyword da API). */
   search?: string;
+  orderBy?: string;
+  orderDirection?: ContactListOrderDirection;
 }
 
 export function useContactList(params?: UseContactListParams) {
@@ -20,6 +23,8 @@ export function useContactList(params?: UseContactListParams) {
   const skip = (page - 1) * pageSize;
   const rawSearch = params?.search?.trim() ?? "";
   const hasSearch = rawSearch.length > 0;
+  const orderBy = params?.orderBy;
+  const orderDirection = params?.orderDirection;
 
   return useQuery({
     queryKey: [
@@ -30,6 +35,8 @@ export function useContactList(params?: UseContactListParams) {
       pageSize,
       hasSearch ? rawSearch : undefined,
       "usePerson",
+      orderBy,
+      orderDirection,
     ],
     queryFn: () =>
       fetchContactList({
@@ -43,6 +50,8 @@ export function useContactList(params?: UseContactListParams) {
           isInBlackList: false,
           ...(hasSearch ? { keyword: rawSearch } : {}),
         },
+        ...(orderBy ? { orderBy } : {}),
+        ...(orderDirection ? { orderDirection } : {}),
       }),
   });
 }

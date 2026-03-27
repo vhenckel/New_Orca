@@ -4,6 +4,7 @@ export interface NpsDailyTrendItem {
 }
 
 export interface NpsMonthlyTrendItem {
+  year: number;
   month?: string;
   value?: number | null;
 }

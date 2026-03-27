@@ -22,6 +22,7 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.contacts.emptyList": "No contacts found.",
   "pages.debtNegotiation.contacts.errors.loadList": "Failed to load contacts.",
   "pages.debtNegotiation.contacts.allFilters": "All filters ({count})",
+  "pages.debtNegotiation.contacts.col.actions": "Actions",
   "pages.debtNegotiation.contacts.col.name": "Name",
   "pages.debtNegotiation.contacts.col.nps": "NPS",
   "pages.debtNegotiation.contacts.col.whatsapp": "WhatsApp",

@@ -23,6 +23,7 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.contacts.errors.loadList":
     "Erro ao carregar contatos.",
   "pages.debtNegotiation.contacts.allFilters": "Todos os filtros ({count})",
+  "pages.debtNegotiation.contacts.col.actions": "Ações",
   "pages.debtNegotiation.contacts.col.name": "Nome",
   "pages.debtNegotiation.contacts.col.nps": "NPS",
   "pages.debtNegotiation.contacts.col.whatsapp": "WhatsApp",

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { AlertCircle, UserMinus } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import type { ContactBlocklistItem } from "@/modules/contact/types/contact-blocklist";
@@ -8,15 +7,19 @@ import {
   useContactBlocklistList,
   useRemoveContactsFromBlocklist,
 } from "@/modules/contact/hooks";
-import { formatCpf } from "@/shared/lib/format";
 import { formatWhatsApp } from "@/modules/contact/utils/format-whatsapp";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { DataTable } from "@/shared/components/data-table";
+import { NameDocumentCell } from "@/shared/components/data-table/NameDocumentCell";
+import { SortHeader } from "@/shared/components/data-table/SortHeader";
 import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
 import { PermissionGuard } from "@/shared/auth/PermissionGuard";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-import { useContactsBlocklistPaginationQueryState } from "@/shared/lib/nuqs-filters";
+import { formatContactListDate } from "@/shared/lib/format-contact-list-date";
+import {
+  useContactsBlocklistPaginationQueryState,
+} from "@/shared/lib/nuqs-filters";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import {
   AlertDialog,
@@ -29,6 +32,7 @@ import {
 } from "@/shared/ui/alert-dialog";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import type {
   AppliedFilter,
   FilterConfig,
@@ -40,20 +44,9 @@ function formatBlocklistPhone(row: ContactBlocklistItem): string {
   return "-";
 }
 
-function formatBlocklistDate(iso: string | undefined): string {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
 export function ContactBlocklistPage() {
-  const { t } = useI18n();
-  const { page, pageSize, setPagination, search, setSearch, setParams } =
+  const { t, locale } = useI18n();
+  const { page, pageSize, setPagination, search, setSearch, orderBy, orderDirection, setParams } =
     useContactsBlocklistPaginationQueryState();
 
   const debouncedSearch = useDebouncedValue(search, 400);
@@ -68,14 +61,28 @@ export function ContactBlocklistPage() {
     }
   }, [debouncedSearch, setParams]);
 
+  const toggleSort = (next: string) => {
+    const nextDir =
+      orderBy !== next ? "ASC" : orderDirection === "ASC" ? "DESC" : "ASC";
+    setParams({
+      contactsBlPage: 1,
+      contactsBlOrderBy: next,
+      contactsBlOrderDir: nextDir,
+    });
+  };
+
   const { data, error, isPending } = useContactBlocklistList({
     page,
     pageSize,
     search: debouncedSearch,
+    orderBy,
+    orderDirection,
   });
 
   const removeMutation = useRemoveContactsFromBlocklist();
-  const [selectedRows, setSelectedRows] = useState<ContactBlocklistItem[]>([]);
+  const [pendingRemove, setPendingRemove] = useState<ContactBlocklistItem | null>(
+    null,
+  );
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const filters = useMemo<FilterConfig[]>(() => [], []);
@@ -84,21 +91,57 @@ export function ContactBlocklistPage() {
   const columns = useMemo<ColumnDef<ContactBlocklistItem>[]>(
     () => [
       {
+        id: "actions",
+        header: () => (
+          <span className="block w-full">{t("pages.contact.blocklist.col.actions")}</span>
+        ),
+        cell: ({ row }) => (
+          <div className="flex w-full justify-center">
+            <PermissionGuard
+              permissionNames={["retirar_da_blocklist"]}
+              moduleName="contatos"
+              subModuleName="blocklist"
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                    aria-label={t("pages.contact.blocklist.removeAction")}
+                    disabled={removeMutation.isPending}
+                    onClick={() => {
+                      setPendingRemove(row.original);
+                      setConfirmOpen(true);
+                    }}
+                  >
+                    <UserMinus className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{t("pages.contact.blocklist.removeAction")}</TooltipContent>
+              </Tooltip>
+            </PermissionGuard>
+          </div>
+        ),
+        size: 72,
+        minSize: 64,
+        maxSize: 80,
+      },
+      {
         id: "name",
         accessorKey: "name",
         header: () => t("pages.contact.blocklist.col.name"),
         cell: ({ row }) => (
-          <Link
-            to={`/contacts/${row.original.id}`}
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {row.original.name}
-          </Link>
+          <NameDocumentCell
+            name={row.original.name}
+            href={`/contacts/${row.original.id}`}
+            cpf={row.original.cpf}
+            cnpj={row.original.cnpj}
+          />
         ),
       },
       {
         id: "phone",
-        header: () => t("pages.contact.blocklist.col.phone"),
+        header: () => t("pages.debtNegotiation.contacts.col.whatsapp"),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
             {formatBlocklistPhone(row.original)}
@@ -106,56 +149,58 @@ export function ContactBlocklistPage() {
         ),
       },
       {
-        accessorKey: "cpf",
-        header: () => t("pages.contact.blocklist.col.cpf"),
+        accessorKey: "reason",
+        meta: {
+          headerClassName: "min-w-80 lg:min-w-96",
+          cellClassName: "min-w-80 lg:min-w-96",
+        },
+        header: () => t("pages.contact.blocklist.col.reason"),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {formatCpf(row.original.cpf)}
+            {row.original.reason || "-"}
           </span>
         ),
       },
       {
         accessorKey: "date",
-        header: () => t("pages.contact.blocklist.col.date"),
+        size: 160,
+        minSize: 140,
+        header: () => (
+          <SortHeader
+            variant="compact"
+            label={t("pages.contact.blocklist.col.date")}
+            active={orderBy === "date"}
+            direction={orderDirection}
+            onClick={() => toggleSort("date")}
+          />
+        ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {formatBlocklistDate(row.original.date)}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "reason",
-        header: () => t("pages.contact.blocklist.col.reason"),
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">{row.original.reason || "-"}</span>
-        ),
-      },
-      {
-        accessorKey: "blockScope",
-        header: () => t("pages.contact.blocklist.col.blockScope"),
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">
-            {row.original.blockScope ?? "-"}
+            {formatContactListDate(row.original.date, locale)}
           </span>
         ),
       },
     ],
-    [t],
+    [locale, orderBy, orderDirection, removeMutation.isPending, t],
   );
 
   const totalRows = data?.total ?? 0;
 
   const handleConfirmRemove = async () => {
-    const ids = selectedRows.map((r) => r.id);
-    if (ids.length === 0) return;
+    if (!pendingRemove) return;
     try {
-      await removeMutation.mutateAsync(ids);
+      await removeMutation.mutateAsync([pendingRemove.id]);
       toast.success(t("pages.contact.blocklist.removeSuccess"));
-      setSelectedRows([]);
+      setPendingRemove(null);
       setConfirmOpen(false);
     } catch {
       toast.error(t("pages.contact.blocklist.removeError"));
     }
+  };
+
+  const handleConfirmOpenChange = (open: boolean) => {
+    setConfirmOpen(open);
+    if (!open) setPendingRemove(null);
   };
 
   return (
@@ -176,26 +221,6 @@ export function ContactBlocklistPage() {
         isLoading={isPending}
       />
 
-      <PermissionGuard
-        permissionNames={["retirar_da_blocklist"]}
-        moduleName="contatos"
-        subModuleName="blocklist"
-      >
-        {selectedRows.length > 0 ? (
-          <div className="flex justify-start">
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              disabled={removeMutation.isPending}
-              onClick={() => setConfirmOpen(true)}
-            >
-              {t("pages.contact.blocklist.removeAction")}
-            </Button>
-          </div>
-        ) : null}
-      </PermissionGuard>
-
       {error && (
         <Alert variant="destructive">
           <AlertCircle />
@@ -214,7 +239,6 @@ export function ContactBlocklistPage() {
           onPaginationChange={setPagination}
           isLoading={isPending}
           getRowId={(row) => String(row.id)}
-          onSelectionChange={setSelectedRows}
           emptyMessage={t("pages.contact.blocklist.emptyList")}
           hidePagination={totalRows === 0 && !isPending}
           tableContainerClassName="border-0 rounded-none shadow-none"
@@ -225,7 +249,7 @@ export function ContactBlocklistPage() {
         />
       </div>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialog open={confirmOpen} onOpenChange={handleConfirmOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -234,11 +258,11 @@ export function ContactBlocklistPage() {
             <AlertDialogDescription asChild>
               <div className="flex flex-col gap-2 text-left">
                 <p>{t("pages.contact.blocklist.dialog.description")}</p>
-                <ul className="max-h-40 list-inside list-disc overflow-y-auto text-sm font-medium text-foreground">
-                  {selectedRows.map((row) => (
-                    <li key={row.id}>{row.name}</li>
-                  ))}
-                </ul>
+                {pendingRemove ? (
+                  <ul className="max-h-40 list-inside list-disc overflow-y-auto text-sm font-medium text-foreground">
+                    <li key={pendingRemove.id}>{pendingRemove.name}</li>
+                  </ul>
+                ) : null}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
