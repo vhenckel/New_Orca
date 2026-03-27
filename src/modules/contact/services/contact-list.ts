@@ -22,6 +22,9 @@ function buildPath(params: ContactListParams): string {
   });
   search.append("companyIds[]", String(params.companyId));
   search.set("where", JSON.stringify(params.where ?? DEFAULT_WHERE));
+  if (params.orderBy) search.set("orderBy", String(params.orderBy));
+  /** DynamicQuery / transformToDynamicQuery usam `orderByDirection`. */
+  if (params.orderDirection) search.set("orderByDirection", params.orderDirection);
   return `${CONTACT_QUERY_PATH}?${search.toString()}`;
 }
 

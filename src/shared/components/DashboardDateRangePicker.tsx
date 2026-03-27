@@ -4,6 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
+import { useRenegotiationPlanUsage } from "@/modules/debt-negotiation/hooks/useRenegotiationPlanUsage";
 import {
   getDefaultDateRange,
   useDebtNegotiationDateRangeQueryState,
@@ -27,9 +28,20 @@ function capEndToToday(end: Date, today: Date): Date {
   return isAfter(end, today) ? today : end;
 }
 
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const ALL_PRESET_FALLBACK_START = "2000-01-01";
+
+function resolveAllPresetStartDate(planStartDate: string | null | undefined): string {
+  if (typeof planStartDate === "string" && ISO_DATE_REGEX.test(planStartDate)) {
+    return planStartDate;
+  }
+  return ALL_PRESET_FALLBACK_START;
+}
+
 export function DashboardDateRangePicker() {
   const { t } = useI18n();
   const { startDate, endDate, setDateRange } = useDebtNegotiationDateRangeQueryState();
+  const { data: planUsageData } = useRenegotiationPlanUsage();
   const [open, setOpen] = useState(false);
 
   const range: DateRange | undefined =
@@ -52,6 +64,7 @@ export function DashboardDateRangePicker() {
     setOpen(false);
   };
   const defaultRange = getDefaultDateRange();
+  const allPresetStartDate = resolveAllPresetStartDate(planUsageData?.startDate);
 
   const label =
     startDate && endDate
@@ -89,7 +102,7 @@ export function DashboardDateRangePicker() {
               variant="ghost"
               size="sm"
               className="justify-start font-normal"
-              onClick={() => setPreset(isoToDate(defaultRange.startDate), isoToDate(defaultRange.endDate))}
+              onClick={() => setPreset(isoToDate(allPresetStartDate), today)}
             >
               {t("dashboard.dateRange.all")}
             </Button>

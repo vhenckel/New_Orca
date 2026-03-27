@@ -3,6 +3,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 
+import { ContactWhatsAppBlocklistLink } from "@/modules/contact/components/ContactWhatsAppLine";
 import {
   createContact,
   fetchContactFields,
@@ -20,6 +21,8 @@ import {
   formatLocalPhoneDigits,
   localDigitsToAppkey,
 } from "@/modules/contact/utils/phone-form";
+import { blocklistFilteredHref } from "@/modules/contact/utils/blocklist-href";
+import { formatWhatsApp } from "@/modules/contact/utils/format-whatsapp";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import { Button } from "@/shared/ui/button";
@@ -450,32 +453,129 @@ export function EditContactDrawer({
                         value={String(watch("mainRowIndex") ?? 0)}
                         onValueChange={(v) => setValue("mainRowIndex", Number(v))}
                       >
-                        {waFields.map((field, index) => (
-                          <div key={field.id} className="flex items-center gap-2">
-                            <RadioGroupItem
-                              value={String(index)}
-                              id={`edit-contact-wa-main-${field.id}`}
-                              className="shrink-0"
-                              aria-label={t("pages.contact.editDrawer.mainPhoneAria")}
-                              disabled={Boolean(
-                                watch(`whatsappRows.${index}.isInBlackList` as const),
+                        {waFields.map((field, index) => {
+                          const blocked = Boolean(
+                            watch(`whatsappRows.${index}.isInBlackList` as const),
+                          );
+                          const digits = watch(`whatsappRows.${index}.localDigits` as const);
+                          const blHref = blocklistFilteredHref(localDigitsToAppkey(digits));
+                          return (
+                            <div key={field.id} className="flex items-center gap-2">
+                              <RadioGroupItem
+                                value={String(index)}
+                                id={`edit-contact-wa-main-${field.id}`}
+                                className="shrink-0"
+                                aria-label={t("pages.contact.editDrawer.mainPhoneAria")}
+                                disabled={blocked}
+                              />
+                              {blocked ? (
+                                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                                  <ContactWhatsAppBlocklistLink
+                                    href={blHref}
+                                    blocklistTitle={t("pages.debtNegotiation.contactDetail.blocklist")}
+                                  />
+                                  <span className="min-w-0 text-sm font-medium text-foreground">
+                                    {formatWhatsApp(localDigitsToAppkey(digits))}
+                                  </span>
+                                  <Controller
+                                    control={control}
+                                    name={`whatsappRows.${index}.localDigits` as const}
+                                    render={({ field: f }) => <input type="hidden" {...f} />}
+                                  />
+                                </div>
+                              ) : (
+                                <>
+                                  <Controller
+                                    control={control}
+                                    name={`whatsappRows.${index}.localDigits` as const}
+                                    render={({ field: f }) => (
+                                      <Input
+                                        className="min-w-0 flex-1"
+                                        placeholder={t("pages.contact.editDrawer.phonePlaceholder")}
+                                        inputMode="numeric"
+                                        autoComplete="tel"
+                                        value={formatLocalPhoneDigits(f.value)}
+                                        onChange={(e) => f.onChange(digitsOnly(e.target.value))}
+                                        onBlur={f.onBlur}
+                                        name={f.name}
+                                        ref={f.ref}
+                                      />
+                                    )}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="shrink-0"
+                                    onClick={() => {
+                                      const removedContactId = getValues(
+                                        `whatsappRows.${index}.contactId` as const,
+                                      );
+                                      if (removedContactId) {
+                                        setPendingRemovalContactIds((prev) =>
+                                          prev.includes(removedContactId)
+                                            ? prev
+                                            : [...prev, removedContactId],
+                                        );
+                                      }
+                                      const current = getValues("mainRowIndex") ?? 0;
+                                      remove(index);
+                                      if (index < current) {
+                                        setValue("mainRowIndex", Math.max(0, current - 1));
+                                      } else if (index === current) {
+                                        setValue("mainRowIndex", 0);
+                                      }
+                                    }}
+                                    aria-label={t("pages.contact.editDrawer.removePhone")}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
                               )}
-                            />
+                            </div>
+                          );
+                        })}
+                      </RadioGroup>
+                    ) : (
+                      waFields.map((field, index) => {
+                        const blocked = Boolean(
+                          watch(`whatsappRows.${index}.isInBlackList` as const),
+                        );
+                        const digits = watch(`whatsappRows.${index}.localDigits` as const);
+                        const blHref = blocklistFilteredHref(localDigitsToAppkey(digits));
+                        if (blocked) {
+                          return (
+                            <div key={field.id} className="flex flex-wrap items-center gap-2">
+                              <ContactWhatsAppBlocklistLink
+                                href={blHref}
+                                blocklistTitle={t("pages.debtNegotiation.contactDetail.blocklist")}
+                              />
+                              <span className="text-sm font-medium text-foreground">
+                                {formatWhatsApp(localDigitsToAppkey(digits))}
+                              </span>
+                              <Controller
+                                control={control}
+                                name={`whatsappRows.${index}.localDigits` as const}
+                                render={({ field: f }) => <input type="hidden" {...f} />}
+                              />
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={field.id} className="flex gap-2">
                             <Controller
                               control={control}
                               name={`whatsappRows.${index}.localDigits` as const}
-                              render={({ field }) => (
+                              render={({ field: f }) => (
                                 <Input
-                                  className="min-w-0 flex-1"
                                   placeholder={t("pages.contact.editDrawer.phonePlaceholder")}
                                   inputMode="numeric"
                                   autoComplete="tel"
-                                  value={formatLocalPhoneDigits(field.value)}
-                                  onChange={(e) => field.onChange(digitsOnly(e.target.value))}
-                                  onBlur={field.onBlur}
-                                  name={field.name}
-                                  ref={field.ref}
-                                  disabled={Boolean(watch(`whatsappRows.${index}.isInBlackList` as const))}
+                                  value={formatLocalPhoneDigits(f.value)}
+                                  onChange={(e) => f.onChange(digitsOnly(e.target.value))}
+                                  onBlur={f.onBlur}
+                                  name={f.name}
+                                  ref={f.ref}
                                 />
                               )}
                             />
@@ -484,67 +584,15 @@ export function EditContactDrawer({
                               variant="outline"
                               size="icon"
                               className="shrink-0"
-                              onClick={() => {
-                                if (getValues(`whatsappRows.${index}.isInBlackList` as const)) return;
-                                const removedContactId = getValues(
-                                  `whatsappRows.${index}.contactId` as const,
-                                );
-                                if (removedContactId) {
-                                  setPendingRemovalContactIds((prev) =>
-                                    prev.includes(removedContactId)
-                                      ? prev
-                                      : [...prev, removedContactId],
-                                  );
-                                }
-                                const current = getValues("mainRowIndex") ?? 0;
-                                remove(index);
-                                if (index < current) {
-                                  setValue("mainRowIndex", Math.max(0, current - 1));
-                                } else if (index === current) {
-                                  setValue("mainRowIndex", 0);
-                                }
-                              }}
-                              disabled={Boolean(getValues(`whatsappRows.${index}.isInBlackList` as const))}
+                              onClick={() => remove(index)}
+                              disabled={waFields.length <= 1}
                               aria-label={t("pages.contact.editDrawer.removePhone")}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        ))}
-                      </RadioGroup>
-                    ) : (
-                      waFields.map((field, index) => (
-                        <div key={field.id} className="flex gap-2">
-                          <Controller
-                            control={control}
-                            name={`whatsappRows.${index}.localDigits` as const}
-                            render={({ field }) => (
-                              <Input
-                                placeholder={t("pages.contact.editDrawer.phonePlaceholder")}
-                                inputMode="numeric"
-                                autoComplete="tel"
-                                value={formatLocalPhoneDigits(field.value)}
-                                onChange={(e) => field.onChange(digitsOnly(e.target.value))}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
-                                disabled={Boolean(watch(`whatsappRows.${index}.isInBlackList` as const))}
-                              />
-                            )}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="shrink-0"
-                            onClick={() => remove(index)}
-                            disabled={waFields.length <= 1}
-                            aria-label={t("pages.contact.editDrawer.removePhone")}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                     <Button
                       type="button"

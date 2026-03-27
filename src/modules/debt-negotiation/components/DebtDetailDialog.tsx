@@ -329,7 +329,7 @@ export function DebtDetailDialog({
                   )}
                   {view === "details" && (
                     <>
-                      <DebtContactCard debtData={data} showBlacklistIcon />
+                      <DebtContactCard debtData={data} />
 
                       <DebtMetricsCard
                         debtData={data}

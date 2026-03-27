@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
-import { ArrowUpDown, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useNavigate } from "react-router-dom";
 
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { DataTable } from "@/shared/components/data-table";
+import { SortHeader } from "@/shared/components/data-table/SortHeader";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
@@ -15,21 +16,6 @@ import { usePayoutList } from "@/modules/finance/hooks/usePayoutList";
 import { usePayoutListPaginationQueryState, usePayoutMonthYearQueryState } from "@/modules/finance/lib/payout-query-state";
 import { usePayoutPermissions } from "@/modules/finance/hooks/usePayoutPermissions";
 import type { PayoutDayDto } from "@/modules/finance/types/payouts";
-
-function SortHeader({
-  label,
-  onClick,
-}: {
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <Button variant="ghost" size="sm" className="-ml-3" onClick={onClick}>
-      {label}
-      <ArrowUpDown data-icon="inline-end" className="ml-2" />
-    </Button>
-  );
-}
 
 export function PayoutsPage() {
   const { t, locale } = useI18n();
@@ -90,7 +76,15 @@ export function PayoutsPage() {
       },
       {
         accessorKey: "payoutId",
-        header: () => <SortHeader label={t("pages.finance.payouts.table.reconciliation")} onClick={() => toggleSort("id")} />,
+        header: () => (
+          <SortHeader
+            variant="compact"
+            label={t("pages.finance.payouts.table.reconciliation")}
+            active={orderBy === "id"}
+            direction={orderDirection}
+            onClick={() => toggleSort("id")}
+          />
+        ),
         cell: ({ row }) => {
           const canOpenReconciliation = canViewReconciliation;
           const detailSearchParams = new URLSearchParams({
@@ -124,7 +118,15 @@ export function PayoutsPage() {
       },
       {
         accessorKey: "dateFormatted",
-        header: () => <SortHeader label={t("pages.finance.payouts.table.scheduledDate")} onClick={() => toggleSort("scheduledDate")} />,
+        header: () => (
+          <SortHeader
+            variant="compact"
+            label={t("pages.finance.payouts.table.scheduledDate")}
+            active={orderBy === "scheduledDate"}
+            direction={orderDirection}
+            onClick={() => toggleSort("scheduledDate")}
+          />
+        ),
       },
       { accessorKey: "quantity", header: t("pages.finance.payouts.table.paidContracts") },
       {
@@ -136,7 +138,7 @@ export function PayoutsPage() {
       { accessorKey: "feeAmountFormatted", header: t("pages.finance.payouts.table.feeAmount") },
       { accessorKey: "netAmountFormatted", header: t("pages.finance.payouts.table.netAmount") },
     ],
-    [canEdit, canViewDetails, canViewReconciliation, month, navigate, page, pageSize, t, toggleSort, year],
+    [canEdit, canViewDetails, canViewReconciliation, month, navigate, orderBy, orderDirection, page, pageSize, t, toggleSort, year],
   );
   const paginationLabels = useMemo(
     () => ({
