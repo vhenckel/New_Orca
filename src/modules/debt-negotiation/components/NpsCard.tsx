@@ -240,6 +240,7 @@ export function NpsCard() {
                     if (v === null || v === undefined) return null;
                     return (
                       <circle
+                        key={`nps-dot-${props.index}`}
                         cx={props.cx}
                         cy={props.cy}
                         r={5}
