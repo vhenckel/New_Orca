@@ -141,6 +141,15 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.conversationHistory.userLabel": "Usuário",
   "pages.debtNegotiation.debts.conversationHistory.empty":
     "Nenhuma mensagem no histórico.",
+  "pages.debtNegotiation.debts.conversationHistory.documentPreviewTitle":
+    "Pré-visualização do PDF: {name}",
+  "pages.debtNegotiation.debts.conversationHistory.audioUntitled": "Áudio",
+  "pages.debtNegotiation.debts.conversationHistory.audioUnavailable":
+    "Áudio não disponível",
+  "pages.debtNegotiation.debts.conversationHistory.audioPreviewTitle":
+    "Reproduzir áudio: {name}",
+  "pages.debtNegotiation.debts.conversationHistory.audioOpenDownload":
+    "Abrir ou baixar em nova aba",
   "pages.debtNegotiation.pendingBanner.message":
     "Um ou mais devedores informaram que realizaram o pagamento. Precisamos que você confirme o recebimento com urgência para prosseguirmos.",
   "pages.debtNegotiation.pendingBanner.viewDebts": "Ver dívidas",
