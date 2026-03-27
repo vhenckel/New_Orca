@@ -15,6 +15,7 @@ import {
 } from "@/shared/ui/side-panel";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
+import { FileText } from "lucide-react";
 
 function formatMessageDate(iso: string): string {
   const d = new Date(iso);
@@ -43,16 +44,49 @@ function textWithBold(text: string | undefined | null): React.ReactNode[] {
   );
 }
 
-function resolveMediaUrl(
-  message: { mediaId?: string; url?: string },
+/** Prefer `mediasAtt.publicUrl` (same request) over `message.url` (short-lived gateway URL). */
+function resolveMedia(
+  message: { mediaId?: string; url?: string; fileName?: string },
   mediasAtt: MediaAtt[],
-): string | undefined {
-  if (message.url) return message.url;
+): { url?: string; fileName?: string } {
   if (message.mediaId) {
     const att = mediasAtt.find((m) => m.mediaId === message.mediaId);
-    return att?.publicUrl;
+    if (att?.publicUrl) {
+      return {
+        url: att.publicUrl,
+        fileName: att.fileName ?? message.fileName,
+      };
+    }
   }
-  return undefined;
+  if (message.url) {
+    return { url: message.url, fileName: message.fileName };
+  }
+  return {};
+}
+
+/**
+ * Chat images use a single full-resolution URL. Smaller file size / lower quality
+ * needs a thumbnail from the API or a CDN transform — do not append query params
+ * to presigned URLs (breaks signature).
+ *
+ * Here we only defer work: lazy load, async decode, low network priority vs critical CSS/JS.
+ */
+const CHAT_IMAGE_IMG_PROPS = {
+  loading: "lazy" as const,
+  decoding: "async" as const,
+  fetchPriority: "low" as const,
+};
+
+/** Best-effort PDF detection for inline preview (browser iframe). */
+function isLikelyPdf(fileName: string | undefined, url: string): boolean {
+  const n = fileName?.toLowerCase().trim() ?? "";
+  if (n.endsWith(".pdf")) return true;
+  try {
+    const path = new URL(url).pathname.toLowerCase();
+    return path.endsWith(".pdf");
+  } catch {
+    return false;
+  }
 }
 
 function MessageContent({
@@ -62,6 +96,7 @@ function MessageContent({
   message: ChatMessage;
   mediasAtt: MediaAtt[];
 }) {
+  const { t } = useI18n();
   if (message.type === "text") {
     return (
       <p className="whitespace-pre-wrap break-words text-sm">
@@ -70,7 +105,7 @@ function MessageContent({
     );
   }
   if (message.type === "image") {
-    const url = resolveMediaUrl(message, mediasAtt);
+    const { url } = resolveMedia(message, mediasAtt);
     if (!url) {
       return (
         <span className="text-xs text-muted-foreground">
@@ -79,7 +114,7 @@ function MessageContent({
       );
     }
     return (
-      <div className="max-h-[70vh] min-w-[400px] max-w-full overflow-auto rounded-md border border-border">
+      <div className="max-h-[min(70vh,560px)] max-w-md overflow-auto rounded-md border border-border">
         <a
           href={url}
           target="_blank"
@@ -89,15 +124,16 @@ function MessageContent({
           <img
             src={url}
             alt=""
-            className="min-w-[400px] w-full object-contain object-left-top"
+            {...CHAT_IMAGE_IMG_PROPS}
+            className="h-auto w-full max-h-[min(70vh,560px)] object-contain object-left-top"
           />
         </a>
       </div>
     );
   }
   if (message.type === "document") {
-    const url = resolveMediaUrl(message, mediasAtt);
-    const label = message.fileName ?? "Documento";
+    const { url, fileName } = resolveMedia(message, mediasAtt);
+    const label = fileName ?? "Documento";
     if (!url) {
       return (
         <span className="text-xs text-muted-foreground">
@@ -105,16 +141,71 @@ function MessageContent({
         </span>
       );
     }
+    const showPdfPreview = isLikelyPdf(fileName, url);
     return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1.5 text-sm underline hover:bg-muted"
-      >
-        <span className="shrink-0">📄</span>
-        {label}
-      </a>
+      <div className="space-y-2">
+        {showPdfPreview ? (
+          <div className="max-h-[min(45vh,420px)] min-h-[180px] min-w-[260px] max-w-full overflow-hidden rounded-md border border-border bg-muted/20">
+            <iframe
+              title={t(
+                "pages.debtNegotiation.debts.conversationHistory.documentPreviewTitle",
+                { name: label },
+              )}
+              src={url}
+              className="h-[min(45vh,420px)] w-full border-0"
+            />
+          </div>
+        ) : null}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1.5 text-sm underline hover:bg-muted"
+        >
+          <FileText className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+          {label}
+        </a>
+      </div>
+    );
+  }
+  if (message.type === "audio") {
+    const { url, fileName } = resolveMedia(message, mediasAtt);
+    const ariaName = fileName ?? t("pages.debtNegotiation.debts.conversationHistory.audioUntitled");
+    const previewTitle = t(
+      "pages.debtNegotiation.debts.conversationHistory.audioPreviewTitle",
+      { name: ariaName },
+    );
+    if (!url) {
+      return (
+        <span className="text-xs text-muted-foreground">
+          {t("pages.debtNegotiation.debts.conversationHistory.audioUnavailable")}
+        </span>
+      );
+    }
+    return (
+      <div className="space-y-2 max-w-md">
+        <audio
+          controls
+          preload="metadata"
+          src={url}
+          className="w-full max-w-full"
+          aria-label={previewTitle}
+          title={previewTitle}
+        />
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex text-xs text-muted-foreground underline hover:text-foreground"
+        >
+          {t("pages.debtNegotiation.debts.conversationHistory.audioOpenDownload")}
+        </a>
+        {message.transcription ? (
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+            {message.transcription}
+          </p>
+        ) : null}
+      </div>
     );
   }
   return (
