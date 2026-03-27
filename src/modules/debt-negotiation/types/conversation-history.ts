@@ -32,11 +32,21 @@ export interface ChatMessageDocument {
   fileName?: string;
 }
 
+/** Mensagem de áudio (ex.: WhatsApp .ogg). */
+export interface ChatMessageAudio {
+  type: "audio";
+  mediaId?: string;
+  url?: string;
+  fileName?: string;
+  transcription?: string;
+}
+
 export type ChatMessage =
   | ChatMessageText
   | ChatMessageButton
   | ChatMessageImage
-  | ChatMessageDocument;
+  | ChatMessageDocument
+  | ChatMessageAudio;
 
 /** Um chat na lista do histórico. sender 1 = usuário, 2 = bot. */
 export interface ConversationChat {

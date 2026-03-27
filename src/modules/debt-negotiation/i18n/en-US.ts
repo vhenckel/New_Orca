@@ -123,6 +123,15 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.conversationHistory.botLabel": "AI Agent",
   "pages.debtNegotiation.debts.conversationHistory.userLabel": "User",
   "pages.debtNegotiation.debts.conversationHistory.empty": "No messages in history.",
+  "pages.debtNegotiation.debts.conversationHistory.documentPreviewTitle":
+    "PDF preview: {name}",
+  "pages.debtNegotiation.debts.conversationHistory.audioUntitled": "Audio",
+  "pages.debtNegotiation.debts.conversationHistory.audioUnavailable":
+    "Audio unavailable",
+  "pages.debtNegotiation.debts.conversationHistory.audioPreviewTitle":
+    "Play audio: {name}",
+  "pages.debtNegotiation.debts.conversationHistory.audioOpenDownload":
+    "Open or download in new tab",
   "pages.debtNegotiation.pendingBanner.message":
     "One or more debtors have reported making a payment. We need you to confirm receipt urgently to proceed.",
   "pages.debtNegotiation.pendingBanner.viewDebts": "View debts",
