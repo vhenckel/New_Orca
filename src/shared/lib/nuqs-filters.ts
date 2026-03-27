@@ -200,6 +200,105 @@ const contactsBlocklistPaginationParsers = {
   }),
 } as const;
 
+type SortDirection = "ASC" | "DESC";
+
+function normalizeSortDirection(raw: string | null | undefined, fallback: SortDirection): SortDirection {
+  if (raw === "ASC" || raw === "DESC") return raw;
+  return fallback;
+}
+
+const contactsSortParsers = {
+  contactsOrderBy: parseAsString.withDefault("updatedAt"),
+  contactsOrderDir: parseAsString.withDefault("DESC"),
+} as const;
+
+/** Sorting na URL para listagem de contatos (`contactsOrderBy`, `contactsOrderDir`). */
+export function useContactsSortQueryState() {
+  const [params, setParams] = useQueryStates(contactsSortParsers);
+  const orderBy = params.contactsOrderBy || "updatedAt";
+  const orderDirection = normalizeSortDirection(params.contactsOrderDir, "DESC");
+  return {
+    orderBy,
+    orderDirection,
+    setSort: (next: { orderBy?: string | null; orderDirection?: SortDirection | null }) =>
+      setParams({
+        contactsOrderBy: next.orderBy ?? null,
+        contactsOrderDir: next.orderDirection ?? null,
+      }),
+    raw: params,
+  };
+}
+
+const contactsListTableParsers = {
+  ...paginationParsers,
+  ...contactsSortParsers,
+  /** Busca na listagem (`q`) — no mesmo `useQueryStates` que page/sort (evita corrida com outro hook). */
+  q: parseAsString.withDefault("").withOptions({
+    history: "replace",
+    scroll: false,
+    limitUrlUpdates: throttle(200),
+  }),
+} as const;
+
+/**
+ * Paginação + sort + busca na mesma URL (`q`, `page`, `pageSize`, `contactsOrderBy`, `contactsOrderDir`).
+ * Um único `setParams` evita nuqs perder keys ao misturar `useQueryState` + `useQueryStates`.
+ */
+export function useContactsListTableQueryState() {
+  const [params, setParams] = useQueryStates(contactsListTableParsers);
+  const pageSize = normalizePageSize(params.pageSize);
+  const page = normalizePage(params.page);
+  const orderBy = params.contactsOrderBy || "updatedAt";
+  const orderDirection = normalizeSortDirection(params.contactsOrderDir, "DESC");
+  const search = params.q ?? "";
+
+  return {
+    page,
+    pageSize,
+    orderBy,
+    orderDirection,
+    search,
+    setSearch: (value: string) => void setParams({ q: value || null }),
+    setParams,
+    setPagination: (u: { page?: number; pageSize?: number }) => {
+      const nextSize = u.pageSize !== undefined ? normalizePageSize(u.pageSize) : pageSize;
+      const nextPage =
+        u.page !== undefined
+          ? normalizePage(u.page)
+          : u.pageSize !== undefined
+            ? 1
+            : page;
+      setParams({
+        page: nextPage,
+        pageSize: nextSize,
+      });
+    },
+    raw: params,
+  };
+}
+
+const contactsBlocklistSortParsers = {
+  contactsBlOrderBy: parseAsString.withDefault("date"),
+  contactsBlOrderDir: parseAsString.withDefault("DESC"),
+} as const;
+
+/** Sorting na URL para blocklist (`contactsBlOrderBy`, `contactsBlOrderDir`). */
+export function useContactsBlocklistSortQueryState() {
+  const [params, setParams] = useQueryStates(contactsBlocklistSortParsers);
+  const orderBy = params.contactsBlOrderBy || "date";
+  const orderDirection = normalizeSortDirection(params.contactsBlOrderDir, "DESC");
+  return {
+    orderBy,
+    orderDirection,
+    setSort: (next: { orderBy?: string | null; orderDirection?: SortDirection | null }) =>
+      setParams({
+        contactsBlOrderBy: next.orderBy ?? null,
+        contactsBlOrderDir: next.orderDirection ?? null,
+      }),
+    raw: params,
+  };
+}
+
 /**
  * Paginação + busca na URL (`contactsBlPage`, `contactsBlPageSize`, `contactsBlQ`).
  * Mesmo hook evita corrida ao resetar página: o merge do nuqs usa `location` e pode
@@ -207,16 +306,28 @@ const contactsBlocklistPaginationParsers = {
  * com página e `contactsBlQ` juntos (ver ContactBlocklistPage).
  */
 export function useContactsBlocklistPaginationQueryState() {
-  const [params, setParams] = useQueryStates(contactsBlocklistPaginationParsers);
+  const [params, setParams] = useQueryStates({
+    ...contactsBlocklistPaginationParsers,
+    ...contactsBlocklistSortParsers,
+  });
   const pageSize = normalizePageSize(params.contactsBlPageSize);
   const page = normalizePage(params.contactsBlPage);
   const search = params.contactsBlQ ?? "";
+  const orderBy = params.contactsBlOrderBy || "date";
+  const orderDirection = normalizeSortDirection(params.contactsBlOrderDir, "DESC");
 
   return {
     page,
     pageSize,
     search,
     setSearch: (value: string) => void setParams({ contactsBlQ: value || null }),
+    orderBy,
+    orderDirection,
+    setSort: (next: { orderBy?: string | null; orderDirection?: SortDirection | null }) =>
+      setParams({
+        contactsBlOrderBy: next.orderBy ?? null,
+        contactsBlOrderDir: next.orderDirection ?? null,
+      }),
     skip: (page - 1) * pageSize,
     take: pageSize,
     setParams,
@@ -275,7 +386,7 @@ function createDrilldownListQueryState<
           : u.pageSize !== undefined
             ? 1
             : page;
-      setParams({ [pageKey]: nextPage, [pageSizeKey]: nextSize } as Record<PK | PSK, number>);
+      setParams({ [pageKey]: nextPage, [pageSizeKey]: nextSize } as any);
     };
 
     return {

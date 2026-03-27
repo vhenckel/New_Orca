@@ -9,12 +9,12 @@ export const contactPtBR = {
   "modules.contact.routes.blocklist.description":
     "Contatos bloqueados para envios e campanhas.",
   "pages.contact.blocklist.search": "Pesquisar",
-  "pages.contact.blocklist.col.name": "Nome",
-  "pages.contact.blocklist.col.phone": "Telefone",
+  "pages.contact.blocklist.col.name": "Nome/CPF",
   "pages.contact.blocklist.col.cpf": "CPF",
   "pages.contact.blocklist.col.date": "Entrou na blocklist",
   "pages.contact.blocklist.col.reason": "Motivo",
   "pages.contact.blocklist.col.blockScope": "Escopo",
+  "pages.contact.blocklist.col.actions": "Ações",
   "pages.contact.blocklist.emptyList": "Nenhum contato na blocklist.",
   "pages.contact.blocklist.errors.loadList": "Erro ao carregar a blocklist.",
   "pages.contact.blocklist.removeAction": "Retirar da blocklist",
@@ -22,7 +22,7 @@ export const contactPtBR = {
   "pages.contact.blocklist.removeError": "Não foi possível remover da blocklist.",
   "pages.contact.blocklist.dialog.title": "Retirar da blocklist",
   "pages.contact.blocklist.dialog.description":
-    "Deseja remover da blocklist o(s) contato(s) selecionado(s)?",
+    "Deseja remover este contato da blocklist?",
   "pages.contact.blocklist.dialog.cancel": "Cancelar",
   "pages.contact.blocklist.dialog.confirm": "Sim, remover",
   "pages.contact.blocklist.dialog.removing": "Removendo…",

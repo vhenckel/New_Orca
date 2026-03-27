@@ -7,9 +7,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { format, isSameMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useRenegotiationNps } from "@/modules/debt-negotiation/hooks";
-import type { NpsDailyTrendItem } from "@/modules/debt-negotiation/types/renegotiation-nps";
+import type {
+  NpsDailyTrendItem,
+  NpsMonthlyTrendItem,
+} from "@/modules/debt-negotiation/types/renegotiation-nps";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { useDateRangeQueryState } from "@/shared/lib/nuqs-filters";
 
 const GAUGE_SIZE = 180;
 const CENTER = GAUGE_SIZE / 2;
@@ -134,15 +140,36 @@ function formatDayLabel(day: string): string {
   return day.padStart(2, "0");
 }
 
+function isoToLocalDate(iso: string): Date {
+  // Avoid timezone shift of `new Date("YYYY-MM-DD")` (interpreted as UTC).
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
+
+function formatMonthLabel(item: NpsMonthlyTrendItem): string {
+  const month = Number(item.month ?? "");
+  if (!Number.isFinite(month) || month < 1 || month > 12) return String(item.month ?? "");
+  const d = new Date(item.year, month - 1, 1);
+  return format(d, "MMM/yy", { locale: ptBR }).toUpperCase();
+}
+
 export function NpsCard() {
   const { t } = useI18n();
   const { data, error } = useRenegotiationNps();
+  const { startDate, endDate } = useDateRangeQueryState();
 
-  const chartData: { day: string; nps: number | null }[] =
-    data?.dailyTrend?.map((item: NpsDailyTrendItem) => ({
-      day: formatDayLabel(item.day),
-      nps: item.value == null ? null : item.value,
-    })) ?? [];
+  const sameMonthRange = isSameMonth(isoToLocalDate(startDate), isoToLocalDate(endDate));
+
+  const chartData: { x: string; nps: number | null }[] =
+    sameMonthRange
+      ? (data?.dailyTrend?.map((item: NpsDailyTrendItem) => ({
+          x: formatDayLabel(item.day),
+          nps: item.value == null ? null : item.value,
+        })) ?? [])
+      : (data?.monthlyTrend?.map((item: NpsMonthlyTrendItem) => ({
+          x: formatMonthLabel(item),
+          nps: item.value == null ? null : item.value,
+        })) ?? []);
 
   return (
     <div
@@ -178,7 +205,7 @@ export function NpsCard() {
               <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis
-                  dataKey="day"
+                  dataKey="x"
                   tick={{ fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
@@ -201,7 +228,7 @@ export function NpsCard() {
                     value === null || value === undefined || Number.isNaN(Number(value)) ? "—" : value,
                     "NPS",
                   ]}
-                  labelFormatter={(label) => `Dia ${label}`}
+                  labelFormatter={(label) => (sameMonthRange ? `Dia ${label}` : `Mês ${label}`)}
                 />
                 <Line
                   type="linear"

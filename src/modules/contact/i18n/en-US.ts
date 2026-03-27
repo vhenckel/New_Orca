@@ -9,12 +9,12 @@ export const contactEnUS = {
   "modules.contact.routes.blocklist.description":
     "Contacts blocked from outreach and campaigns.",
   "pages.contact.blocklist.search": "Search",
-  "pages.contact.blocklist.col.name": "Name",
-  "pages.contact.blocklist.col.phone": "Phone",
+  "pages.contact.blocklist.col.name": "Name/Tax ID",
   "pages.contact.blocklist.col.cpf": "CPF",
   "pages.contact.blocklist.col.date": "Added to blocklist",
   "pages.contact.blocklist.col.reason": "Reason",
   "pages.contact.blocklist.col.blockScope": "Scope",
+  "pages.contact.blocklist.col.actions": "Actions",
   "pages.contact.blocklist.emptyList": "No contacts on the blocklist.",
   "pages.contact.blocklist.errors.loadList": "Failed to load blocklist.",
   "pages.contact.blocklist.removeAction": "Remove from blocklist",
@@ -22,7 +22,7 @@ export const contactEnUS = {
   "pages.contact.blocklist.removeError": "Could not remove from blocklist.",
   "pages.contact.blocklist.dialog.title": "Remove from blocklist",
   "pages.contact.blocklist.dialog.description":
-    "Remove the selected contact(s) from the blocklist?",
+    "Remove this contact from the blocklist?",
   "pages.contact.blocklist.dialog.cancel": "Cancel",
   "pages.contact.blocklist.dialog.confirm": "Yes, remove",
   "pages.contact.blocklist.dialog.removing": "Removing…",

@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
 import { useCallback, useState, type MouseEvent, type ReactNode } from "react";
-import { Ban, Copy, FileBadge2, Mail, MessageCircle, Pencil, Phone, Send } from "lucide-react";
+import { Ban, Copy, FileBadge2, Mail, MessageCircle, Pencil, Send, Smartphone } from "lucide-react";
 
+import { ContactWhatsAppBlocklistLink } from "@/modules/contact/components/ContactWhatsAppLine";
 import { PermissionGuard } from "@/shared/auth/PermissionGuard";
 import { copyTextToClipboard } from "@/shared/lib/copy-to-clipboard";
 import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
@@ -18,7 +18,7 @@ type HeaderTexts = {
   firstConversation: string;
   lastConversation: string;
   emailLabel: string;
-  phoneLabel: string;
+  whatsappLabel: string;
   documentLabel: string;
   edit: string;
   send: string;
@@ -201,43 +201,46 @@ export function ContactDetailHeader({
 
         <Separator />
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <InfoBlock label={texts.emailLabel} value={email ?? "-"} icon={<Mail className="size-4" />} rawValue={email} />
-
-          <div>
-            <InfoBlock
-              label={texts.phoneLabel}
-              value={phoneDisplay ?? "-"}
-              icon={<Phone className="size-4" />}
-              rawValue={phoneRaw}
-              className="mb-1"
-            />
-            {phoneInBlackList && phoneBlocklistHref ? (
-              <PermissionGuard permissionNames={["mover_para_blocklist", "retirar_da_blocklist"]}>
-                <Link to={phoneBlocklistHref} className="inline-flex items-center gap-1 text-xs text-destructive">
-                  <Ban className="size-3.5" />
-                  {texts.blocklist}
-                </Link>
-              </PermissionGuard>
-            ) : null}
+        <div className="flex w-full flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 shrink">
+            <p className="mb-1 text-[11px] uppercase tracking-wide text-muted-foreground">{texts.whatsappLabel}</p>
+            <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-foreground">
+              {phoneInBlackList && phoneBlocklistHref ? (
+                <ContactWhatsAppBlocklistLink href={phoneBlocklistHref} blocklistTitle={texts.blocklist} />
+              ) : (
+                <span className="text-muted-foreground">
+                  <Smartphone className="size-4" />
+                </span>
+              )}
+              <span className="truncate">{phoneDisplay || "-"}</span>
+              {phoneRaw ? <CopyButton value={phoneRaw} /> : null}
+            </div>
           </div>
+
+          <InfoBlock
+            className="min-w-0 shrink md:text-center"
+            label={texts.emailLabel}
+            value={email ?? "-"}
+            icon={<Mail className="size-4" />}
+            rawValue={email}
+          />
 
           <InfoBlock
             label={texts.documentLabel}
             value={documentDisplay ?? "-"}
             icon={<FileBadge2 className="size-4" />}
             rawValue={documentRaw}
-            className="font-mono"
+            className="min-w-0 shrink font-mono md:text-end"
           />
         </div>
 
         <Separator />
 
-        <div className="grid grid-cols-1 gap-2 text-sm text-muted-foreground md:grid-cols-2">
-          <p>
+        <div className="flex w-full flex-col gap-2 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <p className="min-w-0">
             {texts.firstConversation}: {firstConversationDate}
           </p>
-          <p>
+          <p className="min-w-0 md:text-end">
             {texts.lastConversation}: {lastConversationDate}
           </p>
         </div>

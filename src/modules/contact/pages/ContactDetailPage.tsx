@@ -20,6 +20,7 @@ import {
 import type { PersonContactListItem } from "@/modules/contact/types/person-contact";
 import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components/ConversationHistoryDialog";
 import type { ContactDetails, ContactCampaign } from "@/modules/contact/types";
+import { formatContactDetailConversationDate } from "@/shared/lib/format-contact-list-date";
 import { copyTextToClipboard } from "@/shared/lib/copy-to-clipboard";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { ContactDetailHeader } from "@/modules/contact/components/ContactDetailHeader";
@@ -31,15 +32,7 @@ import { ContactDebtsCard } from "@/modules/contact/components/ContactDebtsCard"
 import { ContactCampaignsCard } from "@/modules/contact/components/ContactCampaignsCard";
 import { ContactOriginCard } from "@/modules/contact/components/ContactOriginCard";
 import { ContactCardHeader } from "@/modules/contact/components/ContactCardHeader";
-
-const CONTACT_BLOCKLIST_PATH = "/contacts/blocklist";
-
-/** Query `contactsBlQ` na blocklist (dígitos do appkey, mesmo critério da listagem). */
-function blocklistFilteredHref(appkey: string | null | undefined): string {
-  const digits = String(appkey ?? "").replace(/\D/g, "");
-  if (!digits) return CONTACT_BLOCKLIST_PATH;
-  return `${CONTACT_BLOCKLIST_PATH}?${new URLSearchParams({ contactsBlQ: digits }).toString()}`;
-}
+import { blocklistFilteredHref } from "@/modules/contact/utils/blocklist-href";
 
 function getInitials(name: string | null | undefined): string {
   if (!name || !name.trim()) return "-";
@@ -125,7 +118,7 @@ function CopyButton({ value }: { value: string }) {
 }
 
 export function ContactDetailPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { id } = useParams<{ id: string }>();
   const contactId = id != null ? parseInt(id, 10) : NaN;
   const validId =
@@ -162,7 +155,7 @@ export function ContactDetailPage() {
     });
   }, [linkedContacts]);
 
-  /** WhatsApp principal da pessoa (header ao lado do e-mail). */
+  /** WhatsApp principal da pessoa (header, primeira coluna). */
   const mainContactForHeader = useMemo(() => {
     if (sortedLinkedContacts.length === 0) return null;
     return sortedLinkedContacts.find((c) => c.main) ?? sortedLinkedContacts[0];
@@ -224,8 +217,14 @@ export function ContactDetailPage() {
         phoneBlocklistHref={headerPhoneBlocklistHref}
         documentDisplay={headerDocumentDisplay}
         documentRaw={headerDocumentRaw}
-        firstConversationDate={formatDateTime(metrics?.dateFirstConversation ?? null)}
-        lastConversationDate={formatDateTime(metrics?.dateLastConversation ?? null)}
+        firstConversationDate={formatContactDetailConversationDate(
+          metrics?.dateFirstConversation ?? null,
+          locale,
+        )}
+        lastConversationDate={formatContactDetailConversationDate(
+          metrics?.dateLastConversation ?? null,
+          locale,
+        )}
         texts={{
           addToBlocklist: t("pages.contact.addToBlocklist.button"),
           blocklist: t("pages.debtNegotiation.contactDetail.blocklist"),
@@ -233,7 +232,7 @@ export function ContactDetailPage() {
           firstConversation: t("pages.debtNegotiation.contactDetail.firstConversation"),
           lastConversation: t("pages.debtNegotiation.contactDetail.lastConversation"),
           emailLabel: "E-mail",
-          phoneLabel: "Telefone",
+          whatsappLabel: t("pages.debtNegotiation.contacts.col.whatsapp"),
           documentLabel: "CPF / CNPJ",
           edit: "Editar",
           send: "Enviar",

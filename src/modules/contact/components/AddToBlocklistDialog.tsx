@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Ban } from "lucide-react";
 
 import type { PersonContactListItem } from "@/modules/contact/types/person-contact";
 import {
@@ -133,21 +134,33 @@ export function AddToBlocklistDialog({
                       <label
                         htmlFor={`bl-c-${c.id}`}
                         className={cn(
-                          "flex-1 cursor-pointer text-sm",
+                          "flex min-w-0 flex-1 cursor-pointer text-sm",
                           disabled && "cursor-not-allowed",
                         )}
                       >
-                        {label}
-                        {c.main ? (
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            ({t("pages.debtNegotiation.contactDetail.mainContact")})
-                          </span>
-                        ) : null}
                         {disabled ? (
-                          <span className="ml-2 text-xs text-destructive">
-                            {t("pages.contact.addToBlocklist.inBlocklistHint")}
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium text-foreground">{label}</span>
+                            {c.main ? (
+                              <span className="text-xs text-muted-foreground">
+                                ({t("pages.debtNegotiation.contactDetail.mainContact")})
+                              </span>
+                            ) : null}
+                            <span className="flex items-center gap-1 text-xs text-destructive">
+                              <Ban className="size-3.5 shrink-0" />
+                              {t("pages.contact.addToBlocklist.inBlocklistHint")}
+                            </span>
                           </span>
-                        ) : null}
+                        ) : (
+                          <>
+                            {label}
+                            {c.main ? (
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                ({t("pages.debtNegotiation.contactDetail.mainContact")})
+                              </span>
+                            ) : null}
+                          </>
+                        )}
                       </label>
                     </li>
                   );

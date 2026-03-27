@@ -8,8 +8,6 @@ import {
   Pencil,
   Send,
 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { parseAsString, throttle, useQueryState } from "nuqs";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { AddToBlocklistDialog } from "@/modules/contact/components/AddToBlocklistDialog";
@@ -24,10 +22,13 @@ import { ConversationHistoryDialog } from "@/modules/debt-negotiation/components
 import { PermissionGuard } from "@/shared/auth/PermissionGuard";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { DataTable } from "@/shared/components/data-table";
+import { NameDocumentCell } from "@/shared/components/data-table/NameDocumentCell";
+import { SortHeader } from "@/shared/components/data-table/SortHeader";
 import { FilterPanel } from "@/shared/components/filter-panel/FilterPanel";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-import { usePaginationQueryState } from "@/shared/lib/nuqs-filters";
+import { formatContactListDate } from "@/shared/lib/format-contact-list-date";
+import { useContactsListTableQueryState } from "@/shared/lib/nuqs-filters";
 import { cn } from "@/shared/lib/utils";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
@@ -36,17 +37,6 @@ import type {
   FilterConfig,
 } from "@/shared/components/dynamic-filters/types";
 import type { PersonContactListItem } from "@/modules/contact/types/person-contact";
-
-function formatContactDate(iso: string): string {
-  if (!iso || iso === "-") return "-";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
 
 /** optStatus === 1 = usuário de acordo (LGPD/opt-in). */
 function OptStatusIcon({ optStatus }: { optStatus: number }) {
@@ -67,8 +57,17 @@ function OptStatusIcon({ optStatus }: { optStatus: number }) {
 }
 
 export function ContactsPage() {
-  const { t } = useI18n();
-  const { page, pageSize, setPagination } = usePaginationQueryState();
+  const { t, locale } = useI18n();
+  const {
+    page,
+    pageSize,
+    orderBy,
+    orderDirection,
+    search,
+    setSearch,
+    setParams,
+    setPagination,
+  } = useContactsListTableQueryState();
   const [selectedContact, setSelectedContact] = useState<{
     id: number;
     name: string;
@@ -81,27 +80,24 @@ export function ContactsPage() {
     selectedContact?.id ?? null,
   );
 
-  const [search, setSearch] = useQueryState(
-    "q",
-    parseAsString.withDefault("").withOptions({
-      history: "replace",
-      scroll: false,
-      limitUrlUpdates: throttle(200),
-    }),
-  );
   const debouncedSearch = useDebouncedValue(search, 400);
   const prevSearchRef = useRef(debouncedSearch);
   useEffect(() => {
     if (prevSearchRef.current !== debouncedSearch) {
       prevSearchRef.current = debouncedSearch;
-      setPagination({ page: 1 });
+      setParams({
+        page: 1,
+        q: debouncedSearch || null,
+      });
     }
-  }, [debouncedSearch, setPagination]);
+  }, [debouncedSearch, setParams]);
 
   const { data, error, isPending } = useContactList({
     page,
     pageSize,
     search: debouncedSearch,
+    orderBy,
+    orderDirection,
   });
 
   const filters = useMemo<FilterConfig[]>(() => [], []);
@@ -122,11 +118,26 @@ export function ContactsPage() {
     ];
   }, [linkedContacts, selectedContact]);
 
+  const toggleSort = (next: string) => {
+    const nextDir =
+      orderBy !== next ? "ASC" : orderDirection === "ASC" ? "DESC" : "ASC";
+    setParams({
+      page: 1,
+      contactsOrderBy: next,
+      contactsOrderDir: nextDir,
+      q: search || null,
+    });
+  };
+
   const columns = useMemo<ColumnDef<ContactListItem>[]>(
     () => [
       {
         id: "actions",
-        header: () => <span className="block w-full">Ações</span>,
+        meta: {
+          headerClassName: "w-[90px] max-w-[100px] text-left",
+          cellClassName: "w-[90px] max-w-[100px] text-left",
+        },
+        header: () => t("pages.debtNegotiation.contacts.col.actions"),
         cell: ({ row }) => {
           const contactId = Number(row.original.id);
           const contactName = row.original.name;
@@ -143,7 +154,7 @@ export function ContactsPage() {
           };
 
           return (
-            <div className="flex w-full gap-1">
+            <div className="flex shrink-0 flex-nowrap gap-1">
               <PermissionGuard
                 permissionNames={["editar"]}
                 moduleName="contatos"
@@ -235,28 +246,43 @@ export function ContactsPage() {
             </div>
           );
         },
-        size: 72,
-        minSize: 64,
-        maxSize: 80,
+        size: 100,
+        minSize: 120,
+        maxSize: 140,
       },
       {
         id: "name",
         accessorKey: "name",
+        meta: {
+          /** Alinha o título com o texto do nome (após ícone opt + gap). */
+          headerClassName: "pl-11 pr-4 text-left",
+        },
+        size: 220,
+        minSize: 160,
+        maxSize: 360,
         header: () => t("pages.debtNegotiation.contacts.col.name"),
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <OptStatusIcon optStatus={row.original.optStatus} />
-            <Link
-              to={`/contacts/${row.original.id}`}
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              {row.original.name}
-            </Link>
+            <div className="min-w-0 flex-1">
+              <NameDocumentCell
+                name={row.original.name}
+                href={`/contacts/${row.original.id}`}
+                cpf={row.original.cpf}
+                cnpj={row.original.cnpj}
+              />
+            </div>
           </div>
         ),
       },
       {
         accessorKey: "nps",
+        meta: {
+          headerClassName: "text-center",
+          cellClassName: "text-center",
+        },
+        size: 72,
+        maxSize: 88,
         header: () => t("pages.debtNegotiation.contacts.col.nps"),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
@@ -266,33 +292,55 @@ export function ContactsPage() {
       },
       {
         accessorKey: "whatsapp",
+        size: 168,
+        minSize: 148,
         header: () => t("pages.debtNegotiation.contacts.col.whatsapp"),
         cell: ({ row }) => (
-          <span className="text-muted-foreground">
+          <span className="whitespace-nowrap text-muted-foreground">
             {formatWhatsApp(row.original.whatsapp)}
           </span>
         ),
       },
       {
         accessorKey: "firstConversation",
-        header: () => t("pages.debtNegotiation.contacts.col.firstConversation"),
+        size: 160,
+        minSize: 140,
+        header: () => (
+          <SortHeader
+            variant="compact"
+            label={t("pages.debtNegotiation.contacts.col.firstConversation")}
+            active={orderBy === "firstConversation"}
+            direction={orderDirection}
+            onClick={() => toggleSort("firstConversation")}
+          />
+        ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {formatContactDate(row.original.firstConversation)}
+            {formatContactListDate(row.original.firstConversation, locale)}
           </span>
         ),
       },
       {
         accessorKey: "updatedAt",
-        header: () => t("pages.debtNegotiation.contacts.col.updatedAt"),
+        size: 160,
+        minSize: 140,
+        header: () => (
+          <SortHeader
+            variant="compact"
+            label={t("pages.debtNegotiation.contacts.col.updatedAt")}
+            active={orderBy === "updatedAt"}
+            direction={orderDirection}
+            onClick={() => toggleSort("updatedAt")}
+          />
+        ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {formatContactDate(row.original.updatedAt)}
+            {formatContactListDate(row.original.updatedAt, locale)}
           </span>
         ),
       },
     ],
-    [t],
+    [locale, orderBy, orderDirection, t],
   );
 
   const totalRows = data?.total ?? 0;
