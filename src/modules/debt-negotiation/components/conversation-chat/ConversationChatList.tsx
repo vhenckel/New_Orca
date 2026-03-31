@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import type { ConversationChat, MediaAtt } from "@/modules/debt-negotiation/types/conversation-history";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { cn } from "@/shared/lib/utils";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/shared/ui/empty";
 import { ConversationChatBubble } from "./ConversationChatBubble";
+import { CHAT_SCROLL_SURFACE_CLASS } from "./chat-message.utils";
 
 interface ConversationChatListProps {
   chats: ConversationChat[];
@@ -54,7 +56,10 @@ export function ConversationChatList({
   return (
     <div
       ref={scrollRef}
-      className="h-full min-h-0 flex-1 overflow-y-auto bg-background px-4 py-4"
+      className={cn(
+        "h-full min-h-0 flex-1 overflow-y-auto px-4 py-4",
+        CHAT_SCROLL_SURFACE_CLASS,
+      )}
     >
       <div className="flex flex-col gap-3">
         {isPending ? (
