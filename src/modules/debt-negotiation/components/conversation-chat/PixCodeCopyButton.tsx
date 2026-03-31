@@ -4,7 +4,6 @@ import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
 import { copyTextToClipboard } from "@/shared/lib/copy-to-clipboard";
 import { toast } from "@/shared/ui/sonner";
-import { cn } from "@/shared/lib/utils";
 import { CHAT_PIX_CTA_BUTTON_CLASS } from "./chat-message.utils";
 
 interface PixCodeCopyButtonProps {
@@ -13,7 +12,10 @@ interface PixCodeCopyButtonProps {
   variant?: "default" | "cta";
 }
 
-export function PixCodeCopyButton({ value, variant = "default" }: PixCodeCopyButtonProps) {
+export function PixCodeCopyButton({
+  value,
+  variant = "default",
+}: PixCodeCopyButtonProps) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
@@ -24,16 +26,24 @@ export function PixCodeCopyButton({ value, variant = "default" }: PixCodeCopyBut
     if (!text) return;
     const ok = await copyTextToClipboard(text);
     if (!ok) {
-      toast.error(t("pages.debtNegotiation.debts.conversationHistory.pixCopyFailed"));
+      toast.error(
+        t("pages.debtNegotiation.debts.conversationHistory.pixCopyFailed"),
+      );
       return;
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const labelCopied = t("pages.debtNegotiation.debts.conversationHistory.pixCopied");
-  const labelDefault = t("pages.debtNegotiation.debts.conversationHistory.pixCopyCode");
-  const labelCta = t("pages.debtNegotiation.debts.conversationHistory.pixPayWithPixNow");
+  const labelCopied = t(
+    "pages.debtNegotiation.debts.conversationHistory.pixCopied",
+  );
+  const labelDefault = t(
+    "pages.debtNegotiation.debts.conversationHistory.pixCopyCode",
+  );
+  const labelCta = t(
+    "pages.debtNegotiation.debts.conversationHistory.pixPayWithPixNow",
+  );
 
   if (variant === "cta") {
     return (
@@ -42,11 +52,9 @@ export function PixCodeCopyButton({ value, variant = "default" }: PixCodeCopyBut
         variant="outline"
         onClick={onCopy}
         disabled={!String(value ?? "").trim()}
-        className={cn(CHAT_PIX_CTA_BUTTON_CLASS, "min-h-10 w-full py-2.5")}
+        className={CHAT_PIX_CTA_BUTTON_CLASS}
       >
-        <span className={copied ? "text-muted-foreground" : undefined}>
-          {copied ? labelCopied : labelCta}
-        </span>
+        {copied ? labelCopied : labelCta}
       </Button>
     );
   }

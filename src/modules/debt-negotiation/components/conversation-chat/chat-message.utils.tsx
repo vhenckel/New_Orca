@@ -38,31 +38,29 @@ export function extractPixCodeFromPixMessage(message: ChatMessagePixDynamicCode)
 export const CHAT_SCROLL_SURFACE_CLASS =
   "bg-slate-100/80 dark:bg-background/60";
 
-/** Balão do agente: superfície e borda legíveis em light e dark. */
-export const AGENT_MESSAGE_BACKGROUND_CLASS = cn(
-  "rounded-br-md text-foreground shadow-sm",
+/** Superfície compartilhada: balão de texto do agente e card Pix (evita fundo “diferente” no dark). */
+export const AGENT_MESSAGE_SURFACE_CLASS = cn(
   "border border-slate-200 bg-slate-100/90 dark:border-slate-600/70 dark:bg-slate-800/95",
 );
 
+/** Balão do agente: superfície + canto e sombra do chat. */
+export const AGENT_MESSAGE_BACKGROUND_CLASS = cn(
+  "rounded-br-md text-foreground shadow-sm",
+  AGENT_MESSAGE_SURFACE_CLASS,
+);
+
 /**
- * CTAs tipo quick reply (`type: "button"`): borda e fundo explícitos vs. o balão.
- * Usar com `<Button variant="outline" className={CHAT_QUICK_REPLY_BUTTON_CLASS}>`.
+ * CTA primário (Pix “Pagar com PIX agora” e opções `type: "button"` abaixo do card).
  */
-export const CHAT_QUICK_REPLY_BUTTON_CLASS = cn(
-  "h-auto min-h-10 w-full whitespace-normal rounded-md px-3 py-2.5 text-center text-sm font-medium leading-snug",
-  "border-2 border-primary/25 bg-background text-primary shadow-sm",
-  "hover:bg-muted/60 hover:border-primary/40",
-  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-  "dark:border-primary/40 dark:bg-slate-950/70 dark:text-primary dark:hover:bg-slate-900/90 dark:hover:border-primary/55",
-);
-
-/** CTA Pix (faixa full-width no card inferior): mesmo cromo, raio alinhado ao wrapper. */
 export const CHAT_PIX_CTA_BUTTON_CLASS = cn(
-  CHAT_QUICK_REPLY_BUTTON_CLASS,
-  "rounded-lg",
+  "h-auto min-h-10 w-full whitespace-normal rounded-lg px-3 py-2.5 text-center text-sm font-medium leading-snug shadow-md",
+  "border-0 bg-primary text-primary-foreground hover:bg-primary/90",
+  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+  "disabled:pointer-events-none disabled:opacity-50",
 );
 
-export const PIX_CARD_BACKGROUND_CLASS = "bg-background/40 border border-border/30";
+/** Card de conteúdo Pix: mesma base visual do balão de texto do agente. */
+export const PIX_CARD_BACKGROUND_CLASS = cn("shadow-sm", AGENT_MESSAGE_SURFACE_CLASS);
 
 export const CHAT_IMAGE_IMG_PROPS = {
   loading: "lazy" as const,

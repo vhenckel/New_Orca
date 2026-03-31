@@ -1,17 +1,14 @@
 import { FileText } from "lucide-react";
-import type {
-  ChatMessage,
-  ChatMessageButton,
-  MediaAtt,
-} from "@/modules/debt-negotiation/types/conversation-history";
+import type { ChatMessage, MediaAtt } from "@/modules/debt-negotiation/types/conversation-history";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { cn } from "@/shared/lib/utils";
+import { ChatMessageCardActionStack } from "./ChatMessageCardActionStack";
 import { ConversationPixCard } from "./ConversationPixCard";
 import {
   CHAT_IMAGE_IMG_PROPS,
-  CHAT_QUICK_REPLY_BUTTON_CLASS,
+  CHAT_PIX_CTA_BUTTON_CLASS,
+  formatMessageDate,
   isLikelyPdf,
   resolveMedia,
   textWithBold,
@@ -20,7 +17,7 @@ import {
 interface ConversationMessageContentProps {
   message: ChatMessage;
   mediasAtt: MediaAtt[];
-  /** ISO da mensagem: usado no canto do balão Pix (bot). */
+  /** ISO da mensagem: Pix (horário curto) e mensagens `button` (data no card). */
   messageSentAt?: string;
 }
 
@@ -166,14 +163,73 @@ export function ConversationMessageContent({
     return <ConversationPixCard message={message} sentAt={messageSentAt} />;
   }
 
-  /** Quick replies: `type: "button"` → `<Button>`; outros formatos com items ficam como chips/texto. */
+  if (message.type === "button") {
+    const quickReplyRowsButton =
+      "items" in message &&
+      Array.isArray(message.items) &&
+      message.items.length > 0 &&
+      message.items.every((it) => typeof it?.title === "string");
+
+    if (quickReplyRowsButton) {
+      return (
+        <ChatMessageCardActionStack
+          body={
+            <>
+              <p className="whitespace-pre-wrap break-words text-sm">
+                {textWithBold(fallbackTitle)}
+              </p>
+              {messageSentAt ? (
+                <div className="flex justify-end pt-0.5">
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {formatMessageDate(messageSentAt)}
+                  </span>
+                </div>
+              ) : null}
+            </>
+          }
+          actions={
+            <div className="flex w-full flex-col gap-1">
+              {message.items!.map((item, i) => (
+                <div key={i} className="overflow-hidden rounded-lg">
+                  <Button type="button" variant="default" className={CHAT_PIX_CTA_BUTTON_CLASS}>
+                    <span className="block break-words text-primary-foreground">
+                      {textWithBold(item.title)}
+                    </span>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          }
+        />
+      );
+    }
+
+    return (
+      <ChatMessageCardActionStack
+        body={
+          <>
+            <p className="whitespace-pre-wrap break-words text-sm">
+              {textWithBold(fallbackTitle)}
+            </p>
+            {messageSentAt ? (
+              <div className="flex justify-end pt-0.5">
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {formatMessageDate(messageSentAt)}
+                </span>
+              </div>
+            ) : null}
+          </>
+        }
+      />
+    );
+  }
+
+  /** Quick replies com items (não `button`): texto/chips. */
   const quickReplyRows =
     "items" in message &&
     Array.isArray(message.items) &&
     message.items.length > 0 &&
     message.items.every((it) => typeof it?.title === "string");
-
-  const isButtonMessage = (m: ChatMessage): m is ChatMessageButton => m.type === "button";
 
   return (
     <div className="flex flex-col gap-2">
@@ -181,33 +237,18 @@ export function ConversationMessageContent({
         {textWithBold(fallbackTitle)}
       </p>
       {quickReplyRows ? (
-        isButtonMessage(message) ? (
-          <div className="flex w-full flex-col gap-1">
-            {message.items!.map((item, i) => (
-              <Button
-                key={i}
-                type="button"
-                variant="outline"
-                className={CHAT_QUICK_REPLY_BUTTON_CLASS}
-              >
-                <span className="block break-words">{textWithBold(item.title)}</span>
-              </Button>
-            ))}
-          </div>
-        ) : (
-          <div className="flex w-full flex-col gap-2">
-            {message.items!.map((item, i) => (
-              <div
-                key={i}
-                className="w-full px-3 py-2.5 text-center text-sm font-medium"
-              >
-                <span className="block break-words">
-                  {textWithBold(item.title)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )
+        <div className="flex w-full flex-col gap-2">
+          {message.items!.map((item, i) => (
+            <div
+              key={i}
+              className="w-full px-3 py-2.5 text-center text-sm font-medium"
+            >
+              <span className="block break-words">
+                {textWithBold(item.title)}
+              </span>
+            </div>
+          ))}
+        </div>
       ) : "items" in message && message.items?.length ? (
         <div className="flex flex-wrap gap-1.5">
           {message.items.map((item, i) => (
