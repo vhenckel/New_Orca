@@ -12,6 +12,20 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
     }
   }
 
+  // Fallback mais robusto para webviews/browsers que bloqueiam seleção em textarea.
+  try {
+    const onCopy = (event: ClipboardEvent) => {
+      event.preventDefault();
+      event.clipboardData?.setData("text/plain", t);
+    };
+    document.addEventListener("copy", onCopy);
+    const ok = document.execCommand("copy");
+    document.removeEventListener("copy", onCopy);
+    if (ok) return true;
+  } catch {
+    /* tenta fallback com textarea abaixo */
+  }
+
   try {
     const ta = document.createElement("textarea");
     ta.value = t;

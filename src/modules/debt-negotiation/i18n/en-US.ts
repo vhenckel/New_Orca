@@ -135,9 +135,15 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.conversationHistory.pixCharge":
     "CHARGE #{id}",
   "pages.debtNegotiation.debts.conversationHistory.pixTotal": "Total",
+  "pages.debtNegotiation.debts.conversationHistory.pixPayWithPixNow":
+    "Pay with PIX now",
   "pages.debtNegotiation.debts.conversationHistory.pixCopyCode":
     "Copy Pix code",
   "pages.debtNegotiation.debts.conversationHistory.pixCopied": "Copied",
+  "pages.debtNegotiation.debts.conversationHistory.pixCodeLabel":
+    "Pix code (copy and paste)",
+  "pages.debtNegotiation.debts.conversationHistory.pixCopyFailed":
+    "Could not copy. Select the code above manually.",
   "pages.debtNegotiation.pendingBanner.message":
     "One or more debtors have reported making a payment. We need you to confirm receipt urgently to proceed.",
   "pages.debtNegotiation.pendingBanner.viewDebts": "View debts",

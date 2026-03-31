@@ -152,9 +152,14 @@ export const debtNegotiationPtBR = {
     "Abrir ou baixar em nova aba",
   "pages.debtNegotiation.debts.conversationHistory.pixCharge": "CHARGE #{id}",
   "pages.debtNegotiation.debts.conversationHistory.pixTotal": "Total",
+  "pages.debtNegotiation.debts.conversationHistory.pixPayWithPixNow":
+    "Pagar com PIX agora",
   "pages.debtNegotiation.debts.conversationHistory.pixCopyCode":
     "Copiar código Pix",
   "pages.debtNegotiation.debts.conversationHistory.pixCopied": "Copiado",
+  "pages.debtNegotiation.debts.conversationHistory.pixCodeLabel": "Código Pix (copia e cola)",
+  "pages.debtNegotiation.debts.conversationHistory.pixCopyFailed":
+    "Não foi possível copiar. Selecione o código acima manualmente.",
   "pages.debtNegotiation.pendingBanner.message":
     "Um ou mais devedores informaram que realizaram o pagamento. Precisamos que você confirme o recebimento com urgência para prosseguirmos.",
   "pages.debtNegotiation.pendingBanner.viewDebts": "Ver dívidas",
