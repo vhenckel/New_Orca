@@ -31,13 +31,20 @@ export function DonutCard({ title, data, delay = 0 }: DonutCardProps) {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 100%)",
-                  border: "1px solid hsl(214, 32%, 91%)",
-                  borderRadius: "8px",
-                  fontSize: "12px",
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const item = payload[0];
+                  const v = Number(item.value);
+                  const safe = Number.isFinite(v) ? v : 0;
+                  const pct =
+                    total > 0 ? `${((safe / total) * 100).toFixed(0)}%` : "0%";
+                  return (
+                    <div className="rounded-lg border border-border bg-card px-2.5 py-2 text-xs shadow-md">
+                      <p className="mb-1 font-medium text-foreground">{item.name}</p>
+                      <p className="font-mono font-medium tabular-nums text-foreground">{pct}</p>
+                    </div>
+                  );
                 }}
-                formatter={(value: number) => [`${((value / total) * 100).toFixed(0)}%`, ""]}
               />
             </PieChart>
           </ResponsiveContainer>

@@ -28,6 +28,19 @@ function mapDetailsToChartData(rows: RenegotiationDailyRow[]): { date: string; n
   }));
 }
 
+function formatTooltipValue(
+  raw: number | string | undefined,
+  showValues: "value" | "quantity",
+  locale: string,
+): string {
+  const n = Number(raw);
+  const v = Number.isFinite(n) ? n : 0;
+  if (showValues === "value") {
+    return `R$ ${v.toLocaleString(locale)}`;
+  }
+  return String(v);
+}
+
 export function PerformanceChart() {
   const [showValues, setShowValues] = useDetailsShowValues();
   const { data, error } = useRenegotiationDetails({ showValues });
@@ -105,15 +118,33 @@ export function PerformanceChart() {
               }
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                fontSize: "12px",
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                return (
+                  <div className="rounded-lg border border-border bg-card px-2.5 py-2 text-xs shadow-md">
+                    {label != null && String(label) !== "" && (
+                      <p className="mb-1.5 font-medium text-foreground">{label}</p>
+                    )}
+                    <ul className="m-0 list-none space-y-1 p-0">
+                      {payload.map((item, index) => (
+                        <li
+                          key={String(item.dataKey ?? index)}
+                          className="flex min-w-[10rem] items-center gap-2 leading-none"
+                        >
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="text-muted-foreground">{item.name}</span>
+                          <span className="ml-auto font-mono font-medium tabular-nums text-foreground">
+                            {formatTooltipValue(item.value, showValues, locale)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
               }}
-              formatter={(value: number) =>
-                showValues === "value" ? [`R$ ${value.toLocaleString(locale)}`, ""] : [value, ""]
-              }
             />
             <Legend iconType="circle" iconSize={8} />
             <Area
