@@ -60,6 +60,10 @@ export interface BrandingConfig {
 export interface MeResponse {
   id: number;
   userId?: number;
+  /** Email do usuário (ex.: superadmin@o2ospot.com). Vem do /me (management/trinity). */
+  email?: string;
+  /** Username do usuário (normalmente igual ao email). Vem do /me. */
+  username?: string;
   name: string;
   businessArea: string | unknown;
   profile: MeProfile;

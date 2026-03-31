@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { NavLink, matchPath, useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition } from "@/app/router/types";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
 
@@ -43,6 +44,10 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { t } = useI18n();
   const { pathname } = useLocation();
+  const { user } = useAuth();
+
+  const brandLogoSrc =
+    user?.branding?.image?.trim() || "https://assets.o2ospot.com/spot/icons/o2ospot.svg";
 
   return (
     <aside
@@ -54,13 +59,13 @@ export function AppSidebar({
       <div className="flex h-14 items-center justify-center border-b border-border bg-[hsl(var(--sidebar-primary))] text-[hsl(var(--sidebar-primary-foreground))] px-4">
         {collapsed ? (
           <img
-            src="https://assets.o2ospot.com/spot/icons/o2ospot.svg"
+            src={brandLogoSrc}
             alt="O2OSPOT"
             className="mx-auto h-8 w-auto object-contain"
           />
         ) : (
           <img
-            src="https://assets.o2ospot.com/spot/icons/o2ospot.svg"
+            src={brandLogoSrc}
             alt="O2OSPOT"
             className="mx-auto h-9 w-full max-w-[180px] object-contain"
           />

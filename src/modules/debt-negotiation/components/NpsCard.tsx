@@ -218,21 +218,43 @@ export function NpsCard() {
                   width={28}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: "12px",
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    const item = payload[0];
+                    const raw = item.value;
+                    const npsDisplay =
+                      raw === null || raw === undefined || Number.isNaN(Number(raw))
+                        ? "—"
+                        : String(raw);
+                    const periodLabel =
+                      label != null && String(label) !== ""
+                        ? sameMonthRange
+                          ? `Dia ${label}`
+                          : `Mês ${label}`
+                        : null;
+                    return (
+                      <div className="rounded-lg border border-border bg-card px-2.5 py-2 text-xs shadow-md">
+                        {periodLabel ? (
+                          <p className="mb-1.5 font-medium text-foreground">{periodLabel}</p>
+                        ) : null}
+                        <div className="flex min-w-[10rem] items-center gap-2 leading-none">
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="text-muted-foreground">NPS</span>
+                          <span className="ml-auto font-mono font-medium tabular-nums text-foreground">
+                            {npsDisplay}
+                          </span>
+                        </div>
+                      </div>
+                    );
                   }}
-                  formatter={(value: number | string | null | undefined) => [
-                    value === null || value === undefined || Number.isNaN(Number(value)) ? "—" : value,
-                    "NPS",
-                  ]}
-                  labelFormatter={(label) => (sameMonthRange ? `Dia ${label}` : `Mês ${label}`)}
                 />
                 <Line
                   type="linear"
                   dataKey="nps"
+                  name="NPS"
                   stroke="hsl(var(--chart-1))"
                   strokeWidth={2.5}
                   dot={(props) => {
