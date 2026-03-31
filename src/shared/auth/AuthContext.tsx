@@ -2,6 +2,8 @@
  * AuthProvider: sessão (token + /me), login, logout, e registro de onUnauthorized para 401.
  */
 
+/* eslint-disable react-refresh/only-export-components */
+
 import {
   createContext,
   useCallback,
@@ -25,6 +27,7 @@ import {
 import type { LoginRequest, MeResponse } from "@/shared/auth/types";
 import { fetchUserAccounts } from "@/shared/api/auth-api";
 import { spotJson } from "@/shared/api/http-client";
+import { applyResolvedAccentColor } from "@/shared/auth/branding-accent";
 
 export interface AuthState {
   user: MeResponse | null;
@@ -87,6 +90,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const cid = getCompanyIdFromToken(token) ?? getDefaultCompanyId();
       const me = await fetchMe(cid);
       setUser(me);
+      applyResolvedAccentColor(me);
     } catch (e) {
       clearStoredToken();
       setUser(null);
@@ -130,6 +134,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           getCompanyIdFromToken(data.access_token) ?? getDefaultCompanyId();
         const me = await fetchMe(cid);
         setUser(me);
+        applyResolvedAccentColor(me);
         const target = options?.callbackUrl && options.callbackUrl.startsWith("/") ? options.callbackUrl : "/";
         const accounts = await fetchUserAccounts();
         if (accounts.length > 1) {
@@ -156,6 +161,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const cid = getCompanyIdFromToken(token) ?? getDefaultCompanyId();
     const me = await fetchMe(cid);
     setUser(me);
+    applyResolvedAccentColor(me);
   }, [user]);
 
   const value = useMemo<AuthContextValue>(
