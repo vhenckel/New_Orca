@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { useState, useCallback, useMemo, type MouseEvent } from "react";
 import { Copy } from "lucide-react";
-import { formatCpf } from "@/shared/lib/format";
+import { formatCnpj, formatCpf } from "@/shared/lib/format";
 import { formatContactOriginLabel } from "@/modules/contact/utils/format-contact-origin";
 import { formatWhatsApp } from "@/modules/contact/utils/format-whatsapp";
 import { useI18n } from "@/shared/i18n/useI18n";
@@ -167,8 +167,18 @@ export function ContactDetailPage() {
     mainContactForHeader?.appkey && mainContactForHeader.isInBlackList
       ? blocklistFilteredHref(mainContactForHeader.appkey)
       : null;
-  const headerDocumentRaw = details?.cpf ?? null;
-  const headerDocumentDisplay = details?.cpf ? formatCpf(details.cpf) : null;
+  const headerDocumentRaw =
+    details?.cnpj && details.cnpj !== "0"
+      ? details.cnpj
+      : details?.cpf && details.cpf !== "0"
+        ? details.cpf
+        : null;
+  const headerDocumentDisplay =
+    details?.cnpj && details.cnpj !== "0"
+      ? formatCnpj(details.cnpj)
+      : details?.cpf && details.cpf !== "0"
+        ? formatCpf(details.cpf)
+        : null;
 
   /** Candidatos ao modal de blocklist: cluster da pessoa ou contato único (fallback). */
   const blocklistCandidates = useMemo((): PersonContactListItem[] => {

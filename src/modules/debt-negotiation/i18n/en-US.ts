@@ -132,6 +132,12 @@ export const debtNegotiationEnUS = {
     "Play audio: {name}",
   "pages.debtNegotiation.debts.conversationHistory.audioOpenDownload":
     "Open or download in new tab",
+  "pages.debtNegotiation.debts.conversationHistory.pixCharge":
+    "CHARGE #{id}",
+  "pages.debtNegotiation.debts.conversationHistory.pixTotal": "Total",
+  "pages.debtNegotiation.debts.conversationHistory.pixCopyCode":
+    "Copy Pix code",
+  "pages.debtNegotiation.debts.conversationHistory.pixCopied": "Copied",
   "pages.debtNegotiation.pendingBanner.message":
     "One or more debtors have reported making a payment. We need you to confirm receipt urgently to proceed.",
   "pages.debtNegotiation.pendingBanner.viewDebts": "View debts",
