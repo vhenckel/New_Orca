@@ -41,12 +41,35 @@ export interface ChatMessageAudio {
   transcription?: string;
 }
 
+export interface ChatMessagePixData {
+  code?: string;
+  company?: string;
+  key?: string;
+  keyType?: string;
+  expiration?: string;
+}
+
+export interface ChatMessagePixDynamicCodeItem {
+  id?: string;
+  title?: string;
+  amount?: number;
+  pixData?: ChatMessagePixData;
+}
+
+/** Mensagem com dados de Pix dinâmico para copiar e pagar. */
+export interface ChatMessagePixDynamicCode {
+  type: "pix_dynamic_code" | "dynamic_pix_message";
+  text?: string;
+  items?: ChatMessagePixDynamicCodeItem[];
+}
+
 export type ChatMessage =
   | ChatMessageText
   | ChatMessageButton
   | ChatMessageImage
   | ChatMessageDocument
-  | ChatMessageAudio;
+  | ChatMessageAudio
+  | ChatMessagePixDynamicCode;
 
 /** Um chat na lista do histórico. sender 1 = usuário, 2 = bot. */
 export interface ConversationChat {

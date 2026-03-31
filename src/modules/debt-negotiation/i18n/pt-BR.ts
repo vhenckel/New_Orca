@@ -150,6 +150,11 @@ export const debtNegotiationPtBR = {
     "Reproduzir áudio: {name}",
   "pages.debtNegotiation.debts.conversationHistory.audioOpenDownload":
     "Abrir ou baixar em nova aba",
+  "pages.debtNegotiation.debts.conversationHistory.pixCharge": "CHARGE #{id}",
+  "pages.debtNegotiation.debts.conversationHistory.pixTotal": "Total",
+  "pages.debtNegotiation.debts.conversationHistory.pixCopyCode":
+    "Copiar código Pix",
+  "pages.debtNegotiation.debts.conversationHistory.pixCopied": "Copiado",
   "pages.debtNegotiation.pendingBanner.message":
     "Um ou mais devedores informaram que realizaram o pagamento. Precisamos que você confirme o recebimento com urgência para prosseguirmos.",
   "pages.debtNegotiation.pendingBanner.viewDebts": "Ver dívidas",
