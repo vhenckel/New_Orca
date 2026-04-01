@@ -58,7 +58,7 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
       <div className="min-w-0 flex-1">
         <nav aria-label={t("app.topbar.breadcrumbNav")} className="flex min-w-0 items-center gap-2">
           <Link
-            to={currentModule.basePath}
+            to={currentModule.sidebarLinkTo ?? currentModule.basePath}
             className="shrink-0 truncate text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             {t(currentModule.titleKey)}
@@ -191,7 +191,7 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/settings" className="flex items-center gap-2">
+              <Link to="/config" className="flex items-center gap-2">
                 <Settings2 className="size-4" />
                 {t("app.topbar.preferences")}
               </Link>

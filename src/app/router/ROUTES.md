@@ -16,7 +16,8 @@
   - `/contacts`, `/contacts/blocklist`, `/contacts/:id`
   - `/collections`, `/collections/contacts`, `/collections/charges`
   - `/sales`, `/sales/contacts`, `/sales/pipeline`
-  - `/settings`
+  - `/config` (preferências: tema, idioma, etc.)
+  - `/settings/agent`, `/settings/renegotiation`, `/settings/channels`
 - **Outras:** `*` → NotFoundPage
 
 ## Diferenças

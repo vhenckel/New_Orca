@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { RenegotiationConfigPayload } from "@/modules/agent/types";
-import { updateRenegotiationConfig } from "@/modules/agent/services/renegotiation-config";
+import type { RenegotiationConfigPayload } from "@/modules/settings/types";
+import { updateRenegotiationConfig } from "@/modules/settings/services/renegotiation-config";
 
 export function useUpdateRenegotiationConfig(companyId: number | null, onSuccess?: () => void) {
   const queryClient = useQueryClient();
@@ -12,7 +12,7 @@ export function useUpdateRenegotiationConfig(companyId: number | null, onSuccess
       await updateRenegotiationConfig(companyId, payload);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["agent", "renegotiation-config", companyId] });
+      await queryClient.invalidateQueries({ queryKey: ["settings", "renegotiation-config", companyId] });
       onSuccess?.();
     },
   });

@@ -36,7 +36,7 @@ export function AppShell({ children, modules }: AppShellProps) {
       "debt-negotiation",
       "contact",
       "finance",
-      "agent",
+      "settings",
     ];
 
     const byKey = new Map(modules.map((m) => [m.key, m] as const));
