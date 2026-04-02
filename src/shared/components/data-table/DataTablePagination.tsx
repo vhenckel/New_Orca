@@ -46,6 +46,8 @@ type DataTablePaginationProps = {
   pageSizeOptions?: readonly number[];
   className?: string;
   labels?: Partial<DataTablePaginationLabels>;
+  /** Quando true, oculta o seletor "Linhas por página" (ex.: paginação por mês com pageSize fixo). */
+  hidePageSizeSelect?: boolean;
 };
 
 /**
@@ -89,6 +91,7 @@ export function DataTablePagination({
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   className,
   labels: labelsOverride = {},
+  hidePageSizeSelect = false,
 }: DataTablePaginationProps) {
   const labels = { ...defaultPaginationLabels, ...labelsOverride };
   /** Evita divisão por zero / Infinity; não altera o valor exibido no Select. */
@@ -111,27 +114,36 @@ export function DataTablePagination({
       data-testid="data-table-pagination"
     >
       <Field orientation="horizontal" className="w-fit gap-2">
-        <FieldLabel className="whitespace-nowrap text-muted-foreground">
-          {labels.rowsPerPage}
-        </FieldLabel>
-        <Select
-          value={String(pageSize > 0 ? pageSize : take)}
-          onValueChange={(v) => onChange({ page: 1, pageSize: Number(v) })}
+        {!hidePageSizeSelect && (
+          <>
+            <FieldLabel className="whitespace-nowrap text-muted-foreground">
+              {labels.rowsPerPage}
+            </FieldLabel>
+            <Select
+              value={String(pageSize > 0 ? pageSize : take)}
+              onValueChange={(v) => onChange({ page: 1, pageSize: Number(v) })}
+            >
+              <SelectTrigger className="h-8 w-[4.5rem]" aria-label={labels.rowsPerPage}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {pageSizeOptions.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </>
+        )}
+        <span
+          className={cn(
+            "whitespace-nowrap text-sm text-muted-foreground",
+            !hidePageSizeSelect && "pl-2",
+          )}
         >
-          <SelectTrigger className="h-8 w-[4.5rem]" aria-label={labels.rowsPerPage}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {pageSizeOptions.map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <span className="whitespace-nowrap pl-2 text-sm text-muted-foreground">
           {labels.range(from, to, total)}
         </span>
       </Field>

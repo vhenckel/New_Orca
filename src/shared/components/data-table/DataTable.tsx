@@ -51,6 +51,7 @@ export type DataTableProps<T> = {
   /** `table-fixed` faz as larguras das colunas (TanStack `size`) serem respeitadas. */
   tableLayoutFixed?: boolean;
   paginationLabels?: Partial<DataTablePaginationLabels>;
+  hidePageSizeSelect?: boolean;
 };
 
 function resolveRowId<T>(row: T, index: number, getRowId?: (row: T, i: number) => string): string {
@@ -75,6 +76,7 @@ export function DataTable<T>({
   tableContainerClassName,
   tableLayoutFixed = false,
   paginationLabels,
+  hidePageSizeSelect = false,
 }: DataTableProps<T>) {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
@@ -227,6 +229,7 @@ export function DataTable<T>({
           total={result.total}
           onChange={onPaginationChange}
           labels={paginationLabels}
+          hidePageSizeSelect={hidePageSizeSelect}
         />
       )}
     </div>

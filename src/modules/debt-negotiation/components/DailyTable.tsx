@@ -1,8 +1,21 @@
+import type { ColumnDef } from "@tanstack/react-table";
+import { useEffect, useMemo } from "react";
+
 import { useRenegotiationDetails } from "@/modules/debt-negotiation/hooks";
 import type { RenegotiationDailyRow } from "@/modules/debt-negotiation/types/renegotiation-details";
-import { useDetailsShowValues } from "@/shared/lib/nuqs-filters";
-import { cn } from "@/shared/lib/utils";
+import {
+  formatMonthNavLabel,
+  groupDailyRowsByMonth,
+} from "@/modules/debt-negotiation/utils/group-daily-rows-by-month";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { DataTable } from "@/shared/components/data-table";
+import { formatCurrencyBRL } from "@/shared/components/dynamic-filters/filters/currency";
+import { useResetPaginationOnDateRangeChange } from "@/shared/hooks/useResetPaginationOnDateRangeChange";
+import {
+  useDailyTableMonthPaginationQueryState,
+  useDebtNegotiationDateRangeQueryState,
+  useDetailsShowValues,
+} from "@/shared/lib/nuqs-filters";
 
 function formatDailyDate(isoDate: string): string {
   const d = new Date(isoDate + "T12:00:00");
@@ -26,96 +39,192 @@ function mapApiRowToTable(row: RenegotiationDailyRow) {
   };
 }
 
-function CellValue({ locale, value }: { locale: string; value: string | number }) {
-  if (value === "-" || value === "") {
-    return <span className="text-muted-foreground">-</span>;
-  }
+export type DailyTableRow = ReturnType<typeof mapApiRowToTable>;
 
-  const numericValue = Number(value);
-  if (Number.isNaN(numericValue)) {
+function formatQuantityCell(value: string | number): string {
+  if (value === "-" || value === "") return "";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+}
+
+function formatValueCell(value: string | number): string {
+  if (value === "-" || value === "") return "";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  return formatCurrencyBRL(n);
+}
+
+function renderMetricCell(
+  raw: string | number,
+  mode: "quantity" | "value",
+  tone?: "destructive" | "warning" | "success",
+) {
+  const text = mode === "value" ? formatValueCell(raw) : formatQuantityCell(raw);
+  if (!text) {
     return <span className="text-muted-foreground">-</span>;
   }
-  return <span className="font-mono text-sm">{numericValue.toLocaleString(locale)}</span>;
+  const toneClass =
+    tone === "destructive"
+      ? "font-medium text-destructive"
+      : tone === "warning"
+        ? "font-medium text-warning"
+        : tone === "success"
+          ? "font-medium text-success"
+          : "";
+  return <span className={`font-mono text-sm tabular-nums ${toneClass}`.trim()}>{text}</span>;
 }
 
 export function DailyTable() {
   const { locale, t } = useI18n();
+  const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
+  const { page, setPagination } = useDailyTableMonthPaginationQueryState();
+  useResetPaginationOnDateRangeChange(startDate, endDate, setPagination);
+
   const [showValues] = useDetailsShowValues();
-  const { data, error } = useRenegotiationDetails({ showValues });
+  const mode = showValues;
+  const { data, error, isPending } = useRenegotiationDetails({ showValues });
 
-  const columns = [
-    t("dashboard.daily.date"),
-    t("dashboard.daily.registered"),
-    t("dashboard.daily.collection"),
-    t("dashboard.daily.cancelled"),
-    t("dashboard.daily.ignored"),
-    t("dashboard.daily.negotiating"),
-    t("dashboard.daily.negotiated"),
-    t("dashboard.daily.unpaid"),
-    t("dashboard.daily.recovered"),
-  ];
+  const monthGroups = useMemo(
+    () => groupDailyRowsByMonth(data?.values ?? []),
+    [data?.values],
+  );
 
-  const rows = data?.values?.map(mapApiRowToTable) ?? [];
+  const monthCount = monthGroups.length;
+  const displayPage = monthCount === 0 ? 1 : Math.min(Math.max(1, page), monthCount);
+
+  useEffect(() => {
+    if (monthCount === 0) return;
+    if (page > monthCount) {
+      setPagination({ page: monthCount });
+    }
+  }, [monthCount, page, setPagination]);
+
+  const pageRows = useMemo(() => {
+    const group = monthGroups[displayPage - 1];
+    return group?.rows.map(mapApiRowToTable) ?? [];
+  }, [monthGroups, displayPage]);
+
+  const columns = useMemo<ColumnDef<DailyTableRow, unknown>[]>(() => {
+    const numMeta = {
+      headerClassName: "text-right",
+      cellClassName: "text-right",
+    } as const;
+
+    return [
+      {
+        id: "date",
+        header: t("dashboard.daily.date"),
+        accessorKey: "date",
+        cell: ({ row }) => (
+          <span className="text-sm font-medium text-foreground">{row.original.date}</span>
+        ),
+      },
+      {
+        id: "registered",
+        header: t("dashboard.daily.registered"),
+        accessorKey: "registered",
+        meta: numMeta,
+        cell: ({ row }) => renderMetricCell(row.original.registered, mode),
+      },
+      {
+        id: "collection",
+        header: t("dashboard.daily.collection"),
+        accessorKey: "collection",
+        meta: numMeta,
+        cell: ({ row }) => renderMetricCell(row.original.collection, mode),
+      },
+      {
+        id: "cancelled",
+        header: t("dashboard.daily.cancelled"),
+        accessorKey: "cancelled",
+        meta: numMeta,
+        cell: ({ row }) => renderMetricCell(row.original.cancelled, mode),
+      },
+      {
+        id: "ignored",
+        header: t("dashboard.daily.ignored"),
+        accessorKey: "ignored",
+        meta: numMeta,
+        cell: ({ row }) => renderMetricCell(row.original.ignored, mode, "destructive"),
+      },
+      {
+        id: "negotiating",
+        header: t("dashboard.daily.negotiating"),
+        accessorKey: "negotiating",
+        meta: numMeta,
+        cell: ({ row }) => renderMetricCell(row.original.negotiating, mode),
+      },
+      {
+        id: "negotiated",
+        header: t("dashboard.daily.negotiated"),
+        accessorKey: "negotiated",
+        meta: numMeta,
+        cell: ({ row }) => renderMetricCell(row.original.negotiated, mode),
+      },
+      {
+        id: "unpaid",
+        header: t("dashboard.daily.unpaid"),
+        accessorKey: "unpaid",
+        meta: numMeta,
+        cell: ({ row }) => renderMetricCell(row.original.unpaid, mode, "warning"),
+      },
+      {
+        id: "recovered",
+        header: t("dashboard.daily.recovered"),
+        accessorKey: "recovered",
+        meta: numMeta,
+        cell: ({ row }) => renderMetricCell(row.original.recovered, mode, "success"),
+      },
+    ];
+  }, [t, mode]);
+
+  const paginationLabels = useMemo(
+    () => ({
+      previous: t("common.pagination.previous"),
+      next: t("common.pagination.next"),
+      range: (from: number, _to: number, total: number) => {
+        const group = monthGroups[from - 1];
+        const month =
+          group != null ? formatMonthNavLabel(group.monthKey, locale) : "";
+        return t("dashboard.daily.paginationRange", {
+          current: from,
+          total,
+          month,
+        });
+      },
+    }),
+    [t, monthGroups, locale],
+  );
 
   return (
     <div className="card-surface animate-fade-in overflow-hidden opacity-0" style={{ animationDelay: "700ms" }}>
       <div className="p-5 pb-0">
-        <h3 className="mb-1 section-title">{t("dashboard.daily.title")}</h3>
-        <p className="mb-4 section-subtitle">
+        <h3 className="section-title mb-1">{t("dashboard.daily.title")}</h3>
+        <p className="section-subtitle mb-4">
           {showValues === "value" ? t("dashboard.daily.subtitleValue") : t("dashboard.daily.subtitle")}
         </p>
       </div>
 
       {error && (
-        <div className="px-5 pb-4 text-sm text-destructive">
-          Erro ao carregar dados diários.
-        </div>
+        <div className="text-destructive px-5 pb-4 text-sm">Erro ao carregar dados diários.</div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-border">
-              {columns.map((column) => (
-                <th
-                  key={column}
-                  className="sticky top-0 bg-card px-4 py-3 text-left text-xs font-medium text-muted-foreground"
-                >
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && !error ? (
-              <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-left text-sm text-muted-foreground">
-                  Nenhum dado no período.
-                </td>
-              </tr>
-            ) : (
-              rows.map((row, index) => (
-                <tr
-                  key={row.dateKey}
-                  className={cn(
-                    "border-b border-border transition-colors hover:bg-accent/50",
-                    index % 2 === 1 && "bg-muted/30",
-                  )}
-                >
-                  <td className="px-4 py-2.5 text-sm font-medium text-foreground">{row.date}</td>
-                  <td className="px-4 py-2.5"><CellValue locale={locale} value={row.registered} /></td>
-                  <td className="px-4 py-2.5"><CellValue locale={locale} value={row.collection} /></td>
-                  <td className="px-4 py-2.5"><CellValue locale={locale} value={row.cancelled} /></td>
-                  <td className="px-4 py-2.5 font-medium text-destructive"><CellValue locale={locale} value={row.ignored} /></td>
-                  <td className="px-4 py-2.5"><CellValue locale={locale} value={row.negotiating} /></td>
-                  <td className="px-4 py-2.5"><CellValue locale={locale} value={row.negotiated} /></td>
-                  <td className="px-4 py-2.5 font-medium text-warning"><CellValue locale={locale} value={row.unpaid} /></td>
-                  <td className="px-4 py-2.5 font-medium text-success"><CellValue locale={locale} value={row.recovered} /></td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="px-1 pb-4 sm:px-2">
+        <DataTable<DailyTableRow>
+          columns={columns}
+          result={{ data: pageRows, total: monthCount }}
+          page={displayPage}
+          pageSize={1}
+          onPaginationChange={setPagination}
+          isLoading={isPending}
+          getRowId={(row) => row.dateKey}
+          emptyMessage={t("dashboard.daily.emptyPeriod")}
+          hidePagination={monthCount <= 1}
+          tableContainerClassName="border-0 rounded-none shadow-none"
+          paginationLabels={paginationLabels}
+          hidePageSizeSelect
+        />
       </div>
     </div>
   );

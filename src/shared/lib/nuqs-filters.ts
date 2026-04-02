@@ -6,6 +6,7 @@ import {
   parseAsArrayOf,
   parseAsInteger,
   parseAsString,
+  parseAsStringLiteral,
   throttle,
   useQueryState,
   useQueryStates,
@@ -60,6 +61,32 @@ export function useDateRangeQueryState() {
 /** Mesmo comportamento que `useDateRangeQueryState` — nome explícito para telas de renegociação. */
 export function useDebtNegotiationDateRangeQueryState() {
   return useDateRangeQueryState();
+}
+
+/** Valores de `range` na listagem de dívidas (`/debt-negotiation/debts`). `full` = sem filtro de período na API. */
+const debtNegotiationDebtsListRangeLiterals = ["full"] as const;
+export type DebtNegotiationDebtsListRange =
+  (typeof debtNegotiationDebtsListRangeLiterals)[number];
+
+export const debtNegotiationDebtsListRangeParser = parseAsStringLiteral(
+  debtNegotiationDebtsListRangeLiterals,
+);
+
+const debtsListRangeQueryOptions = {
+  history: "replace" as const,
+  scroll: false,
+};
+
+/** Query `range` para a página de dívidas (ex.: `range=full`). */
+export function useDebtNegotiationDebtsListRangeQueryState(): [
+  DebtNegotiationDebtsListRange | null,
+  (value: DebtNegotiationDebtsListRange | null) => void,
+] {
+  const [range, setRange] = useQueryState(
+    "range",
+    debtNegotiationDebtsListRangeParser.withOptions(debtsListRangeQueryOptions),
+  );
+  return [range, setRange];
 }
 
 /** Monta path com `startDate` e `endDate` na query (navegação dashboard ↔ drill-down). */
@@ -185,6 +212,25 @@ export function useDebtsPaginationQueryState() {
             ? 1
             : page;
       setParams({ debtsPage: nextPage, debtsPageSize: nextSize });
+    },
+    raw: params,
+  };
+}
+
+const dailyTableMonthPaginationParsers = {
+  dnDailyMonthPage: parseAsInteger.withDefault(1),
+} as const;
+
+/** Página do mês na tabela "Dados diários" do dashboard (`dnDailyMonthPage`, 1 = primeiro mês do período). */
+export function useDailyTableMonthPaginationQueryState() {
+  const [params, setParams] = useQueryStates(dailyTableMonthPaginationParsers);
+  const page = normalizePage(params.dnDailyMonthPage);
+
+  return {
+    page,
+    setPagination: (u: { page?: number; pageSize?: number }) => {
+      if (u.page === undefined) return;
+      setParams({ dnDailyMonthPage: normalizePage(u.page) });
     },
     raw: params,
   };

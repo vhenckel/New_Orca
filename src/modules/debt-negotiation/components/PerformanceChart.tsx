@@ -10,8 +10,9 @@ import {
 } from "recharts";
 import { useRenegotiationDetails } from "@/modules/debt-negotiation/hooks";
 import type { RenegotiationDailyRow } from "@/modules/debt-negotiation/types/renegotiation-details";
-import { useDetailsShowValues } from "@/shared/lib/nuqs-filters";
+import { formatCurrencyBRL } from "@/shared/components/dynamic-filters/filters/currency";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { useDetailsShowValues } from "@/shared/lib/nuqs-filters";
 
 function formatDailyDate(isoDate: string): string {
   const d = new Date(isoDate + "T12:00:00");
@@ -36,9 +37,9 @@ function formatTooltipValue(
   const n = Number(raw);
   const v = Number.isFinite(n) ? n : 0;
   if (showValues === "value") {
-    return `R$ ${v.toLocaleString(locale)}`;
+    return formatCurrencyBRL(v) || "R$ 0,00";
   }
-  return String(v);
+  return v.toLocaleString(locale, { maximumFractionDigits: 0 });
 }
 
 export function PerformanceChart() {

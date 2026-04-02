@@ -36,8 +36,9 @@ export interface DebtDetailsResponse {
 export interface DebtDetailsParams {
   take: number;
   skip: number;
-  startDate: string;
-  endDate: string;
+  /** Ausentes = API sem restrição de período (comportamento legado “todo o período”). */
+  startDate?: string;
+  endDate?: string;
   companyId: number;
   orderBy?: string;
   orderByDirection?: "ASC" | "DESC";

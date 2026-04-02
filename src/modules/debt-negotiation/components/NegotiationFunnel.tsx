@@ -16,7 +16,6 @@ export function NegotiationFunnel() {
 
   const stages = useMemo(() => {
     const registered = boxesData?.totalDebtCount.currentValue ?? 0;
-    const inCollection = 0;
     const inNegotiation = boxesData?.totalNegotiatedCount.currentValue ?? 0;
     const negotiated = (detailsData?.values ?? []).reduce(
       (acc, row) =>
@@ -24,6 +23,10 @@ export function NegotiationFunnel() {
       0,
     );
     const paid = boxesData?.totalRecoveredCount.currentValue ?? 0;
+    const inCollection = Math.max(
+      0,
+      registered - inNegotiation - negotiated - paid,
+    );
 
     const values = [registered, inCollection, inNegotiation, negotiated, paid];
     const max = Math.max(registered, 1);

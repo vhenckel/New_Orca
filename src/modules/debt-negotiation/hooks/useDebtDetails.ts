@@ -5,8 +5,8 @@ import { getCurrentCompanyId } from "@/shared/auth/current-company";
 const DEFAULT_PAGE_SIZE = 10;
 
 export interface UseDebtDetailsParams {
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   page?: number;
   /** Linhas por página (API take). Default 10. */
   pageSize?: number;
@@ -45,8 +45,7 @@ export function useDebtDetails(params: UseDebtDetailsParams) {
       fetchDebtDetails({
         take: pageSize,
         skip,
-        startDate,
-        endDate,
+        ...(startDate && endDate ? { startDate, endDate } : {}),
         companyId,
         orderBy: params?.orderBy ?? "contactName",
         orderByDirection: params?.orderByDirection ?? "DESC",
