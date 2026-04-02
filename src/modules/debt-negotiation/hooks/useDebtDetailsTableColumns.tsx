@@ -143,15 +143,19 @@ export function useDebtDetailsTableColumns(options: {
         ),
       },
       {
-        accessorKey: "debtAmount",
+        id: "debtValue",
+        accessorFn: (row) => row.debtValue ?? row.debtAmount,
         header: () => (
           <span className="block text-left">{t("pages.debtNegotiation.debts.col.debtAmount")}</span>
         ),
-        cell: ({ getValue }) => (
-          <div className="font-medium tabular-nums">
-            {formatDebtAmountString(String(getValue()))}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const raw = row.original.debtValue ?? row.original.debtAmount;
+          return (
+            <div className="font-medium tabular-nums">
+              {formatDebtAmountString(raw == null || raw === "" ? null : String(raw))}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "negotiatedValue",

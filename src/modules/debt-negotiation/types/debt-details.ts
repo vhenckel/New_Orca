@@ -8,7 +8,13 @@ export interface DebtDetailsItem {
   pipelineStageId: number;
   pipelineStageName: string;
   debtAge: string;
+  /** Valor original (contrato) na listagem view/debt-details. */
   debtAmount: string;
+  /**
+   * Valor atualizado (juros/multa etc.) na mesma API.
+   * No detalhe GET /renegotiation/:id/details o campo equivalente é `debtAmount`; aqui o nome diverge.
+   */
+  debtValue?: string | number | null;
   negotiatedValue: string | null;
   recoveredValue: string | null;
   contractId: string;
