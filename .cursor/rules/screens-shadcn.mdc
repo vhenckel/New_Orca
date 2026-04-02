@@ -1,0 +1,18 @@
+---
+description: Ao criar ou refatorar telas/páginas, seguir o guia shadcn/ui do projeto.
+globs:
+  - "**/pages/**/*.tsx"
+  - "**/app/layouts/**/*.tsx"
+alwaysApply: false
+---
+
+# Telas e shadcn/ui
+
+Sempre que **criar telas novas** ou **refatorar páginas** (arquivos sob `pages/` ou layouts com conteúdo principal):
+
+1. **Seguir a regra shadcn do repositório:** ler e aplicar [.cursor/rules/chadcn.mdc](.cursor/rules/chadcn.mdc) e os arquivos referenciados (`chadcn/styling.md`, `chadcn/forms.md`, `chadcn/composition.md`, `chadcn/base-vs-radix.md`, `chadcn/icons.md` quando relevante).
+2. **Reutilizar primeiro** componentes em `@/shared/ui/*` e padrões já usados em páginas existentes (`DashboardPageLayout`, `Card` completo, `Alert`, `Button`, etc.).
+3. **Novos blocos shadcn:** usar o CLI conforme o projeto (`npx shadcn@latest add …`, `search`, `docs`) como descrito em `chadcn.mdc` — não reinventar UI sem consultar componentes disponíveis.
+4. **Layout:** `flex` + `gap-*` (evitar `space-y-*` / `space-x-*`); cores semânticas (`bg-background`, `text-muted-foreground`); `cn()` para classes condicionais; formulários alinhados a `forms.md` quando aplicável.
+
+Em dúvida sobre um padrão de tela, tratar `chadcn.mdc` como fonte da verdade para UI neste app.

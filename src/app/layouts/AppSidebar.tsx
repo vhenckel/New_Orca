@@ -3,6 +3,7 @@ import { NavLink, matchPath, useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition } from "@/app/router/types";
 import { useAuth } from "@/shared/auth/AuthContext";
+import { isSuperAdminUser } from "@/shared/auth/is-super-admin";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
 
@@ -52,6 +53,7 @@ export function AppSidebar({
   const { t } = useI18n();
   const { pathname } = useLocation();
   const { user } = useAuth();
+  const canSeeChannelsSettings = isSuperAdminUser(user);
 
   const brandLogoSrc =
     user?.branding?.image?.trim() || "https://assets.o2ospot.com/spot/icons/o2ospot.svg";
@@ -117,6 +119,10 @@ export function AppSidebar({
             )}
             {currentModule.routes
               .filter((route) => !route.hideInSidebar)
+              .filter(
+                (route) =>
+                  route.path !== "/settings/channels" || canSeeChannelsSettings,
+              )
               .map((route) => (
                 <NavLink
                   key={route.path}
