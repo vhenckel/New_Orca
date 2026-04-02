@@ -26,6 +26,7 @@ import { formatCurrency } from "@/shared/lib/format";
 import {
   useDebtsPaginationQueryState,
   useDebtNegotiationDateRangeQueryState,
+  useDebtNegotiationDebtsListRangeQueryState,
 } from "@/shared/lib/nuqs-filters";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -34,7 +35,14 @@ export function DebtsPage() {
   const { t } = useI18n();
   const { page, pageSize, setPagination } = useDebtsPaginationQueryState();
   const { startDate, endDate } = useDebtNegotiationDateRangeQueryState();
-  useResetPaginationOnDateRangeChange(startDate, endDate, setPagination);
+  const [debtsListRange] = useDebtNegotiationDebtsListRangeQueryState();
+  const isFullDebtListRange = debtsListRange === "full";
+  useResetPaginationOnDateRangeChange(
+    startDate,
+    endDate,
+    setPagination,
+    isFullDebtListRange ? "full" : "period",
+  );
 
   const [search, setSearch] = useQueryState(
     "q",
@@ -61,8 +69,7 @@ export function DebtsPage() {
   );
 
   const { data, error, isPending } = useDebtDetails({
-    startDate,
-    endDate,
+    ...(isFullDebtListRange ? {} : { startDate, endDate }),
     page,
     pageSize,
     statuses: statuses.length > 0 ? statuses : undefined,

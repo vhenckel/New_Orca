@@ -17,10 +17,10 @@ export function buildRenegotiationViewListQuery(params: DebtDetailsParams): stri
   const search = new URLSearchParams({
     take: String(params.take),
     skip: String(params.skip),
-    startDate: params.startDate,
-    endDate: params.endDate,
     companyId: String(params.companyId),
   });
+  if (params.startDate) search.set("startDate", params.startDate);
+  if (params.endDate) search.set("endDate", params.endDate);
   if (params.orderBy) search.set("orderBy", params.orderBy);
   if (params.orderByDirection) search.set("orderByDirection", params.orderByDirection);
   params.statuses?.forEach((s) => search.append("statuses[]", String(s)));

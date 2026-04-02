@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 
+import { PAYMENT_CONFIRMATION_FILTER_STAGE_ID } from "@/modules/debt-negotiation/constants/pipeline-stages";
 import { usePendingPaymentConfirmations } from "@/modules/debt-negotiation/hooks/usePendingPaymentConfirmations";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
 
-const DEBTS_CONFIRMATION_PATH = "/debt-negotiation/debts?statuses=11";
+const DEBTS_CONFIRMATION_PATH = `/debt-negotiation/debts?statuses=${PAYMENT_CONFIRMATION_FILTER_STAGE_ID}&range=full`;
 
 export function PendingPaymentBanner() {
   const { t } = useI18n();

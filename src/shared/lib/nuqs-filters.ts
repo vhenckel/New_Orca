@@ -6,6 +6,7 @@ import {
   parseAsArrayOf,
   parseAsInteger,
   parseAsString,
+  parseAsStringLiteral,
   throttle,
   useQueryState,
   useQueryStates,
@@ -60,6 +61,32 @@ export function useDateRangeQueryState() {
 /** Mesmo comportamento que `useDateRangeQueryState` — nome explícito para telas de renegociação. */
 export function useDebtNegotiationDateRangeQueryState() {
   return useDateRangeQueryState();
+}
+
+/** Valores de `range` na listagem de dívidas (`/debt-negotiation/debts`). `full` = sem filtro de período na API. */
+const debtNegotiationDebtsListRangeLiterals = ["full"] as const;
+export type DebtNegotiationDebtsListRange =
+  (typeof debtNegotiationDebtsListRangeLiterals)[number];
+
+export const debtNegotiationDebtsListRangeParser = parseAsStringLiteral(
+  debtNegotiationDebtsListRangeLiterals,
+);
+
+const debtsListRangeQueryOptions = {
+  history: "replace" as const,
+  scroll: false,
+};
+
+/** Query `range` para a página de dívidas (ex.: `range=full`). */
+export function useDebtNegotiationDebtsListRangeQueryState(): [
+  DebtNegotiationDebtsListRange | null,
+  (value: DebtNegotiationDebtsListRange | null) => void,
+] {
+  const [range, setRange] = useQueryState(
+    "range",
+    debtNegotiationDebtsListRangeParser.withOptions(debtsListRangeQueryOptions),
+  );
+  return [range, setRange];
 }
 
 /** Monta path com `startDate` e `endDate` na query (navegação dashboard ↔ drill-down). */
