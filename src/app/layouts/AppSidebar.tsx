@@ -23,6 +23,13 @@ function isModuleNavActive(module: AppModuleDefinition, pathname: string): boole
     return isDebtNegotiation && !isContacts;
   }
 
+  if (module.key === "settings") {
+    return Boolean(
+      matchPath({ path: "/settings/*", end: false }, pathname) ||
+        matchPath({ path: "/settings", end: true }, pathname),
+    );
+  }
+
   return Boolean(
     matchPath({ path: `${module.basePath}/*`, end: false }, pathname) ||
       matchPath({ path: module.basePath, end: true }, pathname),
@@ -84,7 +91,7 @@ export function AppSidebar({
             .map((module) => (
               <NavLink
                 key={module.key}
-                to={module.basePath}
+                to={module.sidebarLinkTo ?? module.basePath}
                 title={collapsed ? t(module.titleKey) : undefined}
                 className={() =>
                   cn(
@@ -114,7 +121,10 @@ export function AppSidebar({
                 <NavLink
                   key={route.path}
                   to={route.path}
-                  end={route.path === currentModule.basePath}
+                  end={
+                    route.path === currentModule.basePath ||
+                    currentModule.key === "settings"
+                  }
                   title={collapsed ? t(route.labelKey) : undefined}
                   className={({ isActive }) =>
                     cn(

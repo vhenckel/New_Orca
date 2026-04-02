@@ -1,6 +1,6 @@
 import { spotFetch, spotJson } from "@/shared/api/http-client";
 
-import type { RenegotiationConfigDto, RenegotiationConfigPayload } from "@/modules/agent/types";
+import type { RenegotiationConfigDto, RenegotiationConfigPayload } from "@/modules/settings/types";
 
 function configUrl(companyId: number): string {
   return `/renegotiation/config?companyId=${companyId}`;
