@@ -27,8 +27,8 @@ export function PreferencesPage() {
     <DashboardPageLayout
       className="mx-auto max-w-4xl"
       showPageHeader
-      title={t("modules.settings.routes.preferences.label")}
-      subtitle={t("modules.settings.routes.preferences.description")}
+      title={t("modules.config.routes.preferences.label")}
+      subtitle={t("modules.config.routes.preferences.description")}
     >
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>

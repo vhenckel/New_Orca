@@ -37,6 +37,11 @@ export interface AppRouteDefinition {
 export interface AppModuleDefinition {
   key: string;
   basePath: string;
+  /**
+   * Destino do clique no item do módulo na sidebar (default: `basePath`).
+   * Use quando `basePath` for só prefixo e a landing for outra rota.
+   */
+  sidebarLinkTo?: string;
   titleKey: TranslationKey;
   descriptionKey: TranslationKey;
   icon: LucideIcon;

@@ -1,3 +1,5 @@
+export type * from "@/modules/settings/types/channel";
+
 export type AgentApplyOver = "corrected";
 
 export interface RenegotiationConfigDto {

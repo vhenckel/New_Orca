@@ -47,6 +47,8 @@ export function AppRouter() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/choose-company" element={<ChooseCompanyPage />} />
             <Route path="/" element={<Navigate to={debtNegotiationModule.basePath} replace />} />
+            <Route path="/settings" element={<Navigate to="/settings/agent" replace />} />
+            <Route path="/agent/renegotiation-config" element={<Navigate to="/settings/agent" replace />} />
             {businessModules.flatMap((module) =>
               module.routes.map((route) => (
                 <Route
