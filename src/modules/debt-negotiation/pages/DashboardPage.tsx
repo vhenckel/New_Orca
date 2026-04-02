@@ -473,9 +473,11 @@ export function DashboardPage() {
 
       <DailyTable />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 hidden">
+      <div className="flex flex-col gap-6">
         <NegotiationFunnel />
-        <ActivityFeed />
+        <div className="hidden">
+          <ActivityFeed />
+        </div>
       </div>
     </DashboardPageLayout>
   );
