@@ -111,7 +111,7 @@ export const debtNegotiationEnUS = {
   "pages.debtNegotiation.debts.col.contractNumber": "Contract Number",
   "pages.debtNegotiation.debts.col.status": "Status",
   "pages.debtNegotiation.debts.col.debtAge": "Debt age on platform",
-  "pages.debtNegotiation.debts.col.debtAmount": "Debt value (updated)",
+  "pages.debtNegotiation.debts.col.debtAmount": "Debt value",
   "pages.debtNegotiation.debts.col.negotiatedValue": "Negotiated Value",
   "pages.debtNegotiation.debts.col.recoveredValue": "Recovered Value",
   "pages.debtNegotiation.debts.action.details": "Debt details",
