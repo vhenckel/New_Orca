@@ -190,6 +190,25 @@ export function useDebtsPaginationQueryState() {
   };
 }
 
+const dailyTableMonthPaginationParsers = {
+  dnDailyMonthPage: parseAsInteger.withDefault(1),
+} as const;
+
+/** Página do mês na tabela "Dados diários" do dashboard (`dnDailyMonthPage`, 1 = primeiro mês do período). */
+export function useDailyTableMonthPaginationQueryState() {
+  const [params, setParams] = useQueryStates(dailyTableMonthPaginationParsers);
+  const page = normalizePage(params.dnDailyMonthPage);
+
+  return {
+    page,
+    setPagination: (u: { page?: number; pageSize?: number }) => {
+      if (u.page === undefined) return;
+      setParams({ dnDailyMonthPage: normalizePage(u.page) });
+    },
+    raw: params,
+  };
+}
+
 const contactsBlocklistPaginationParsers = {
   contactsBlPage: parseAsInteger.withDefault(1),
   contactsBlPageSize: parseAsInteger.withDefault(10),
