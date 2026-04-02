@@ -1,12 +1,11 @@
 import type { MeResponse } from "@/shared/auth/types";
+import { isSuperAdminUser } from "@/shared/auth/is-super-admin";
 import {
   accentColorStorageKey,
   applyAccentColor,
   defaultAccentColor,
   sanitizeAccentColor,
 } from "@/shared/theme/accent-color";
-
-const SUPERADMIN_EMAIL = "superadmin@o2ospot.com";
 
 function getStoredUserAccentColor(): string | null {
   try {
@@ -16,11 +15,6 @@ function getStoredUserAccentColor(): string | null {
   } catch {
     return null;
   }
-}
-
-function isSuperAdminUser(me: MeResponse | null): boolean {
-  const email = me?.email?.trim().toLowerCase();
-  return !!email && email === SUPERADMIN_EMAIL;
 }
 
 /**
