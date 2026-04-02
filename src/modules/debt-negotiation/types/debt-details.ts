@@ -8,6 +8,7 @@ export interface DebtDetailsItem {
   pipelineStageId: number;
   pipelineStageName: string;
   debtAge: string;
+  /** Valor da dívida na listagem (view/debt-details); o detalhe GET /renegotiation/:id/details expõe original e atualizado separadamente. */
   debtAmount: string;
   negotiatedValue: string | null;
   recoveredValue: string | null;
