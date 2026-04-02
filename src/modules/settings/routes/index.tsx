@@ -4,6 +4,7 @@ import type { AppModuleDefinition } from "@/app/router/types";
 import { AgentSettingsPage } from "@/modules/settings/pages/AgentSettingsPage";
 import { ChannelsPage } from "@/modules/settings/pages/ChannelsPage";
 import { RenegotiationSettingsPage } from "@/modules/settings/pages/RenegotiationSettingsPage";
+import { SuperAdminOnly } from "@/shared/auth/SuperAdminOnly";
 
 export const settingsModule: AppModuleDefinition = {
   key: "settings",
@@ -32,7 +33,11 @@ export const settingsModule: AppModuleDefinition = {
       labelKey: "modules.settings.routes.channels.label",
       descriptionKey: "modules.settings.routes.channels.description",
       icon: Radio,
-      element: <ChannelsPage />,
+      element: (
+        <SuperAdminOnly redirectTo="/">
+          <ChannelsPage />
+        </SuperAdminOnly>
+      ),
     },
   ],
 };

@@ -1,5 +1,5 @@
 import { Ban, Pencil, Plus, RefreshCw, Play } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import type { ChannelModel } from "@/modules/settings/types/channel";
 import {
@@ -78,6 +78,27 @@ function statusBadgeClass(status: ChannelRowStatus): string {
   }
 }
 
+/** Badge que preenche a célula (padrão visual próximo à tabela de dívidas). */
+function FullWidthPillBadge({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "flex w-full min-h-7 shrink-0 justify-center rounded-full border px-3 py-1.5 text-center text-xs font-normal leading-tight",
+        className,
+      )}
+    >
+      {children}
+    </Badge>
+  );
+}
+
 export function ChannelTableSection({
   channels,
   isLoading,
@@ -140,20 +161,19 @@ export function ChannelTableSection({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button type="button" onClick={onAdd} className="w-full sm:w-auto">
-          <Plus className="size-4" data-icon="inline-start" />
-          {t("modules.settings.channels.actions.add")}
-        </Button>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Button
           type="button"
           variant="outline"
           onClick={onRefresh}
           disabled={isLoading}
-          className="w-full sm:w-auto"
         >
           <RefreshCw className={cn("size-4", isLoading && "animate-spin")} data-icon="inline-start" />
           {t("modules.settings.channels.actions.refresh")}
+        </Button>
+        <Button type="button" onClick={onAdd}>
+          <Plus className="size-4" data-icon="inline-start" />
+          {t("modules.settings.channels.actions.add")}
         </Button>
       </div>
 
@@ -163,16 +183,20 @@ export function ChannelTableSection({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[100px]">{t("modules.settings.channels.table.actions")}</TableHead>
                   <TableHead className="w-14">{t("modules.settings.channels.table.id")}</TableHead>
                   <TableHead>{t("modules.settings.channels.table.name")}</TableHead>
                   <TableHead>{t("modules.settings.channels.table.number")}</TableHead>
-                  <TableHead>{t("modules.settings.channels.table.status")}</TableHead>
+                  <TableHead className="min-w-[140px]">
+                    {t("modules.settings.channels.table.status")}
+                  </TableHead>
                   <TableHead className="text-right">{t("modules.settings.channels.table.weight")}</TableHead>
                   <TableHead className="min-w-[140px]">{t("modules.settings.channels.table.usageToday")}</TableHead>
                   <TableHead className="text-right">{t("modules.settings.channels.table.dailyLimit")}</TableHead>
                   <TableHead className="text-right">{t("modules.settings.channels.table.msgMin")}</TableHead>
-                  <TableHead>{t("modules.settings.channels.table.restrictions")}</TableHead>
-                  <TableHead className="w-[100px] text-right">{t("modules.settings.channels.table.actions")}</TableHead>
+                  <TableHead className="min-w-[120px]">
+                    {t("modules.settings.channels.table.restrictions")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -199,41 +223,8 @@ export function ChannelTableSection({
 
                     return (
                       <TableRow key={ch.id}>
-                        <TableCell className="font-mono text-sm">{ch.id}</TableCell>
-                        <TableCell className="max-w-[160px] truncate font-medium">{ch.name}</TableCell>
-                        <TableCell className="font-mono text-sm">{ch.phoneNumber ?? "—"}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={cn("font-normal", statusBadgeClass(status))}>
-                            {channelStatusLabel(t, status)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">{ch.weight}%</TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <span className="text-xs tabular-nums text-muted-foreground">
-                              {today}/{limitLabel}
-                            </span>
-                            <Progress value={progress} className="h-1.5" />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">{limitLabel}</TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {ch.messagesPerMinute ?? "—"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {(ch.blockedMessageTypes ?? []).map((x) => (
-                              <Badge key={x} variant="destructive" className="font-normal">
-                                {x}
-                              </Badge>
-                            ))}
-                            {(ch.blockedMessageTypes ?? []).length === 0 ? (
-                              <span className="text-muted-foreground">—</span>
-                            ) : null}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
+                        <TableCell className="text-left">
+                          <div className="flex justify-start gap-1">
                             <Button
                               type="button"
                               size="icon"
@@ -269,6 +260,45 @@ export function ChannelTableSection({
                               </Button>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{ch.id}</TableCell>
+                        <TableCell className="max-w-[160px] truncate font-medium">{ch.name}</TableCell>
+                        <TableCell className="font-mono text-sm">{ch.phoneNumber ?? "—"}</TableCell>
+                        <TableCell className="align-middle">
+                          <div className="flex w-full min-w-0">
+                            <FullWidthPillBadge className={statusBadgeClass(status)}>
+                              {channelStatusLabel(t, status)}
+                            </FullWidthPillBadge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{ch.weight}%</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs tabular-nums text-muted-foreground">
+                              {today}/{limitLabel}
+                            </span>
+                            <Progress value={progress} className="h-1.5" />
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{limitLabel}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {ch.messagesPerMinute ?? "—"}
+                        </TableCell>
+                        <TableCell className="align-middle">
+                          {(ch.blockedMessageTypes ?? []).length > 0 ? (
+                            <div className="flex w-full min-w-0 flex-col gap-1">
+                              {(ch.blockedMessageTypes ?? []).map((x) => (
+                                <FullWidthPillBadge
+                                  key={x}
+                                  className="border-transparent bg-destructive/15 text-destructive"
+                                >
+                                  {x}
+                                </FullWidthPillBadge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

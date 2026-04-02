@@ -17,7 +17,8 @@
   - `/collections`, `/collections/contacts`, `/collections/charges`
   - `/sales`, `/sales/contacts`, `/sales/pipeline`
   - `/config` (preferências: tema, idioma, etc.)
-  - `/settings/agent`, `/settings/renegotiation`, `/settings/channels`
+  - `/settings/agent`, `/settings/renegotiation`
+  - `/settings/channels` — **somente** usuário com email `superadmin@o2ospot.com` (demais são redirecionados para `/`; item oculto na sidebar)
 - **Outras:** `*` → NotFoundPage
 
 ## Diferenças
