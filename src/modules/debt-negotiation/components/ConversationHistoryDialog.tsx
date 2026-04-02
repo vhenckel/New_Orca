@@ -31,6 +31,7 @@ export function ConversationHistoryDialog({
     error,
     fetchNextPage,
     hasNextPage,
+    canRevealChatList,
   } = useConversationHistory(contactId, open);
 
   return (
@@ -43,7 +44,7 @@ export function ConversationHistoryDialog({
               {contactName ? ` – ${contactName}` : ""}
             </SidePanelTitle>
           }
-          bodyClassName="p-0"
+          bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden p-0"
           footerLeft={
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               {t("common.actions.cancel")}
@@ -54,6 +55,7 @@ export function ConversationHistoryDialog({
             chats={chats}
             mediasAtt={mediasAtt}
             isPending={isPending}
+            canRevealChatList={canRevealChatList}
             isNextPending={isNextPending}
             hasNextPage={hasNextPage}
             error={error}

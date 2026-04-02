@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
@@ -8,6 +9,7 @@ import { useRenegotiationPlanUsage } from "@/modules/debt-negotiation/hooks/useR
 import {
   getDefaultDateRange,
   useDebtNegotiationDateRangeQueryState,
+  useDebtNegotiationDebtsListRangeQueryState,
 } from "@/shared/lib/nuqs-filters";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
@@ -38,36 +40,50 @@ function resolveAllPresetStartDate(planStartDate: string | null | undefined): st
   return ALL_PRESET_FALLBACK_START;
 }
 
+const DEBTS_LIST_PATH = "/debt-negotiation/debts";
+
 export function DashboardDateRangePicker() {
   const { t } = useI18n();
+  const { pathname } = useLocation();
   const { startDate, endDate, setDateRange } = useDebtNegotiationDateRangeQueryState();
+  const [debtsListRange, setDebtsListRange] = useDebtNegotiationDebtsListRangeQueryState();
   const { data: planUsageData } = useRenegotiationPlanUsage();
   const [open, setOpen] = useState(false);
 
+  const isDebtsListPage = pathname === DEBTS_LIST_PATH;
+  const isFullDebtsListRange = isDebtsListPage && debtsListRange === "full";
+
   const range: DateRange | undefined =
-    startDate && endDate
-      ? { from: isoToDate(startDate), to: isoToDate(endDate) }
-      : undefined;
+    isFullDebtsListRange
+      ? undefined
+      : startDate && endDate
+        ? { from: isoToDate(startDate), to: isoToDate(endDate) }
+        : undefined;
 
   const today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+
+  const applyDateRange = (next: { startDate: string; endDate: string }) => {
+    setDateRange(next);
+    void setDebtsListRange(null);
+    setOpen(false);
+  };
 
   const handleSelect = (next: DateRange | undefined) => {
     if (!next?.from) return;
     const to = capEndToToday(next.to ?? next.from, today);
-    setDateRange({ startDate: dateToIso(next.from), endDate: dateToIso(to) });
-    setOpen(false);
+    applyDateRange({ startDate: dateToIso(next.from), endDate: dateToIso(to) });
   };
 
   const setPreset = (start: Date, end: Date) => {
     const endCapped = capEndToToday(end, today);
-    setDateRange({ startDate: dateToIso(start), endDate: dateToIso(endCapped) });
-    setOpen(false);
+    applyDateRange({ startDate: dateToIso(start), endDate: dateToIso(endCapped) });
   };
   const defaultRange = getDefaultDateRange();
   const allPresetStartDate = resolveAllPresetStartDate(planUsageData?.startDate);
 
-  const label =
-    startDate && endDate
+  const label = isFullDebtsListRange
+    ? t("dashboard.dateRange.all")
+    : startDate && endDate
       ? `${format(isoToDate(startDate), "dd/MM/yyyy", { locale: ptBR })} → ${format(isoToDate(endDate), "dd/MM/yyyy", { locale: ptBR })}`
       : t("dashboard.dateRange.placeholder");
 
