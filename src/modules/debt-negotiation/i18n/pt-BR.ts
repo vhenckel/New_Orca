@@ -126,7 +126,7 @@ export const debtNegotiationPtBR = {
   "pages.debtNegotiation.debts.col.contractNumber": "Número de Contrato",
   "pages.debtNegotiation.debts.col.status": "Status",
   "pages.debtNegotiation.debts.col.debtAge": "Idade da dívida na plataforma",
-  "pages.debtNegotiation.debts.col.debtAmount": "Valor da dívida (atualizado)",
+  "pages.debtNegotiation.debts.col.debtAmount": "Valor da dívida",
   "pages.debtNegotiation.debts.col.negotiatedValue": "Valor Negociado",
   "pages.debtNegotiation.debts.col.recoveredValue": "Valor Recuperado",
   "pages.debtNegotiation.debts.action.details": "Detalhes da dívida",
