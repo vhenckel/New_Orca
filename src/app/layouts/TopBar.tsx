@@ -1,5 +1,5 @@
-import { Bell, Building2, ChevronDown, Download, LogOut, Settings2 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Bell, ChevronDown, Download, LogOut, Settings2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
 import { PayoutMonthYearTopBar } from "@/modules/finance/components/PayoutMonthYearTopBar";
@@ -25,14 +25,9 @@ interface TopBarProps {
 
 export function TopBar({ currentModule, currentRoute }: TopBarProps) {
   const { t } = useI18n();
-  const location = useLocation();
   const { user, logout } = useAuth();
   const token = getStoredToken();
   const companyName = token ? getCompanyNameFromToken(token) : null;
-  const chooseCompanyUrl =
-    location.pathname && location.pathname !== "/choose-company"
-      ? `/choose-company?callbackUrl=${encodeURIComponent(location.pathname)}`
-      : "/choose-company";
   const {
     notifications,
     unreadCount,
@@ -184,12 +179,6 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem asChild>
-              <Link to={chooseCompanyUrl} className="flex items-center gap-2">
-                <Building2 className="size-4" />
-                {t("app.topbar.changeCompany")}
-              </Link>
-            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/config" className="flex items-center gap-2">
                 <Settings2 className="size-4" />

@@ -1,4 +1,4 @@
-export const accentColorStorageKey = "o2ospot-accent-color";
+export const accentColorStorageKey = "orca-accent-color";
 export const defaultAccentColor = "#6467f2";
 
 interface RgbColor {

@@ -1,7 +1,7 @@
 import type { MeResponse } from "@/shared/auth/types";
 
-/** Conta compartilhada de Super Admin no O2OSPOT (acesso multi-empresa). */
-export const SUPERADMIN_EMAIL = "superadmin@o2ospot.com";
+/** Conta compartilhada de Super Admin no ORCA (acesso multi-empresa). */
+export const SUPERADMIN_EMAIL = "superadmin@orca.app";
 
 /**
  * Indica se o usuário atual é o Super Admin identificado por email no `/me`.

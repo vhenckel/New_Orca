@@ -12,9 +12,9 @@ import { LoginPage } from "@/app/pages/LoginPage";
 import { AppShell } from "@/app/layouts/AppShell";
 import { NotFoundPage } from "@/app/router/NotFoundPage";
 import { businessModules } from "@/app/router/modules";
-import { debtNegotiationModule } from "@/modules/debt-negotiation";
+import { quotationModule } from "@/modules/quotation";
 
-const APP_NAME = "O2OSpot";
+const APP_NAME = "Orca";
 
 function DocumentTitleSync() {
   const location = useLocation();
@@ -46,9 +46,7 @@ export function AppRouter() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/choose-company" element={<ChooseCompanyPage />} />
-            <Route path="/" element={<Navigate to={debtNegotiationModule.basePath} replace />} />
-            <Route path="/settings" element={<Navigate to="/settings/agent" replace />} />
-            <Route path="/agent/renegotiation-config" element={<Navigate to="/settings/agent" replace />} />
+            <Route path="/" element={<Navigate to={quotationModule.basePath} replace />} />
             {businessModules.flatMap((module) =>
               module.routes.map((route) => (
                 <Route

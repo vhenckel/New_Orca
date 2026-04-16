@@ -13,6 +13,7 @@ export const settingsModule: AppModuleDefinition = {
   titleKey: "modules.settings.title",
   descriptionKey: "modules.settings.description",
   icon: Settings2,
+  hideInSidebar: true,
   routes: [
     {
       path: "/settings/agent",

@@ -10,12 +10,14 @@ import { debtNegotiationEnUS } from "@/modules/debt-negotiation/i18n/en-US";
 import { debtNegotiationPtBR } from "@/modules/debt-negotiation/i18n/pt-BR";
 import { financeEnUS } from "@/modules/finance/i18n/en-US";
 import { financePtBR } from "@/modules/finance/i18n/pt-BR";
+import { quotationEnUS } from "@/modules/quotation/i18n/en-US";
+import { quotationPtBR } from "@/modules/quotation/i18n/pt-BR";
 import { salesEnUS } from "@/modules/sales/i18n/en-US";
 import { salesPtBR } from "@/modules/sales/i18n/pt-BR";
 import { settingsEnUS } from "@/modules/settings/i18n/en-US";
 import { settingsPtBR } from "@/modules/settings/i18n/pt-BR";
 
-export const localeStorageKey = "o2ospot-locale";
+export const localeStorageKey = "orca-locale";
 export const defaultLocale = "pt-BR";
 
 const ptBRMessages = {
@@ -27,6 +29,7 @@ const ptBRMessages = {
   ...salesPtBR,
   ...settingsPtBR,
   ...configPtBR,
+  ...quotationPtBR,
 } as const;
 
 const enUSMessages = {
@@ -38,6 +41,7 @@ const enUSMessages = {
   ...salesEnUS,
   ...settingsEnUS,
   ...configEnUS,
+  ...quotationEnUS,
 } as const;
 
 export const appMessages = {

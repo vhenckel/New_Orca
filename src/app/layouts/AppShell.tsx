@@ -33,10 +33,7 @@ export function AppShell({ children, modules }: AppShellProps) {
 
   const sidebarModules = useMemo(() => {
     const desiredOrder: Array<AppModuleDefinition["key"]> = [
-      "debt-negotiation",
-      "contact",
-      "finance",
-      "settings",
+      "quotation",
     ];
 
     const byKey = new Map(modules.map((m) => [m.key, m] as const));
@@ -64,7 +61,6 @@ export function AppShell({ children, modules }: AppShellProps) {
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         collapsed={sidebarCollapsed}
-        currentModule={currentModule}
         modules={sidebarModules}
         onToggle={() => setSidebarCollapsed((currentValue) => !currentValue)}
       />

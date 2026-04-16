@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/shared/ui/input";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
-const O2OSPOT_LOGO = "https://assets.o2ospot.com/spot/icons/o2ospot.svg";
+const ORCA_LOGO = "https://placehold.co/240x64/0b3b98/ffffff?text=Orca";
 
 export function ChooseCompanyPage() {
   const [searchParams] = useSearchParams();
@@ -114,8 +114,8 @@ export function ChooseCompanyPage() {
           <div className="w-full max-w-[420px] rounded-3xl border border-white/35 bg-white/10 px-8 py-10 shadow-2xl backdrop-blur-xl sm:px-10 sm:py-12">
             <div className="mb-8 flex justify-center">
               <img
-                src={O2OSPOT_LOGO}
-                alt="Logo O2OSPOT"
+                src={ORCA_LOGO}
+                alt="Logo Orca"
                 className="h-auto w-[200px] sm:w-[220px]"
               />
             </div>

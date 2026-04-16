@@ -30,6 +30,7 @@ export const contactModule: AppModuleDefinition = {
   titleKey: "modules.contact.title",
   descriptionKey: "modules.contact.description",
   icon: Users,
+  hideInSidebar: true,
   routes: [
     {
       path: "/contacts",

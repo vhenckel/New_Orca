@@ -14,6 +14,7 @@ export const debtNegotiationModule: AppModuleDefinition = {
   titleKey: "modules.debtNegotiation.title",
   descriptionKey: "modules.debtNegotiation.description",
   icon: Handshake,
+  hideInSidebar: true,
   routes: [
     {
       path: "/debt-negotiation",

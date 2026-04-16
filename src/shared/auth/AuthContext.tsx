@@ -22,10 +22,8 @@ import { getCompanyIdFromToken } from "@/shared/auth/jwt";
 import {
   clearStoredToken,
   getStoredToken,
-  setStoredToken,
 } from "@/shared/auth/token-store";
 import type { LoginRequest, MeResponse } from "@/shared/auth/types";
-import { fetchUserAccounts } from "@/shared/api/auth-api";
 import { spotJson } from "@/shared/api/http-client";
 import { applyResolvedAccentColor } from "@/shared/auth/branding-accent";
 
@@ -46,8 +44,39 @@ interface AuthContextValue extends AuthState {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const DEFAULT_BRANDING = {
-  image: "https://assets.o2ospot.com/spot/icons/o2ospot.svg",
+  image: "",
   color: "#096dd9",
+};
+
+const LOCAL_USER: MeResponse = {
+  id: 1,
+  userId: 1,
+  email: "usuario@orca.app",
+  username: "usuario@orca.app",
+  name: "Usuario ORCA",
+  businessArea: "Compras",
+  profile: {
+    id: "local-profile",
+    name: "Administrador",
+    mask: "admin",
+    isActive: true,
+    isSystem: false,
+    updatedByUserId: "local",
+    createdByUserId: "local",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    roleId: "local-role",
+    companyRoleId: "local-company-role",
+    companyUserId: "local-company-user",
+    profileId: "local-profile",
+    businessAreaId: "local-business",
+    modules: [],
+  },
+  lastAccess: new Date().toISOString(),
+  modules: [],
+  maxNumberOfClients: 0,
+  branding: DEFAULT_BRANDING,
+  features: [],
 };
 
 async function fetchMe(companyId: number): Promise<MeResponse> {
@@ -105,44 +134,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [loadSession]);
 
   const login = useCallback(
-    async (credentials: LoginRequest, options?: { callbackUrl?: string }) => {
+    async (_credentials: LoginRequest, options?: { callbackUrl?: string }) => {
       setLoading(true);
       setError(null);
       try {
-        const { spotApiBaseUrl } = await import("@/shared/config/env");
-        const res = await fetch(`${spotApiBaseUrl}/auth/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(credentials.tokenRecaptcha
-              ? { "Token-Recaptcha": credentials.tokenRecaptcha }
-              : {}),
-          },
-          body: JSON.stringify({
-            username: credentials.username,
-            password: credentials.password,
-          }),
-          credentials: "omit",
-        });
-        const data = await res.json();
-        if (data.status === 429) throw new Error("Muitas tentativas, tente novamente mais tarde!");
-        if (res.status === 401 && data.message === "invalid_captcha")
-          throw new Error("Captcha inválido!");
-        if (!data.access_token) throw new Error(data.message ?? "Usuário e/ou senha inválido(s)!");
-        setStoredToken(data.access_token);
-        const cid =
-          getCompanyIdFromToken(data.access_token) ?? getDefaultCompanyId();
-        const me = await fetchMe(cid);
-        setUser(me);
-        applyResolvedAccentColor(me);
+        setUser(LOCAL_USER);
+        applyResolvedAccentColor(LOCAL_USER);
         const target = options?.callbackUrl && options.callbackUrl.startsWith("/") ? options.callbackUrl : "/";
-        const accounts = await fetchUserAccounts();
-        if (accounts.length > 1) {
-          const url = target === "/" ? "/choose-company" : `/choose-company?callbackUrl=${encodeURIComponent(target)}`;
-          navigate(url, { replace: true });
-        } else {
-          navigate(target, { replace: true });
-        }
+        navigate(target === "/" ? "/dashboard" : target, { replace: true });
       } catch (e) {
         setError(
           e instanceof Error ? e.message : "Login failed"

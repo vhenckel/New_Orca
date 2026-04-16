@@ -17,7 +17,7 @@ export function AppProviders({ children }: PropsWithChildren) {
         attribute="class"
         defaultTheme="dark"
         enableSystem={false}
-        storageKey="o2ospot-theme"
+        storageKey="orca-theme"
       >
         <AccentColorProvider>
           <I18nProvider>

@@ -10,6 +10,7 @@ export const financeModule: AppModuleDefinition = {
   titleKey: "modules.finance.title",
   descriptionKey: "modules.finance.description",
   icon: DollarSign,
+  hideInSidebar: true,
   routes: [
     {
       path: "/finance/payouts",

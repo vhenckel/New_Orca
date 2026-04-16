@@ -3,7 +3,7 @@
  * Fonte única para Authorization; fallback para env fica em getSpotApiHeaders quando token vazio.
  */
 
-const STORAGE_KEY = "o2ospot_access_token";
+const STORAGE_KEY = "orca_access_token";
 
 let memoryToken: string | null = null;
 
