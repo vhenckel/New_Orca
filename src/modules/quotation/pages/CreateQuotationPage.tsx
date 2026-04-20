@@ -3,11 +3,13 @@ import { ptBR } from "date-fns/locale";
 import {
   ArrowLeft,
   CalendarIcon,
+  ChevronDown,
+  ChevronRight,
   Clock,
   Package,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { MOCK_CATALOG_PRODUCTS } from "@/modules/quotation/data/quotationMocks";
@@ -15,19 +17,16 @@ import type { BudgetLineItem, CatalogProduct } from "@/modules/quotation/types";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
 import { Calendar } from "@/shared/ui/calendar";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Collapsible, CollapsibleContent } from "@/shared/ui/collapsible";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/ui/command";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
 import { Switch } from "@/shared/ui/switch";
 import { Textarea } from "@/shared/ui/textarea";
 import { toast } from "@/shared/ui/sonner";
@@ -49,9 +48,15 @@ function emptyLineItem(product: CatalogProduct): BudgetLineItem {
     productId: product.id,
     quantity: 1,
     anyBrand: false,
-    brand: product.brands[0] ?? null,
+    brands: [],
     note: "",
   };
+}
+
+function isLineComplete(line: BudgetLineItem): boolean {
+  const qtyOk = Number.isFinite(line.quantity) && line.quantity >= 1;
+  const brandsOk = line.anyBrand || line.brands.length > 0;
+  return qtyOk && brandsOk;
 }
 
 export function CreateQuotationPage() {
@@ -64,9 +69,16 @@ export function CreateQuotationPage() {
   const [deadlineTime, setDeadlineTime] = useState(defaultTimeString);
   const [deliveryTime, setDeliveryTime] = useState("08:00");
   const [observations, setObservations] = useState("");
+  const deadlineTimeRef = useRef<HTMLInputElement>(null);
+  const deliveryTimeRef = useRef<HTMLInputElement>(null);
 
   const [productSearch, setProductSearch] = useState("");
   const [lineItems, setLineItems] = useState<Record<string, BudgetLineItem>>({});
+  /** Ordem de inclusão: novos itens sempre no final. */
+  const [lineOrder, setLineOrder] = useState<string[]>([]);
+  const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
+  const [lastAddedProductId, setLastAddedProductId] = useState<string | null>(null);
+  const [showLineValidation, setShowLineValidation] = useState(false);
 
   const addedIds = useMemo(() => new Set(Object.keys(lineItems)), [lineItems]);
 
@@ -90,13 +102,8 @@ export function CreateQuotationPage() {
   }, [productSearch, addedIds]);
 
   const linesArray = useMemo(() => {
-    return Object.values(lineItems).sort((a, b) => {
-      const pa = productById.get(a.productId);
-      const pb = productById.get(b.productId);
-      if (!pa || !pb) return 0;
-      return pa.categoryLabel.localeCompare(pb.categoryLabel) || pa.name.localeCompare(pb.name);
-    });
-  }, [lineItems]);
+    return lineOrder.map((id) => lineItems[id]).filter(Boolean);
+  }, [lineOrder, lineItems]);
 
   const categoryCount = useMemo(() => {
     const cats = new Set(linesArray.map((l) => productById.get(l.productId)?.category).filter(Boolean));
@@ -106,10 +113,16 @@ export function CreateQuotationPage() {
   const availableCount = MOCK_CATALOG_PRODUCTS.length - addedIds.size;
 
   function addProduct(p: CatalogProduct) {
+    const isNew = !lineItems[p.id];
     setLineItems((prev) => ({
       ...prev,
       [p.id]: prev[p.id] ?? emptyLineItem(p),
     }));
+    if (isNew) {
+      setLineOrder((prev) => [...prev, p.id]);
+      setExpandedProductId(p.id);
+      setLastAddedProductId(p.id);
+    }
   }
 
   function removeProduct(productId: string) {
@@ -118,10 +131,16 @@ export function CreateQuotationPage() {
       delete next[productId];
       return next;
     });
+    setLineOrder((prev) => prev.filter((id) => id !== productId));
+    if (expandedProductId === productId) setExpandedProductId(null);
   }
 
   function clearAll() {
     setLineItems({});
+    setLineOrder([]);
+    setExpandedProductId(null);
+    setLastAddedProductId(null);
+    setShowLineValidation(false);
   }
 
   function updateLine(productId: string, patch: Partial<BudgetLineItem>) {
@@ -145,20 +164,70 @@ export function CreateQuotationPage() {
       toast.error(t("modules.quotation.quotations.create.validationProducts"));
       return;
     }
-    for (const line of linesArray) {
-      if (!line.anyBrand && !line.brand) {
-        toast.error(t("modules.quotation.quotations.create.validationBrand"));
-        return;
+    const incomplete = linesArray.filter((line) => !isLineComplete(line));
+    if (incomplete.length > 0) {
+      setShowLineValidation(true);
+      toast.error(t("modules.quotation.quotations.create.validationLineIncomplete"));
+      const firstId = incomplete[0]?.productId;
+      if (firstId) {
+        setExpandedProductId(firstId);
+        requestAnimationFrame(() => {
+          document.getElementById(`budget-line-${firstId}`)?.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        });
       }
+      return;
     }
+    setShowLineValidation(false);
     toast.success(t("modules.quotation.quotations.create.toastSuccess"));
     navigate("/quotations");
   }
 
+  function openTimePicker(input: HTMLInputElement | null) {
+    if (!input) return;
+    if ("showPicker" in input) {
+      input.showPicker();
+      return;
+    }
+    input.focus();
+  }
+
+  function setAllBrands(productId: string, brands: string[], selected: boolean) {
+    updateLine(productId, { brands: selected ? brands : [] });
+  }
+
+  function toggleBrand(productId: string, brand: string, selected: boolean) {
+    setLineItems((prev) => {
+      const cur = prev[productId];
+      if (!cur) return prev;
+      const exists = cur.brands.includes(brand);
+      if (selected && exists) return prev;
+      if (!selected && !exists) return prev;
+      const nextBrands = selected ? [...cur.brands, brand] : cur.brands.filter((b) => b !== brand);
+      return { ...prev, [productId]: { ...cur, brands: nextBrands } };
+    });
+  }
+
+  useEffect(() => {
+    if (!lastAddedProductId) return;
+    const el = document.getElementById(`budget-line-${lastAddedProductId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [lastAddedProductId, linesArray.length]);
+
+  useEffect(() => {
+    if (!showLineValidation) return;
+    if (linesArray.length > 0 && linesArray.every(isLineComplete)) {
+      setShowLineValidation(false);
+    }
+  }, [showLineValidation, linesArray]);
+
   if (step === 1) {
     return (
       <DashboardPageLayout showPageHeader={false}>
-        <Card className="mx-auto max-w-3xl">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>{t("modules.quotation.quotations.create.step1Title")}</CardTitle>
           </CardHeader>
@@ -196,13 +265,23 @@ export function CreateQuotationPage() {
               <div className="space-y-2">
                 <Label htmlFor="deadline-time">{t("modules.quotation.quotations.create.deadlineTime")}</Label>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-1 top-1/2 z-10 size-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => openTimePicker(deadlineTimeRef.current)}
+                    aria-label={t("modules.quotation.quotations.create.deadlineTime")}
+                  >
+                    <Clock className="size-4" />
+                  </Button>
                   <Input
+                    ref={deadlineTimeRef}
                     id="deadline-time"
                     type="time"
                     value={deadlineTime}
                     onChange={(e) => setDeadlineTime(e.target.value)}
-                    className="pl-9"
+                    className="pl-10 [&::-webkit-calendar-picker-indicator]:hidden"
                   />
                 </div>
               </div>
@@ -211,13 +290,23 @@ export function CreateQuotationPage() {
             <div className="space-y-2">
               <Label htmlFor="delivery-time">{t("modules.quotation.quotations.create.deliveryTime")}</Label>
               <div className="relative max-w-md">
-                <Clock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-1 top-1/2 z-10 size-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => openTimePicker(deliveryTimeRef.current)}
+                  aria-label={t("modules.quotation.quotations.create.deliveryTime")}
+                >
+                  <Clock className="size-4" />
+                </Button>
                 <Input
+                  ref={deliveryTimeRef}
                   id="delivery-time"
                   type="time"
                   value={deliveryTime}
                   onChange={(e) => setDeliveryTime(e.target.value)}
-                  className="pl-9"
+                  className="pl-10 [&::-webkit-calendar-picker-indicator]:hidden"
                 />
               </div>
             </div>
@@ -233,7 +322,7 @@ export function CreateQuotationPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex justify-end gap-2 border-t bg-muted/30">
+          <CardFooter className="flex justify-end gap-2 border-t bg-muted/30 pt-4">
             <Button type="button" variant="outline" onClick={() => navigate("/quotations")}>
               {t("modules.quotation.quotations.create.cancel")}
             </Button>
@@ -249,6 +338,7 @@ export function CreateQuotationPage() {
   return (
     <DashboardPageLayout
       showPageHeader={false}
+      className="min-h-[calc(100dvh-6.5rem)] overflow-hidden lg:h-[calc(100dvh-6.5rem)] lg:min-h-0"
       headerContent={
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-1">
@@ -285,9 +375,9 @@ export function CreateQuotationPage() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
-        <Card className="flex min-h-[420px] flex-col">
-          <CardHeader className="pb-3">
+      <div className="grid h-full min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[340px_minmax(0,1fr)] lg:items-stretch">
+        <Card className="flex min-h-0 flex-1 flex-col">
+          <CardHeader className="shrink-0 pb-3">
             <CardTitle className="text-base">{t("modules.quotation.quotations.create.availableTitle")}</CardTitle>
             <Input
               value={productSearch}
@@ -299,9 +389,9 @@ export function CreateQuotationPage() {
               {t("modules.quotation.quotations.create.availableCount", { count: availableCount })}
             </p>
           </CardHeader>
-          <CardContent className="flex-1 overflow-hidden pt-0">
-            <ScrollArea className="h-[min(52vh,480px)] pr-3">
-              <div className="space-y-6 pb-2">
+          <CardContent className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden pt-0">
+            <ScrollArea className="min-h-0 flex-1 pr-3">
+              <div className="flex flex-col gap-6 pb-2">
                 {groupedAvailable.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     {t("modules.quotation.quotations.create.noProductsMatch")}
@@ -312,19 +402,21 @@ export function CreateQuotationPage() {
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {category}
                       </p>
-                      <div className="space-y-1">
+                      <div className="flex flex-col gap-1">
                         {products.map((p) => (
                           <button
                             key={p.id}
                             type="button"
                             onClick={() => addProduct(p)}
-                            className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left text-sm transition-colors hover:border-border hover:bg-muted/50"
+                            className="flex w-full items-start gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition-colors hover:border-border hover:bg-muted/50"
                           >
-                            <Package className="size-4 shrink-0 text-muted-foreground" />
-                            <span className="flex-1 font-medium text-foreground">{p.name}</span>
-                            <span className="shrink-0 text-xs text-muted-foreground">
-                              {p.unit} · {formatMoney(p.unitPriceCents)}
-                            </span>
+                            <Package className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                            <div className="min-w-0 flex-1">
+                              <span className="block text-sm font-medium leading-snug text-foreground">{p.name}</span>
+                              <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground sm:text-xs">
+                                {p.unit} · {formatMoney(p.unitPriceCents)}
+                              </span>
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -333,14 +425,14 @@ export function CreateQuotationPage() {
                 )}
               </div>
             </ScrollArea>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="shrink-0 text-xs text-muted-foreground">
               {t("modules.quotation.quotations.create.availableHint")}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="flex min-h-[420px] flex-col">
-          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-3">
+        <Card className="flex min-h-0 flex-1 flex-col">
+          <CardHeader className="flex shrink-0 flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-3">
             <CardTitle className="text-base">
               {t("modules.quotation.quotations.create.budgetTitle", { count: linesArray.length })}
             </CardTitle>
@@ -357,9 +449,9 @@ export function CreateQuotationPage() {
               </Button>
             ) : null}
           </CardHeader>
-          <CardContent className="flex-1 overflow-hidden pt-0">
+          <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden pt-0">
             {linesArray.length === 0 ? (
-              <div className="flex min-h-[280px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center">
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center">
                 <Package className="size-10 text-muted-foreground/40" />
                 <p className="font-medium text-foreground">{t("modules.quotation.quotations.create.emptyBudget")}</p>
                 <p className="max-w-sm text-sm text-muted-foreground">
@@ -367,112 +459,227 @@ export function CreateQuotationPage() {
                 </p>
               </div>
             ) : (
-              <ScrollArea className="h-[min(52vh,480px)] pr-3">
+              <ScrollArea className="min-h-0 flex-1 pr-3">
                 <div className="space-y-4 pb-2">
                   {linesArray.map((line, index) => {
                     const p = productById.get(line.productId);
                     if (!p) return null;
+                    const isExpanded = expandedProductId == null ? index === linesArray.length - 1 : expandedProductId === line.productId;
+                    const isAllBrandsSelected = p.brands.length > 0 && line.brands.length === p.brands.length;
+                    /** Minimizado e incompleto: sempre destaca. Expandido e incompleto: só após tentar continuar. */
+                    const lineInvalid =
+                      !isLineComplete(line) && (!isExpanded || showLineValidation);
                     return (
-                      <div
-                        key={line.productId}
-                        className="rounded-lg border border-border bg-card p-4 shadow-sm"
-                      >
-                        <div className="mb-3 flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">
-                              {index + 1}. {p.name}
-                            </p>
-                            <span className="mt-1 inline-block rounded-md bg-muted px-2 py-0.5 text-xs capitalize text-muted-foreground">
-                              {p.category}
-                            </span>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="shrink-0 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeProduct(line.productId)}
-                            aria-label={t("modules.quotation.quotations.create.remove")}
+                      <Collapsible key={line.productId} open={isExpanded}>
+                        <div
+                          id={`budget-line-${line.productId}`}
+                          className={cn(
+                            "relative rounded-lg bg-card p-4 text-left shadow-sm",
+                            lineInvalid
+                              ? "border-2 border-warning"
+                              : "border border-border",
+                            isExpanded && !lineInvalid ? "ring-1 ring-primary/30" : "",
+                          )}
+                        >
+                          {!isExpanded ? (
+                            <button
+                              type="button"
+                              className="absolute inset-0 z-[1] cursor-pointer rounded-lg border-0 bg-transparent p-0"
+                              aria-label={t("modules.quotation.quotations.create.expandLine")}
+                              onClick={() => setExpandedProductId(line.productId)}
+                            />
+                          ) : null}
+
+                          <div
+                            className={cn("relative z-[2]", !isExpanded && "pointer-events-none")}
                           >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
-
-                        <div className="flex flex-wrap items-end gap-3">
-                          <div className="space-y-1">
-                            <Label className="text-xs">{t("modules.quotation.quotations.create.qty")}</Label>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min={1}
-                                step={1}
-                                className="w-20"
-                                value={line.quantity}
-                                onChange={(e) => {
-                                  const n = Number.parseInt(e.target.value, 10);
-                                  updateLine(line.productId, {
-                                    quantity: Number.isFinite(n) && n >= 1 ? n : 1,
-                                  });
-                                }}
-                              />
-                              <span className="text-sm text-muted-foreground">{p.unit}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex min-w-[200px] flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-                            <div className="flex items-center gap-2">
-                              <Switch
-                                id={`any-${line.productId}`}
-                                checked={line.anyBrand}
-                                onCheckedChange={(checked) =>
-                                  updateLine(line.productId, {
-                                    anyBrand: checked,
-                                    brand: checked ? null : p.brands[0] ?? null,
-                                  })
+                            <div className="mb-1 flex items-start justify-between gap-2">
+                              <div
+                                className={cn(
+                                  "flex min-w-0 flex-1 items-start gap-2 rounded-md outline-none",
+                                  isExpanded && "cursor-pointer pointer-events-auto",
+                                )}
+                                onClick={
+                                  isExpanded
+                                    ? () => {
+                                        setExpandedProductId(null);
+                                      }
+                                    : undefined
                                 }
-                              />
-                              <Label htmlFor={`any-${line.productId}`} className="text-xs font-normal">
-                                {t("modules.quotation.quotations.create.anyBrand")}
-                              </Label>
+                                onKeyDown={
+                                  isExpanded
+                                    ? (e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                          e.preventDefault();
+                                          setExpandedProductId(null);
+                                        }
+                                      }
+                                    : undefined
+                                }
+                                role={isExpanded ? "button" : undefined}
+                                tabIndex={isExpanded ? 0 : undefined}
+                                aria-label={
+                                  isExpanded ? t("modules.quotation.quotations.create.collapseLine") : undefined
+                                }
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-semibold text-foreground">
+                                    {index + 1}. {p.name}
+                                  </p>
+                                  {isExpanded ? (
+                                    <span className="mt-1 inline-block rounded-md bg-muted px-2 py-0.5 text-xs capitalize text-muted-foreground">
+                                      {p.category}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <span className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden>
+                                  {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                                </span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="pointer-events-auto shrink-0 text-muted-foreground hover:text-destructive"
+                                onClick={() => removeProduct(line.productId)}
+                                aria-label={t("modules.quotation.quotations.create.remove")}
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
                             </div>
-                            <Select
-                              value={line.anyBrand ? undefined : line.brand ?? undefined}
-                              onValueChange={(v) => updateLine(line.productId, { brand: v || null })}
-                              disabled={line.anyBrand}
-                            >
-                              <SelectTrigger className="flex-1">
-                                <SelectValue placeholder={t("modules.quotation.quotations.create.selectBrand")} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {p.brands.map((b) => (
-                                  <SelectItem key={b} value={b}>
-                                    {b}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+
+                          <CollapsibleContent className="pt-2">
+                            <div className="flex flex-wrap items-end gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">{t("modules.quotation.quotations.create.qty")}</Label>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    step={1}
+                                    className="w-20"
+                                    value={line.quantity}
+                                    onFocus={(e) => e.currentTarget.select()}
+                                    onChange={(e) => {
+                                      const n = Number(e.target.value);
+                                      if (!Number.isFinite(n)) return;
+                                      updateLine(line.productId, {
+                                        quantity: n >= 1 ? Math.trunc(n) : 1,
+                                      });
+                                    }}
+                                  />
+                                  <span className="text-sm text-muted-foreground">{p.unit}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex min-w-[260px] flex-1 flex-col gap-2">
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                    id={`any-${line.productId}`}
+                                    checked={line.anyBrand}
+                                    onCheckedChange={(checked) =>
+                                      updateLine(line.productId, {
+                                        anyBrand: checked,
+                                      })
+                                    }
+                                  />
+                                  <Label htmlFor={`any-${line.productId}`} className="text-xs font-normal">
+                                    {t("modules.quotation.quotations.create.anyBrand")}
+                                  </Label>
+                                </div>
+                                <Label className="text-xs">{t("modules.quotation.quotations.create.selectBrand")}</Label>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="h-auto min-h-10 w-full justify-between"
+                                      disabled={line.anyBrand}
+                                    >
+                                      <div className="flex flex-wrap items-center gap-1 text-left">
+                                        {line.anyBrand ? (
+                                          <Badge variant="secondary">
+                                            {t("modules.quotation.quotations.create.anyBrand")}
+                                          </Badge>
+                                        ) : line.brands.length === 0 ? (
+                                          <span className="text-sm text-muted-foreground">
+                                            {t("modules.quotation.quotations.create.selectBrand")}
+                                          </span>
+                                        ) : isAllBrandsSelected ? (
+                                          <Badge variant="secondary">
+                                            {t("modules.quotation.quotations.create.selectAllBrands")}
+                                          </Badge>
+                                        ) : (
+                                          line.brands.map((brand) => (
+                                            <Badge key={brand} variant="secondary">
+                                              {brand}
+                                            </Badge>
+                                          ))
+                                        )}
+                                      </div>
+                                      <ChevronDown className="size-4 text-muted-foreground" />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-[280px] p-0" align="start">
+                                    <Command>
+                                      <CommandInput placeholder={t("modules.quotation.quotations.create.selectBrand")} />
+                                      <CommandList>
+                                        <CommandEmpty>Nenhuma marca encontrada.</CommandEmpty>
+                                        <CommandGroup>
+                                          <CommandItem
+                                            value={t("modules.quotation.quotations.create.selectAllBrands")}
+                                            onSelect={() =>
+                                              setAllBrands(line.productId, p.brands, !isAllBrandsSelected)
+                                            }
+                                            className="flex items-center justify-between gap-2"
+                                          >
+                                            <span>{t("modules.quotation.quotations.create.selectAllBrands")}</span>
+                                            <Checkbox checked={isAllBrandsSelected} />
+                                          </CommandItem>
+                                          {p.brands.map((brand) => {
+                                            const checked = line.brands.includes(brand);
+                                            return (
+                                              <CommandItem
+                                                key={brand}
+                                                value={brand}
+                                                onSelect={() => toggleBrand(line.productId, brand, !checked)}
+                                                className="flex items-center justify-between gap-2"
+                                              >
+                                                <span>{brand}</span>
+                                                <Checkbox checked={checked} />
+                                              </CommandItem>
+                                            );
+                                          })}
+                                        </CommandGroup>
+                                      </CommandList>
+                                    </Command>
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 space-y-1">
+                              <Label className="text-xs text-muted-foreground" htmlFor={`note-${line.productId}`}>
+                                {t("modules.quotation.quotations.create.lineNote")}
+                              </Label>
+                              <Input
+                                id={`note-${line.productId}`}
+                                value={line.note}
+                                onChange={(e) => updateLine(line.productId, { note: e.target.value })}
+                                placeholder={t("modules.quotation.quotations.create.lineNotePlaceholder")}
+                              />
+                            </div>
+                          </CollapsibleContent>
                           </div>
                         </div>
-
-                        <div className="mt-3 space-y-1">
-                          <Label className="text-xs text-muted-foreground" htmlFor={`note-${line.productId}`}>
-                            {t("modules.quotation.quotations.create.lineNote")}
-                          </Label>
-                          <Input
-                            id={`note-${line.productId}`}
-                            value={line.note}
-                            onChange={(e) => updateLine(line.productId, { note: e.target.value })}
-                            placeholder={t("modules.quotation.quotations.create.lineNotePlaceholder")}
-                          />
-                        </div>
-                      </div>
+                      </Collapsible>
                     );
                   })}
                 </div>
               </ScrollArea>
             )}
           </CardContent>
-          <CardFooter className="mt-auto flex flex-col gap-3 border-t bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
+          <CardFooter className="mt-auto flex flex-col gap-3 border-t bg-muted/30 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <span>
                 {t("modules.quotation.quotations.create.footerItems", { count: linesArray.length })}

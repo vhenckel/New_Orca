@@ -4,8 +4,10 @@ import type { AppModuleDefinition } from "@/app/router/types";
 import { AnalyticsPage } from "@/modules/quotation/pages/AnalyticsPage";
 import { CreateQuotationPage } from "@/modules/quotation/pages/CreateQuotationPage";
 import { DashboardPage } from "@/modules/quotation/pages/DashboardPage";
+import { ProductDetailPage } from "@/modules/quotation/pages/ProductDetailPage";
 import { ProductsPage } from "@/modules/quotation/pages/ProductsPage";
 import { QuotationsPage } from "@/modules/quotation/pages/QuotationsPage";
+import { SupplierDetailPage } from "@/modules/quotation/pages/SupplierDetailPage";
 import { SuppliersPage } from "@/modules/quotation/pages/SuppliersPage";
 
 export const quotationModule: AppModuleDefinition = {
@@ -49,11 +51,35 @@ export const quotationModule: AppModuleDefinition = {
       element: <ProductsPage />,
     },
     {
+      path: "/products/:id",
+      labelKey: "modules.quotation.routes.productsDetail.label",
+      descriptionKey: "modules.quotation.routes.productsDetail.description",
+      icon: Package,
+      element: <ProductDetailPage />,
+      hideInSidebar: true,
+      topBarParent: {
+        labelKey: "modules.quotation.routes.products.label",
+        path: "/products",
+      },
+    },
+    {
       path: "/suppliers",
       labelKey: "modules.quotation.routes.suppliers.label",
       descriptionKey: "modules.quotation.routes.suppliers.description",
       icon: Store,
       element: <SuppliersPage />,
+    },
+    {
+      path: "/suppliers/:id",
+      labelKey: "modules.quotation.routes.suppliersDetail.label",
+      descriptionKey: "modules.quotation.routes.suppliersDetail.description",
+      icon: Store,
+      element: <SupplierDetailPage />,
+      hideInSidebar: true,
+      topBarParent: {
+        labelKey: "modules.quotation.routes.suppliers.label",
+        path: "/suppliers",
+      },
     },
     {
       path: "/analytics",
