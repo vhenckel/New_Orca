@@ -1,4 +1,4 @@
-import { Check, Languages, Moon, Sun } from "lucide-react";
+import { Check, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
@@ -13,14 +13,9 @@ const themeOptions = [
   { value: "light", labelKey: "app.preferences.theme.light", icon: Sun },
 ] as const;
 
-const languageOptions = [
-  { value: "pt-BR", labelKey: "app.preferences.language.pt-BR" },
-  { value: "en-US", labelKey: "app.preferences.language.en-US" },
-] as const;
-
 export function PreferencesPage() {
   const { resolvedTheme, setTheme } = useTheme();
-  const { locale, setLocale, t } = useI18n();
+  const { t } = useI18n();
   const { accentColor, setAccentColor } = useAccentColor();
 
   return (
@@ -30,7 +25,7 @@ export function PreferencesPage() {
       title={t("modules.config.routes.preferences.label")}
       subtitle={t("modules.config.routes.preferences.description")}
     >
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -58,37 +53,6 @@ export function PreferencesPage() {
                   className={cn(
                     "h-4 w-4 text-primary transition-opacity",
                     resolvedTheme === option.value ? "opacity-100" : "opacity-0",
-                  )}
-                />
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Languages className="h-4 w-4 text-primary" />
-              <CardTitle>{t("app.preferences.language.title")}</CardTitle>
-            </div>
-            <CardDescription>{t("app.preferences.language.description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {languageOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setLocale(option.value)}
-                className={cn(
-                  "flex items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-left transition-colors hover:bg-accent",
-                  locale === option.value && "border-primary bg-primary/10",
-                )}
-              >
-                <span className="font-medium text-foreground">{t(option.labelKey)}</span>
-                <Check
-                  className={cn(
-                    "h-4 w-4 text-primary transition-opacity",
-                    locale === option.value ? "opacity-100" : "opacity-0",
                   )}
                 />
               </button>

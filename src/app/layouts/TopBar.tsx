@@ -1,15 +1,12 @@
-import { Bell, ChevronDown, Download, LogOut, Settings2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Bell, ChevronDown, LogOut, Settings2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
-import { PayoutMonthYearTopBar } from "@/modules/finance/components/PayoutMonthYearTopBar";
-import { DashboardDateRangePicker } from "@/shared/components/DashboardDateRangePicker";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { getCompanyNameFromToken } from "@/shared/auth/jwt";
 import { getStoredToken } from "@/shared/auth/token-store";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useNotifications } from "@/shared/notifications/useNotifications";
-import { Button } from "@/shared/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,11 +33,6 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
     markAllAsRead,
     isMarkingAll,
   } = useNotifications();
-  const navigate = useNavigate();
-
-  const showDebtDateRange = currentRoute.showDebtNegotiationDateRangeInTopBar === true;
-  const showPayoutMonthYear = currentRoute.showPayoutMonthYearInTopBar === true;
-  const showImportDebts = currentRoute.showImportDebtsInTopBar === true;
 
   const parent = currentRoute.topBarParent;
   const parentTo =
@@ -77,20 +69,6 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        {showDebtDateRange && <DashboardDateRangePicker />}
-        {showPayoutMonthYear && <PayoutMonthYearTopBar />}
-        {showImportDebts && (
-          <Button
-            size="sm"
-            className="gap-1.5"
-            type="button"
-            onClick={() => navigate("/debt-negotiation/debts/import")}
-          >
-            <Download className="size-3.5" />
-            <span className="hidden sm:inline">{t("app.topbar.importDebts")}</span>
-          </Button>
-        )}
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
