@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getCurrentCompanyId } from "@/shared/auth/current-company";
 import {
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  resolveSessionCompanyId,
 } from "@/shared/notifications/services";
 import type { NotificationItem, NotificationsResponse } from "@/shared/notifications/types";
 
@@ -21,7 +21,7 @@ function updateCacheAfterMarkAll(prev: NotificationsResponse | undefined): Notif
 }
 
 export function useNotifications() {
-  const companyId = getCurrentCompanyId();
+  const companyId = resolveSessionCompanyId();
   const queryClient = useQueryClient();
 
   const query = useQuery({

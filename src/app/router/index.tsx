@@ -12,7 +12,7 @@ import { LoginPage } from "@/app/pages/LoginPage";
 import { AppShell } from "@/app/layouts/AppShell";
 import { NotFoundPage } from "@/app/router/NotFoundPage";
 import { businessModules } from "@/app/router/modules";
-import { quotationModule } from "@/modules/quotation";
+import { dashboardModule } from "@/modules/dashboard";
 
 const APP_NAME = "Orca";
 
@@ -46,7 +46,7 @@ export function AppRouter() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/choose-company" element={<ChooseCompanyPage />} />
-            <Route path="/" element={<Navigate to={quotationModule.basePath} replace />} />
+            <Route path="/" element={<Navigate to={dashboardModule.basePath} replace />} />
             {businessModules.flatMap((module) =>
               module.routes.map((route) => (
                 <Route

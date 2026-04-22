@@ -1,5 +1,4 @@
 import type { MeResponse } from "@/shared/auth/types";
-import { isSuperAdminUser } from "@/shared/auth/is-super-admin";
 import {
   accentColorStorageKey,
   applyAccentColor,
@@ -18,19 +17,13 @@ function getStoredUserAccentColor(): string | null {
 }
 
 /**
- * Resolve e aplica a cor primária (shadcn/Tailwind CSS vars) considerando:
- * - SuperAdmin (email fixo): cor da empresa tem precedência; senão cai na do usuário.
- * - Usuário normal: preferência do usuário tem precedência; senão cai na da empresa.
+ * Resolve e aplica a cor primária (shadcn/Tailwind CSS vars):
+ * preferência do usuário tem precedência; depois branding da empresa; por fim default.
  */
 export function applyResolvedAccentColor(me: MeResponse | null): void {
   const userAccent = getStoredUserAccentColor();
   const companyAccent = me?.branding?.color ? sanitizeAccentColor(me.branding.color) : null;
-  const isSuperAdmin = isSuperAdminUser(me);
-
-  const resolved =
-    isSuperAdmin
-      ? (companyAccent ?? userAccent ?? defaultAccentColor)
-      : (userAccent ?? companyAccent ?? defaultAccentColor);
+  const resolved = userAccent ?? companyAccent ?? defaultAccentColor;
 
   applyAccentColor(resolved);
 }

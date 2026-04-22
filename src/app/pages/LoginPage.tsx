@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, BarChart3, CircleDollarSign, ShieldCheck } from "lucide-react";
-import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 import { useAuth } from "@/shared/auth/AuthContext";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -29,23 +29,18 @@ const loginHighlights = [
 ] as const;
 
 export function LoginPage() {
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
   const { login, loading, error, isAuthenticated } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
-  const callbackUrl = searchParams.get("callbackUrl") ?? from ?? "/";
-
   if (isAuthenticated) {
-    return <Navigate to={callbackUrl} replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login({ username, password }, { callbackUrl });
+      await login({ username, password });
     } catch {
       // error already set in context
     }

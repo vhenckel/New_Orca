@@ -23,4 +23,20 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    files: ["src/app/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/modules/*/pages/**", "@/modules/*/data/**", "@/modules/*/components/**"],
+              message: "Importe apenas o barrel público @/modules/<nome>.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

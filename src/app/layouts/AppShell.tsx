@@ -32,7 +32,12 @@ export function AppShell({ children, modules }: AppShellProps) {
 
   const sidebarModules = useMemo(() => {
     const desiredOrder: Array<AppModuleDefinition["key"]> = [
+      "dashboard",
       "quotation",
+      "product",
+      "supplier",
+      "analytic",
+      "config",
     ];
 
     const byKey = new Map(modules.map((m) => [m.key, m] as const));

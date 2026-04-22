@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition } from "@/app/router/types";
 import { useI18n } from "@/shared/i18n/useI18n";
@@ -11,15 +11,20 @@ interface AppSidebarProps {
   onToggle: () => void;
 }
 
+function moduleNavIsActive(pathname: string, to: string): boolean {
+  if (pathname === to) return true;
+  if (to === "/") return false;
+  return pathname.startsWith(`${to}/`);
+}
+
 export function AppSidebar({
   collapsed,
   modules,
   onToggle,
 }: AppSidebarProps) {
   const { t } = useI18n();
+  const location = useLocation();
   const visibleModules = modules.filter((module) => !module.hideInSidebar);
-  const primaryModule = visibleModules[0];
-  const menuRoutes = primaryModule?.routes.filter((route) => !route.hideInSidebar) ?? [];
 
   return (
     <aside
@@ -39,24 +44,26 @@ export function AppSidebar({
 
       <div className="flex-1 overflow-y-auto p-3">
         <div className="space-y-1">
-          {menuRoutes.map((route) => (
-            <NavLink
-              key={route.path}
-              to={route.path}
-              end={route.path !== "/quotations"}
-              title={collapsed ? t(route.labelKey) : undefined}
-              className={({ isActive }) =>
-                cn(
+          {visibleModules.map((module) => {
+            const to = module.sidebarLinkTo ?? module.basePath;
+            const ModuleIcon = module.icon;
+            const isActive = moduleNavIsActive(location.pathname, to);
+            return (
+              <NavLink
+                key={module.key}
+                to={to}
+                title={collapsed ? t(module.titleKey) : undefined}
+                className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
                   collapsed && "justify-center px-0",
                   isActive && "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
-                )
-              }
-            >
-              <route.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">{t(route.labelKey)}</span>}
-            </NavLink>
-          ))}
+                )}
+              >
+                <ModuleIcon className="h-4 w-4 shrink-0" />
+                {!collapsed && <span className="truncate">{t(module.titleKey)}</span>}
+              </NavLink>
+            );
+          })}
         </div>
       </div>
 

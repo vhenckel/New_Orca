@@ -12,8 +12,9 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { MOCK_CATALOG_PRODUCTS } from "@/modules/quotation/data/quotationMocks";
-import type { BudgetLineItem, CatalogProduct } from "@/modules/quotation/types";
+import { MOCK_CATALOG_PRODUCTS } from "@/modules/product";
+import type { CatalogProduct } from "@/modules/product";
+import type { BudgetLineItem } from "@/modules/quotation/types";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";

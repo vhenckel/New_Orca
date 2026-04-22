@@ -1,6 +1,6 @@
 /**
  * Storage de token: memória + localStorage.
- * Fonte única para Authorization; fallback para env fica em getSpotApiHeaders quando token vazio.
+ * Fonte única para Authorization; fallback para env fica em getApiHeaders quando token vazio.
  */
 
 const STORAGE_KEY = "orca_access_token";

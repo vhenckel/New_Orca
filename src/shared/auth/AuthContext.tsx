@@ -15,8 +15,6 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { setHttpClientOnUnauthorized } from "@/shared/api/http-client";
-import { clearPartitionCache } from "@/shared/api/spot-gateway";
 import { getDefaultCompanyId } from "@/shared/config/env";
 import { getCompanyIdFromToken } from "@/shared/auth/jwt";
 import {
@@ -24,7 +22,6 @@ import {
   getStoredToken,
 } from "@/shared/auth/token-store";
 import type { LoginRequest, MeResponse } from "@/shared/auth/types";
-import { spotJson } from "@/shared/api/http-client";
 import { applyResolvedAccentColor } from "@/shared/auth/branding-accent";
 
 export interface AuthState {
@@ -36,7 +33,7 @@ export interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (credentials: LoginRequest, options?: { callbackUrl?: string }) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
   refetchMe: () => Promise<void>;
 }
@@ -79,10 +76,8 @@ const LOCAL_USER: MeResponse = {
   features: [],
 };
 
-async function fetchMe(companyId: number): Promise<MeResponse> {
-  const data = await spotJson<MeResponse>(`/me?companyId=${companyId}`);
-  if (!data.branding) (data as MeResponse).branding = DEFAULT_BRANDING;
-  return data;
+async function fetchMe(_companyId: number): Promise<MeResponse> {
+  return Promise.resolve(LOCAL_USER);
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -97,16 +92,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const logout = useCallback(() => {
     clearStoredToken();
-    clearPartitionCache();
     setUser(null);
     setError(null);
     navigate("/login", { replace: true });
   }, [navigate]);
-
-  useEffect(() => {
-    setHttpClientOnUnauthorized(logout);
-    return () => setHttpClientOnUnauthorized(null);
-  }, [logout]);
   const loadSession = useCallback(async () => {
     const token = getStoredToken();
     if (!token) {
@@ -116,8 +105,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setLoading(true);
     setError(null);
     try {
-      const cid = getCompanyIdFromToken(token) ?? getDefaultCompanyId();
-      const me = await fetchMe(cid);
+      const me = await fetchMe(getCompanyIdFromToken(token) ?? getDefaultCompanyId());
       setUser(me);
       applyResolvedAccentColor(me);
     } catch (e) {
@@ -134,14 +122,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [loadSession]);
 
   const login = useCallback(
-    async (_credentials: LoginRequest, options?: { callbackUrl?: string }) => {
+    async (_credentials: LoginRequest) => {
       setLoading(true);
       setError(null);
       try {
         setUser(LOCAL_USER);
         applyResolvedAccentColor(LOCAL_USER);
-        const target = options?.callbackUrl && options.callbackUrl.startsWith("/") ? options.callbackUrl : "/";
-        navigate(target === "/" ? "/dashboard" : target, { replace: true });
+        navigate("/dashboard", { replace: true });
       } catch (e) {
         setError(
           e instanceof Error ? e.message : "Login failed"

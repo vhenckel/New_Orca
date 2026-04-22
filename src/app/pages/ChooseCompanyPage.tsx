@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import { fetchUserAccounts, switchCompany } from "@/shared/api/auth-api";
-import { clearPartitionCache } from "@/shared/api/spot-gateway";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { setStoredToken } from "@/shared/auth/token-store";
 import type { UserAccountItem } from "@/shared/auth/types";
 import { Building2, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Input } from "@/shared/ui/input";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
 const ORCA_LOGO = "https://placehold.co/240x64/0b3b98/ffffff?text=Orca";
 
 export function ChooseCompanyPage() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, loading: authLoading, isAuthenticated, refetchMe } = useAuth();
   const [accounts, setAccounts] = useState<UserAccountItem[]>([]);
@@ -33,9 +30,6 @@ export function ChooseCompanyPage() {
             name.toLowerCase().includes(searchLower) ||
             String(id).includes(searchLower)
         );
-
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
-  const loginCallbackUrl = "/choose-company" + (callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : "");
 
   useEffect(() => {
     if (!user) return;
@@ -66,7 +60,7 @@ export function ChooseCompanyPage() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={`/login?callbackUrl=${encodeURIComponent(loginCallbackUrl)}`} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   const hour = new Date().getHours();
@@ -80,9 +74,8 @@ export function ChooseCompanyPage() {
     try {
       const data = await switchCompany(companyId);
       setStoredToken(data.access_token);
-      clearPartitionCache();
       await refetchMe();
-      navigate(callbackUrl.startsWith("/") ? callbackUrl : "/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao trocar empresa");
     } finally {

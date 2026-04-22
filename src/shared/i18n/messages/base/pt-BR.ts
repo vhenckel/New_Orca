@@ -2,11 +2,8 @@
 export const basePtBR = {
   "app.brand.modules": "Módulos de negócio",
   "app.sidebar.modules": "Módulos",
-  "app.topbar.importData": "Importar dados",
-  "app.topbar.importDebts": "Importar dívidas",
   "app.topbar.preferences": "Preferências",
   "app.topbar.userMenu": "Abrir menu do usuário",
-  "app.topbar.changeCompany": "Mudar empresa",
   "app.topbar.logout": "Sair",
   "app.topbar.breadcrumbNav": "Caminho de navegação",
   "app.preferences.title": "Preferências",
@@ -16,10 +13,6 @@ export const basePtBR = {
   "app.preferences.theme.description": "Escolha entre modo dark ou light.",
   "app.preferences.theme.dark": "Escuro",
   "app.preferences.theme.light": "Claro",
-  "app.preferences.language.title": "Idioma",
-  "app.preferences.language.description": "Selecione o idioma padrão da interface.",
-  "app.preferences.language.pt-BR": "Português (BR)",
-  "app.preferences.language.en-US": "Inglês (US)",
   "app.preferences.color.title": "Cor principal",
   "app.preferences.color.description":
     "Escolha a cor base da interface. Ela será aplicada em botões, destaques e gráficos.",
@@ -38,18 +31,4 @@ export const basePtBR = {
   "common.pagination.pageOf": "Página {page} de {total}",
   "common.pagination.previous": "Anterior",
   "common.pagination.next": "Próxima",
-  "common.placeholder.description":
-    "Esta tela já está preparada dentro do módulo, mas ainda sem integração com dados e regras específicas.",
-  /** Faixa busca + filtros: título = ação principal (POLA: alinha com o campo de busca). */
-  "components.filterPanel.sectionTitle": "Buscar",
-  "components.filterPanel.searchPlaceholder": "Buscar…",
-  "components.filterPanel.clearAll": "Limpar",
-  "components.filterPanel.removeFilterAria": "Remover filtro",
-  "components.filterPanel.searchClearAria": "Limpar busca",
-  /** Botão abre painel de critérios; rótulo curto e esperado em listagens. */
-  "components.dynamicFilters.button": "Filtros",
-  "components.dynamicFilters.headingSr": "Filtros avançados",
-  "components.dynamicFilters.close": "Fechar",
-  "components.dynamicFilters.apply": "Aplicar filtros",
-  "components.dynamicFilters.selectCategory": "Selecione uma categoria",
 } as const;

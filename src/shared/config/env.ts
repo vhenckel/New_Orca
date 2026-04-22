@@ -1,17 +1,17 @@
 /**
- * Configuração de ambiente. SaaS multi-tenant: todas as APIs devem usar companyId.
- * Hoje: companyId vem de VITE_DEFAULT_COMPANY_ID. Depois: virá do token (auth context).
+ * Configuração de ambiente do Orca.
+ * companyId default vem do .env e depois é sobrescrito pelo token da sessão.
  *
- * Em dev: se VITE_SPOT_API_BASE_URL for URL absoluta (http/https), usa direto; senão usa "/api" (proxy Vite) se VITE_USE_API_PROXY !== "false".
+ * Usa apenas variáveis `VITE_ORCA_*`.
  */
 
 const rawBaseUrl =
-  import.meta.env.VITE_SPOT_API_BASE_URL ??
-  "https://spot-api-management.o2obots.com";
+  import.meta.env.VITE_ORCA_API_BASE_URL ??
+  "https://api.orca.app";
 
 const isAbsoluteUrl = /^https?:\/\//.test(rawBaseUrl);
 
-export const spotApiBaseUrl =
+export const apiBaseUrl =
   import.meta.env.DEV &&
   import.meta.env.VITE_USE_API_PROXY !== "false" &&
   !isAbsoluteUrl
@@ -26,18 +26,20 @@ export function getDefaultCompanyId(): number {
   return Number.isNaN(n) ? 316 : n;
 }
 
-/** Token temporário para testes: colar o token do browser no .env. Depois virá do auth (login). */
-const spotApiToken = import.meta.env.VITE_SPOT_API_TOKEN;
+/** Token opcional de fallback em dev quando não houver sessão autenticada. */
+const apiToken =
+  import.meta.env.VITE_ORCA_API_TOKEN;
 
-/** Headers para requisições à API Spot. Inclui Authorization se VITE_SPOT_API_TOKEN estiver definido. */
-export function getSpotApiHeaders(): HeadersInit {
-  if (!spotApiToken || typeof spotApiToken !== "string") return {};
-  return { Authorization: `Bearer ${spotApiToken}` };
+/** Headers base para API. Inclui Authorization se token de fallback estiver definido. */
+export function getApiHeaders(): HeadersInit {
+  if (!apiToken || typeof apiToken !== "string") return {};
+  return { Authorization: `Bearer ${apiToken}` };
 }
 
-/** URLs que não usam gatekeeper (ex.: morpheus). Lista separada por vírgula. */
-export function getSpotSkipGatekeeperUrls(): string[] {
-  const v = import.meta.env.VITE_SPOT_SKIP_GATEKEEPER_URLS;
+/** Paths que não devem passar por resolução de gatekeeper. Lista separada por vírgula. */
+export function getSkipGatekeeperPaths(): string[] {
+  const v =
+    import.meta.env.VITE_ORCA_SKIP_GATEKEEPER_PATHS;
   if (!v || typeof v !== "string") return [];
   return v
     .split(",")
@@ -45,9 +47,9 @@ export function getSpotSkipGatekeeperUrls(): string[] {
     .filter(Boolean);
 }
 
-/** URL alternativa quando gatekeeper é morpheus e a URL está em SKIP. */
-export const spotApiMorpheusUrl =
-  import.meta.env.VITE_SPOT_API_MORPHEUS_URL &&
-  typeof import.meta.env.VITE_SPOT_API_MORPHEUS_URL === "string"
-    ? (import.meta.env.VITE_SPOT_API_MORPHEUS_URL as string)
+/** URL alternativa para bypass de gatekeeper em paths de skip. */
+export const apiBypassBaseUrl =
+  import.meta.env.VITE_ORCA_API_BYPASS_BASE_URL &&
+  typeof import.meta.env.VITE_ORCA_API_BYPASS_BASE_URL === "string"
+    ? (import.meta.env.VITE_ORCA_API_BYPASS_BASE_URL as string)
     : null;

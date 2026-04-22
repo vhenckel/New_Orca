@@ -1,21 +1,31 @@
-/**
- * Chamadas de auth: contas do usuário e troca de empresa.
- * Usam spotFetch/spotJson (baseUrl sem gatekeeper para /auth/accounts e /auth/switch-company).
- */
+import type { SwitchCompanyResponse, UserAccountItem } from "@/shared/auth/types";
 
-import { spotJson } from "@/shared/api/http-client";
-import type { UserAccountItem, SwitchCompanyResponse } from "@/shared/auth/types";
+const MOCK_ACCOUNTS: UserAccountItem[] = [
+  [316, "Orca Matriz", "ORCA-MATRIZ"],
+  [481, "Orca Filial Centro", "ORCA-CENTRO"],
+  [902, "Orca Filial Sul", "ORCA-SUL"],
+];
 
-/** GET /auth/accounts – lista empresas do usuário (userId vem do JWT no backend). */
-export async function fetchUserAccounts(): Promise<UserAccountItem[]> {
-  const data = await spotJson<UserAccountItem[]>(`/auth/accounts`);
-  return Array.isArray(data) ? data : [];
+function createMockToken(companyId: number, companyName: string, companyExternalId: string): string {
+  const payload = {
+    cmpid: companyId,
+    companyName,
+    companyExternalId,
+    sub: "local-user",
+  };
+  return `mock.${btoa(JSON.stringify(payload))}.token`;
 }
 
+/** Mock local para seleção de empresa enquanto API não estiver disponível. */
+export async function fetchUserAccounts(): Promise<UserAccountItem[]> {
+  return Promise.resolve(MOCK_ACCOUNTS);
+}
+
+/** Mock local para troca de empresa. Retorna token compatível com parser local. */
 export async function switchCompany(companyId: number): Promise<SwitchCompanyResponse> {
-  return spotJson<SwitchCompanyResponse>("/auth/switch-company", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ companyId }),
+  const account = MOCK_ACCOUNTS.find(([id]) => id === companyId) ?? MOCK_ACCOUNTS[0];
+  const [id, name, externalId] = account;
+  return Promise.resolve({
+    access_token: createMockToken(id, name, externalId),
   });
 }

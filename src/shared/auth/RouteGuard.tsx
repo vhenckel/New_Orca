@@ -1,13 +1,11 @@
 /**
- * RouteGuard: redireciona para /login se requiresAuth e não autenticado;
- * opcionalmente exige requiredPermissions (senão redireciona ou mostra forbidden).
+ * RouteGuard: redireciona para /login se requiresAuth e não autenticado.
  */
 
 import { type PropsWithChildren } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 import { useAuth } from "@/shared/auth/AuthContext";
-import { hasPermission } from "@/shared/auth/permissions";
 import type { AppRouteDefinition } from "@/app/router/types";
 
 interface RouteGuardProps extends PropsWithChildren {
@@ -15,10 +13,8 @@ interface RouteGuardProps extends PropsWithChildren {
 }
 
 export function RouteGuard({ route, children }: RouteGuardProps) {
-  const { isAuthenticated, loading, user } = useAuth();
-  const location = useLocation();
+  const { isAuthenticated, loading } = useAuth();
   const requiresAuth = route.requiresAuth !== false;
-  const requiredPermissions = route.requiredPermissions;
 
   if (loading) {
     return (
@@ -29,19 +25,7 @@ export function RouteGuard({ route, children }: RouteGuardProps) {
   }
 
   if (requiresAuth && !isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (
-    requiredPermissions?.length &&
-    user?.profile &&
-    !hasPermission(user.profile, requiredPermissions)
-  ) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <p className="text-muted-foreground">Sem permissão para acessar esta página.</p>
-      </div>
-    );
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
