@@ -1,5 +1,5 @@
 import { Bell, ChevronDown, LogOut, Settings2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -20,8 +20,9 @@ interface TopBarProps {
   currentRoute: AppRouteDefinition;
 }
 
-export function TopBar({ currentModule, currentRoute }: TopBarProps) {
+export function TopBar({ currentModule: _currentModule, currentRoute }: TopBarProps) {
   const { t } = useI18n();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const token = getStoredToken();
   const companyName = token ? getCompanyNameFromToken(token) : null;
@@ -40,19 +41,14 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
       ? `${parent.path}${parent.preserveSearch ? location.search : ""}`
       : null;
 
+  const preferencesPath = user?.persona === "supplier" ? "/supplier/config" : "/config";
+
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-card px-6">
       <div className="min-w-0 flex-1">
         <nav aria-label={t("app.topbar.breadcrumbNav")} className="flex min-w-0 items-center gap-2">
-          <Link
-            to={currentModule.sidebarLinkTo ?? currentModule.basePath}
-            className="shrink-0 truncate text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {t(currentModule.titleKey)}
-          </Link>
           {parentTo != null && parent != null ? (
             <>
-              <span className="hidden shrink-0 text-sm text-muted-foreground md:inline">/</span>
               <Link
                 to={parentTo}
                 className="min-w-0 max-w-[40%] truncate text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:max-w-[50%]"
@@ -158,7 +154,7 @@ export function TopBar({ currentModule, currentRoute }: TopBarProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem asChild>
-              <Link to="/config" className="flex items-center gap-2">
+              <Link to={preferencesPath} className="flex items-center gap-2">
                 <Settings2 className="size-4" />
                 {t("app.topbar.preferences")}
               </Link>

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ArrowRight, BarChart3, CircleDollarSign, ShieldCheck } from "lucide-react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
-import { useAuth } from "@/shared/auth/AuthContext";
+import { getLandingPathForPersona, useAuth } from "@/shared/auth/AuthContext";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/shared/ui/field";
 import { Button } from "@/shared/ui/button";
@@ -29,18 +29,21 @@ const loginHighlights = [
 ] as const;
 
 export function LoginPage() {
-  const { login, loading, error, isAuthenticated } = useAuth();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const { login, loading, error, isAuthenticated, user } = useAuth();
+  const [email, setEmail] = useState("");
 
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated && user) {
+    return <Navigate to={getLandingPathForPersona(user.persona)} replace />;
   }
+
+  const fillTestAccount = (value: string) => {
+    setEmail(value);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login({ username, password });
+      await login({ username: email.trim() });
     } catch {
       // error already set in context
     }
@@ -97,54 +100,29 @@ export function LoginPage() {
               <div className="flex flex-col gap-2 px-1">
                 <h2 className="text-3xl font-semibold text-slate-950">Bem-vindo de volta</h2>
                 <p className="text-sm leading-6 text-slate-500">
-                  Entre com suas credenciais para acessar o painel
+                  Informe seu e-mail para acessar o painel (ambiente de demonstração)
                 </p>
               </div>
 
               <Card className="rounded-[28px] border-slate-200/80 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.08)]">
                 <CardContent className="p-7 sm:p-8">
-                  <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                  <form onSubmit={handleSubmit} className="flex flex-col gap-5" autoComplete="off">
                     <FieldGroup className="gap-5">
                       <Field className="gap-2">
-                        <FieldLabel htmlFor="login-username" className="text-slate-700">
+                        <FieldLabel htmlFor="login-email" className="text-slate-700">
                           E-mail
                         </FieldLabel>
                         <FieldContent>
                           <Input
-                            id="login-username"
+                            id="login-email"
                             type="email"
-                            name="username"
-                            autoComplete="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            name="email"
+                            autoComplete="email"
+                            inputMode="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             placeholder="seu@email.com"
-                            disabled={loading}
-                            className="h-11 rounded-xl border-slate-200 bg-white text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:ring-primary/20"
-                          />
-                        </FieldContent>
-                      </Field>
-
-                      <Field className="gap-2">
-                        <div className="flex items-center justify-between gap-3">
-                          <FieldLabel htmlFor="login-password" className="text-slate-700">
-                            Senha
-                          </FieldLabel>
-                          <Link
-                            to="/forgot-password"
-                            className="text-xs font-medium text-primary transition hover:underline"
-                          >
-                            Esqueci minha senha
-                          </Link>
-                        </div>
-                        <FieldContent>
-                          <Input
-                            id="login-password"
-                            type="password"
-                            name="password"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="********"
+                            required
                             disabled={loading}
                             className="h-11 rounded-xl border-slate-200 bg-white text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:ring-primary/20"
                           />
@@ -162,6 +140,26 @@ export function LoginPage() {
                       {loading ? "Entrando..." : "Entrar"}
                       {!loading && <ArrowRight data-icon="inline-end" />}
                     </Button>
+
+                    <div className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-3 text-xs text-slate-500">
+                      <span className="font-medium text-slate-600">
+                        Contas de teste (enquanto não temos API)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => fillTestAccount("restaurante@orca.com.br")}
+                        className="text-left text-slate-600 transition hover:text-primary"
+                      >
+                        <span className="font-medium">Restaurante:</span> restaurante@orca.com.br
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => fillTestAccount("fornecedor@orca.com.br")}
+                        className="text-left text-slate-600 transition hover:text-primary"
+                      >
+                        <span className="font-medium">Fornecedor:</span> fornecedor@orca.com.br
+                      </button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>

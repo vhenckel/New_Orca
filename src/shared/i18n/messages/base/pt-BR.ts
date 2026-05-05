@@ -6,6 +6,9 @@ export const basePtBR = {
   "app.topbar.userMenu": "Abrir menu do usuário",
   "app.topbar.logout": "Sair",
   "app.topbar.breadcrumbNav": "Caminho de navegação",
+  "app.mobile.backToList": "Voltar",
+  "app.mobile.menuLabel": "Abrir menu",
+  "app.mobile.menuTitle": "Conta",
   "app.preferences.title": "Preferências",
   "app.preferences.description":
     "Defina como a aplicação deve aparecer para você. As escolhas ficam salvas neste navegador.",

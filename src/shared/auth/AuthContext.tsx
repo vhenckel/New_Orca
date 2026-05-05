@@ -21,8 +21,39 @@ import {
   clearStoredToken,
   getStoredToken,
 } from "@/shared/auth/token-store";
-import type { LoginRequest, MeResponse } from "@/shared/auth/types";
+import type { LoginRequest, MeResponse, UserPersona } from "@/shared/auth/types";
 import { applyResolvedAccentColor } from "@/shared/auth/branding-accent";
+import { getIsViewportMobile } from "@/shared/hooks/useIsMobile";
+
+/**
+ * Mapa hardcoded de email → persona, usado enquanto não temos a API do Orca.
+ * Qualquer outro email cai no fallback `buyer`.
+ */
+const PERSONA_BY_EMAIL: Record<string, UserPersona> = {
+  "restaurante@orca.com.br": "buyer",
+  "fornecedor@orca.com.br": "supplier",
+};
+
+function resolvePersonaFromEmail(email: string | undefined): UserPersona {
+  if (!email) return "buyer";
+  return PERSONA_BY_EMAIL[email.trim().toLowerCase()] ?? "buyer";
+}
+
+export interface GetLandingPathOptions {
+  /** Quando true, fornecedor cai em `/m/supplier/quotations` (fluxo mobile). */
+  isMobile?: boolean;
+}
+
+/** Landing pós-login por persona. */
+export function getLandingPathForPersona(
+  persona: UserPersona,
+  options?: GetLandingPathOptions,
+): string {
+  if (persona === "supplier" && options?.isMobile) {
+    return "/m/supplier/quotations";
+  }
+  return persona === "supplier" ? "/supplier/dashboard" : "/dashboard";
+}
 
 export interface AuthState {
   user: MeResponse | null;
@@ -48,6 +79,7 @@ const DEFAULT_BRANDING = {
 const LOCAL_USER: MeResponse = {
   id: 1,
   userId: 1,
+  persona: "buyer",
   email: "usuario@orca.app",
   username: "usuario@orca.app",
   name: "Usuario ORCA",
@@ -122,13 +154,28 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [loadSession]);
 
   const login = useCallback(
-    async (_credentials: LoginRequest) => {
+    async (credentials: LoginRequest) => {
+      const email = credentials.username.trim();
+      if (!email) {
+        setError("Informe um e-mail válido.");
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
-        setUser(LOCAL_USER);
-        applyResolvedAccentColor(LOCAL_USER);
-        navigate("/dashboard", { replace: true });
+        const persona = resolvePersonaFromEmail(email);
+        const sessionUser: MeResponse = {
+          ...LOCAL_USER,
+          persona,
+          email: email || LOCAL_USER.email,
+          username: email || LOCAL_USER.username,
+        };
+        setUser(sessionUser);
+        applyResolvedAccentColor(sessionUser);
+        const landing = getLandingPathForPersona(persona, {
+          isMobile: getIsViewportMobile(),
+        });
+        navigate(landing, { replace: true });
       } catch (e) {
         setError(
           e instanceof Error ? e.message : "Login failed"

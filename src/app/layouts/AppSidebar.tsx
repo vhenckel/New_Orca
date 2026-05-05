@@ -8,6 +8,7 @@ import { cn } from "@/shared/lib/utils";
 interface AppSidebarProps {
   collapsed: boolean;
   modules: AppModuleDefinition[];
+  onSidebarItemClick: (to: string) => void;
   onToggle: () => void;
 }
 
@@ -20,6 +21,7 @@ function moduleNavIsActive(pathname: string, to: string): boolean {
 export function AppSidebar({
   collapsed,
   modules,
+  onSidebarItemClick,
   onToggle,
 }: AppSidebarProps) {
   const { t } = useI18n();
@@ -30,7 +32,7 @@ export function AppSidebar({
     <aside
       className={cn(
         "fixed left-0 top-0 z-30 flex h-screen flex-col border-r border-border bg-card transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
+        collapsed ? "w-16" : "w-52",
       )}
     >
       <div className="flex h-14 items-center border-b border-border bg-card px-4">
@@ -52,6 +54,7 @@ export function AppSidebar({
               <NavLink
                 key={module.key}
                 to={to}
+                onClick={() => onSidebarItemClick(to)}
                 title={collapsed ? t(module.titleKey) : undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",

@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
@@ -26,25 +26,48 @@ function routePathMatches(routePath: string, pathname: string): boolean {
   );
 }
 
+/** Rota exata do item Dashboard na sidebar (comprador ou fornecedor). */
+function getDashboardPath(modules: AppModuleDefinition[]): string | null {
+  const dash = modules.find((m) => m.key === "dashboard" || m.key === "supplier-dashboard");
+  return dash ? (dash.sidebarLinkTo ?? dash.basePath) : null;
+}
+
 export function AppShell({ children, modules }: AppShellProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const dashboardPath = useMemo(() => getDashboardPath(modules), [modules]);
+  const prevPathnameRef = useRef(location.pathname);
 
-  const sidebarModules = useMemo(() => {
-    const desiredOrder: Array<AppModuleDefinition["key"]> = [
-      "dashboard",
-      "quotation",
-      "product",
-      "supplier",
-      "analytic",
-      "config",
-    ];
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const dp = getDashboardPath(modules);
+    if (!dp) return false;
+    return location.pathname !== dp;
+  });
 
-    const byKey = new Map(modules.map((m) => [m.key, m] as const));
-    const ordered = desiredOrder.map((k) => byKey.get(k)).filter(Boolean) as AppModuleDefinition[];
-    const rest = modules.filter((m) => !desiredOrder.includes(m.key));
-    return [...ordered, ...rest];
-  }, [modules]);
+  useEffect(() => {
+    if (!dashboardPath) {
+      prevPathnameRef.current = location.pathname;
+      return;
+    }
+    const prev = prevPathnameRef.current;
+
+    if (location.pathname === dashboardPath) {
+      setSidebarCollapsed(false);
+      prevPathnameRef.current = location.pathname;
+      return;
+    }
+    if (prev === dashboardPath) {
+      setSidebarCollapsed(true);
+    }
+    prevPathnameRef.current = location.pathname;
+  }, [location.pathname, dashboardPath]);
+
+  const handleSidebarItemClick = (to: string) => {
+    if (dashboardPath && to === dashboardPath) {
+      setSidebarCollapsed(false);
+    } else {
+      setSidebarCollapsed(true);
+    }
+  };
 
   const currentModule = useMemo(
     () =>
@@ -54,25 +77,30 @@ export function AppShell({ children, modules }: AppShellProps) {
 
   const currentRoute = useMemo(
     () =>
-      currentModule.routes.find(
+      currentModule?.routes.find(
         (route) =>
           route.path === location.pathname || routePathMatches(route.path, location.pathname),
-      ) ?? getFallbackRoute(currentModule),
+      ) ?? (currentModule ? getFallbackRoute(currentModule) : null),
     [currentModule, location.pathname],
   );
+
+  if (!currentModule || !currentRoute) {
+    return <main className="flex min-h-screen flex-1 flex-col">{children}</main>;
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         collapsed={sidebarCollapsed}
-        modules={sidebarModules}
+        modules={modules}
+        onSidebarItemClick={handleSidebarItemClick}
         onToggle={() => setSidebarCollapsed((currentValue) => !currentValue)}
       />
 
       <div
         className={cn(
           "flex min-h-screen min-w-0 flex-1 flex-col transition-all duration-300",
-          sidebarCollapsed ? "ml-16" : "ml-64",
+          sidebarCollapsed ? "ml-16" : "ml-52",
         )}
       >
         <TopBar currentModule={currentModule} currentRoute={currentRoute} />

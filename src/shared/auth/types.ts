@@ -31,6 +31,12 @@ export interface Module {
   subModules?: SubModule[];
 }
 
+/**
+ * Persona do usuário logado. Define qual "visão" do produto é exibida
+ * (bar/restaurante = buyer; fornecedor = supplier).
+ */
+export type UserPersona = "buyer" | "supplier";
+
 /** Perfil do usuário (vindo do /me). */
 export interface MeProfile {
   id: string;
@@ -60,6 +66,8 @@ export interface BrandingConfig {
 export interface MeResponse {
   id: number;
   userId?: number;
+  /** Persona do usuário — define qual visão do produto é carregada (buyer/supplier). */
+  persona: UserPersona;
   /** Email do usuário (ex.: superadmin@orca.app). Vem do /me (management/trinity). */
   email?: string;
   /** Username do usuário (normalmente igual ao email). Vem do /me. */
@@ -76,10 +84,10 @@ export interface MeResponse {
   features?: Array<{ name: string }>;
 }
 
-/** Payload do POST /auth/login. */
+/** Payload de login (fluxo atual: só e-mail; senha opcional quando houver API). */
 export interface LoginRequest {
   username: string;
-  password: string;
+  password?: string;
   tokenRecaptcha?: string;
 }
 

@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import type { UserPersona } from "@/shared/auth/types";
 import type { TranslationKey } from "@/shared/i18n/config";
 
 export interface AppRouteDefinition {
@@ -47,5 +48,14 @@ export interface AppModuleDefinition {
   icon: LucideIcon;
   /** Se true, o módulo nao aparece no menu lateral. */
   hideInSidebar?: boolean;
+  /**
+   * Personas autorizadas a acessar este módulo. Se vazio/undefined, qualquer persona acessa.
+   * Usado pelo RouteGuard para bloquear cross-persona e pelo AppRouter para filtrar rotas.
+   */
+  allowedPersonas?: UserPersona[];
+  /**
+   * Módulo exclusivo de layout mobile (rotas /m/...). AppRouter usa `MobileShell` em vez de `AppShell`.
+   */
+  isMobile?: boolean;
   routes: AppRouteDefinition[];
 }
