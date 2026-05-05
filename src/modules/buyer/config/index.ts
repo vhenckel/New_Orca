@@ -1,1 +1,1 @@
-export { configModule } from "@/modules/config/routes";
+export { configModule } from "@/modules/buyer/config/routes";

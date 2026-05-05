@@ -2,9 +2,10 @@ import { Filter, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { MOCK_QUOTATIONS, matchesStatus } from "@/modules/quotation/data/quotationMocks";
-import type { QuotationStatus } from "@/modules/quotation/types";
+import { MOCK_QUOTATIONS, matchesStatus } from "@/modules/buyer/quotation/data/quotationMocks";
+import type { QuotationStatus } from "@/modules/buyer/quotation/types";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
+import { cn } from "@/shared/lib/utils";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -116,7 +117,7 @@ export function QuotationsPage() {
       title={t("modules.quotation.quotations.pageTitle")}
       subtitle={t("modules.quotation.quotations.pageSubtitle")}
       headerActions={
-        <Button asChild className="gap-2">
+        <Button asChild className="gap-2 text-white">
           <Link to="/quotations/new">
             <Plus className="size-4" />
             {t("modules.quotation.quotations.addButton")}
@@ -213,8 +214,22 @@ export function QuotationsPage() {
               ) : (
                 paginatedRows.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="font-medium">{row.id}</TableCell>
-                    <TableCell className="font-medium">{row.title}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        to={`/quotations/${row.id}`}
+                        className="text-primary underline-offset-4 hover:underline"
+                      >
+                        {row.id}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        to={`/quotations/${row.id}`}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {row.title}
+                      </Link>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusBadgeClass(row.status)}>
                         {t(`modules.quotation.quotations.status.${row.status}`)}
@@ -279,7 +294,7 @@ export function QuotationsPage() {
                   size="sm"
                   variant={item === currentPage ? "default" : "outline"}
                   onClick={() => setPage(item)}
-                  className="min-w-9"
+                  className={cn("min-w-9", item === currentPage && "text-white")}
                 >
                   {item}
                 </Button>

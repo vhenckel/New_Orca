@@ -1,2 +1,2 @@
-export { quotationModule } from "@/modules/quotation/routes";
-export type * from "@/modules/quotation/types";
+export { quotationModule } from "@/modules/buyer/quotation/routes";
+export type * from "@/modules/buyer/quotation/types";

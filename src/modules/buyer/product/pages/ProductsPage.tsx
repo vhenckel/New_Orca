@@ -2,7 +2,7 @@ import { ArrowUpDown, Eye, Filter, Plus, Search, SlidersHorizontal } from "lucid
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { MOCK_PRODUCTS } from "@/modules/product/data/productMocks";
+import { MOCK_PRODUCTS } from "@/modules/buyer/product/data/productMocks";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -293,7 +293,7 @@ export function ProductsPage() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button type="button" className="gap-2" onClick={() => toast.success(t("modules.product.list.toastAdd"))}>
+          <Button type="button" className="gap-2 text-white" onClick={() => toast.success(t("modules.product.list.toastAdd"))}>
             <Plus className="size-4" />
             {t("modules.product.list.addProduct")}
           </Button>
@@ -436,7 +436,7 @@ export function ProductsPage() {
                   size="sm"
                   variant={item === currentPage ? "default" : "outline"}
                   onClick={() => setPage(item)}
-                  className="min-w-9"
+                  className={cn("min-w-9", item === currentPage && "text-white")}
                 >
                   {item}
                 </Button>

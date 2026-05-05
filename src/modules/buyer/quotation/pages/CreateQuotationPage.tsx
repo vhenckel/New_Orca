@@ -12,9 +12,9 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { MOCK_CATALOG_PRODUCTS } from "@/modules/product";
-import type { CatalogProduct } from "@/modules/product";
-import type { BudgetLineItem } from "@/modules/quotation/types";
+import { MOCK_CATALOG_PRODUCTS } from "@/modules/buyer/product";
+import type { CatalogProduct } from "@/modules/buyer/product";
+import type { BudgetLineItem } from "@/modules/buyer/quotation/types";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
@@ -233,8 +233,8 @@ export function CreateQuotationPage() {
             <CardTitle>{t("modules.quotation.quotations.create.step1Title")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2 sm:col-span-1">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
                 <Label>{t("modules.quotation.quotations.create.deadlineDate")}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -286,29 +286,28 @@ export function CreateQuotationPage() {
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="delivery-time">{t("modules.quotation.quotations.create.deliveryTime")}</Label>
-              <div className="relative max-w-md">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute left-1 top-1/2 z-10 size-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  onClick={() => openTimePicker(deliveryTimeRef.current)}
-                  aria-label={t("modules.quotation.quotations.create.deliveryTime")}
-                >
-                  <Clock className="size-4" />
-                </Button>
-                <Input
-                  ref={deliveryTimeRef}
-                  id="delivery-time"
-                  type="time"
-                  value={deliveryTime}
-                  onChange={(e) => setDeliveryTime(e.target.value)}
-                  className="pl-10 [&::-webkit-calendar-picker-indicator]:hidden"
-                />
+              <div className="space-y-2">
+                <Label htmlFor="delivery-time">{t("modules.quotation.quotations.create.deliveryTime")}</Label>
+                <div className="relative">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-1 top-1/2 z-10 size-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => openTimePicker(deliveryTimeRef.current)}
+                    aria-label={t("modules.quotation.quotations.create.deliveryTime")}
+                  >
+                    <Clock className="size-4" />
+                  </Button>
+                  <Input
+                    ref={deliveryTimeRef}
+                    id="delivery-time"
+                    type="time"
+                    value={deliveryTime}
+                    onChange={(e) => setDeliveryTime(e.target.value)}
+                    className="pl-10 [&::-webkit-calendar-picker-indicator]:hidden"
+                  />
+                </div>
               </div>
             </div>
 
@@ -327,7 +326,7 @@ export function CreateQuotationPage() {
             <Button type="button" variant="outline" onClick={() => navigate("/quotations")}>
               {t("modules.quotation.quotations.create.cancel")}
             </Button>
-            <Button type="button" onClick={handleNextFromStep1}>
+            <Button type="button" onClick={handleNextFromStep1} className="text-white">
               {t("modules.quotation.quotations.create.next")}
             </Button>
           </CardFooter>
@@ -368,7 +367,7 @@ export function CreateQuotationPage() {
             <Button type="button" variant="outline" onClick={() => navigate("/quotations")}>
               {t("modules.quotation.quotations.create.cancel")}
             </Button>
-            <Button type="button" className="gap-1" onClick={handleFinish}>
+            <Button type="button" className="gap-1 text-white" onClick={handleFinish}>
               {t("modules.quotation.quotations.create.continue")}
               <span aria-hidden>›</span>
             </Button>
@@ -689,7 +688,7 @@ export function CreateQuotationPage() {
                 {t("modules.quotation.quotations.create.footerCategories", { count: categoryCount })}
               </span>
             </div>
-            <Button type="button" className="gap-1 sm:ml-auto" onClick={handleFinish}>
+            <Button type="button" className="gap-1 sm:ml-auto text-white" onClick={handleFinish}>
               {t("modules.quotation.quotations.create.continue")}
               <span aria-hidden>›</span>
             </Button>

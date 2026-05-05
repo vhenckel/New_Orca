@@ -1,1 +1,1 @@
-export { analyticModule } from "@/modules/analytic/routes";
+export { analyticModule } from "@/modules/buyer/analytic/routes";

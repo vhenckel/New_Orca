@@ -3,7 +3,7 @@ import type {
   SupplierListItem,
   SupplierPerformanceIndicators,
   SupplierRecentQuotation,
-} from "@/modules/supplier/types";
+} from "@/modules/buyer/supplier/types";
 
 /** Dados de demonstração — cards da lista + detalhe. */
 export const MOCK_SUPPLIERS: SupplierListItem[] = [

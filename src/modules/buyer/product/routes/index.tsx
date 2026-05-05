@@ -1,12 +1,13 @@
 import { Package } from "lucide-react";
 
 import type { AppModuleDefinition } from "@/app/router/types";
-import { ProductDetailPage } from "@/modules/product/pages/ProductDetailPage";
-import { ProductsPage } from "@/modules/product/pages/ProductsPage";
+import { ProductDetailPage } from "@/modules/buyer/product/pages/ProductDetailPage";
+import { ProductsPage } from "@/modules/buyer/product/pages/ProductsPage";
 
 export const productModule: AppModuleDefinition = {
   key: "product",
   basePath: "/products",
+  allowedPersonas: ["buyer"],
   titleKey: "modules.product.title",
   descriptionKey: "modules.product.description",
   icon: Package,

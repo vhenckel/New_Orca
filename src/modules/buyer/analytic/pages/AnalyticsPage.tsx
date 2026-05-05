@@ -1,8 +1,8 @@
 import { Clock, PiggyBank, ShoppingBag, Target, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
-import { AnalyticsDeepAnalysis } from "@/modules/analytic/components/analytics/AnalyticsDeepAnalysis";
-import { ANALYTICS_INSIGHTS, ANALYTICS_OPTIMIZATION } from "@/modules/analytic/data/analyticsMocks";
+import { AnalyticsDeepAnalysis } from "@/modules/buyer/analytic/components/analytics/AnalyticsDeepAnalysis";
+import { ANALYTICS_INSIGHTS, ANALYTICS_OPTIMIZATION } from "@/modules/buyer/analytic/data/analyticsMocks";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent } from "@/shared/ui/card";

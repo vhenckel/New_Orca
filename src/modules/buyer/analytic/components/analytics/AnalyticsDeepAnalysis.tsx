@@ -30,7 +30,7 @@ import {
   RESPONSE_TIME_ROWS,
   SUPPLIER_RANKING,
   TRENDS_MONTHLY,
-} from "@/modules/analytic/data/analyticsMocks";
+} from "@/modules/buyer/analytic/data/analyticsMocks";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Progress } from "@/shared/ui/progress";

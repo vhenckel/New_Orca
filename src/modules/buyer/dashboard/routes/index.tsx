@@ -1,11 +1,12 @@
 import { LayoutDashboard } from "lucide-react";
 
 import type { AppModuleDefinition } from "@/app/router/types";
-import { DashboardPage } from "@/modules/dashboard/pages/DashboardPage";
+import { DashboardPage } from "@/modules/buyer/dashboard/pages/DashboardPage";
 
 export const dashboardModule: AppModuleDefinition = {
   key: "dashboard",
   basePath: "/dashboard",
+  allowedPersonas: ["buyer"],
   titleKey: "modules.dashboard.title",
   descriptionKey: "modules.dashboard.description",
   icon: LayoutDashboard,

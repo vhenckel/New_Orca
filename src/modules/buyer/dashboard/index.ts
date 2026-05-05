@@ -1,1 +1,1 @@
-export { dashboardModule } from "@/modules/dashboard/routes";
+export { dashboardModule } from "@/modules/buyer/dashboard/routes";

@@ -1,11 +1,12 @@
 import { BarChart3 } from "lucide-react";
 
 import type { AppModuleDefinition } from "@/app/router/types";
-import { AnalyticsPage } from "@/modules/analytic/pages/AnalyticsPage";
+import { AnalyticsPage } from "@/modules/buyer/analytic/pages/AnalyticsPage";
 
 export const analyticModule: AppModuleDefinition = {
   key: "analytic",
   basePath: "/analytics",
+  allowedPersonas: ["buyer"],
   titleKey: "modules.analytic.title",
   descriptionKey: "modules.analytic.description",
   icon: BarChart3,

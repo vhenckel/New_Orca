@@ -1,4 +1,4 @@
-import type { CatalogProduct, ProductBrandEntry, ProductDetailData, ProductListItem } from "@/modules/product/types";
+import type { CatalogProduct, ProductBrandEntry, ProductDetailData, ProductListItem } from "@/modules/buyer/product/types";
 
 export const MOCK_CATALOG_PRODUCTS: CatalogProduct[] = [
   {

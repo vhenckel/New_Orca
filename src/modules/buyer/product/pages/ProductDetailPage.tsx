@@ -1,7 +1,7 @@
 import { ArrowLeft, Layers, Package, Pencil, Tags } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
-import { getProductDetail } from "@/modules/product/data/productMocks";
+import { getProductDetail } from "@/modules/buyer/product/data/productMocks";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import {
   Breadcrumb,
@@ -104,7 +104,7 @@ export function ProductDetailPage() {
                     {t("modules.product.detail.back")}
                   </Link>
                 </Button>
-                <Button type="button" className="gap-2" onClick={onEdit}>
+                <Button type="button" className="gap-2 text-white" onClick={onEdit}>
                   <Pencil className="size-4" />
                   {t("modules.product.detail.edit")}
                 </Button>

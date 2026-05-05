@@ -15,8 +15,8 @@ import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useNavigate } from "react-router-dom";
 
-import { MOCK_SUPPLIERS } from "@/modules/supplier/data/supplierMocks";
-import type { SupplierBranchId, SupplierListItem } from "@/modules/supplier/types";
+import { MOCK_SUPPLIERS } from "@/modules/buyer/supplier/data/supplierMocks";
+import type { SupplierBranchId, SupplierListItem } from "@/modules/buyer/supplier/types";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -166,7 +166,7 @@ export function SuppliersPage() {
       <CardFooter className="flex flex-col gap-2 border-t bg-background/80 pt-4">
         <Button
           type="button"
-          className="w-full"
+          className="w-full text-white"
           onClick={() => toast.info(t("modules.supplier.toast.linkReps"))}
         >
           {t("modules.supplier.actions.linkReps")}
@@ -205,7 +205,7 @@ export function SuppliersPage() {
           <Button
             type="button"
             size="sm"
-            className="gap-2"
+            className="gap-2 text-white"
             onClick={() => toast.info(t("modules.supplier.toast.register"))}
           >
             <Plus className="size-4" aria-hidden />

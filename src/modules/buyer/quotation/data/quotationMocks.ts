@@ -1,4 +1,4 @@
-import type { QuotationListItem, QuotationStatus } from "@/modules/quotation/types";
+import type { QuotationListItem, QuotationStatus } from "@/modules/buyer/quotation/types";
 
 export const MOCK_QUOTATIONS: QuotationListItem[] = [
   {

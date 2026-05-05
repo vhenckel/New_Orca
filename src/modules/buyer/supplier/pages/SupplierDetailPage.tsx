@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
-import { getSupplierDetail } from "@/modules/supplier/data/supplierMocks";
-import type { SupplierRecentQuotationStatus } from "@/modules/supplier/types";
+import { getSupplierDetail } from "@/modules/buyer/supplier/data/supplierMocks";
+import type { SupplierRecentQuotationStatus } from "@/modules/buyer/supplier/types";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
@@ -241,7 +241,7 @@ export function SupplierDetailPage() {
                   <MessageSquare className="size-4" />
                   {t("modules.supplier.detail.message")}
                 </Button>
-                <Button type="button" className="gap-2" onClick={onEdit}>
+                <Button type="button" className="gap-2 text-white" onClick={onEdit}>
                   <Pencil className="size-4" />
                   {t("modules.supplier.detail.edit")}
                 </Button>

@@ -1,11 +1,12 @@
 import { Settings2 } from "lucide-react";
 
 import type { AppModuleDefinition } from "@/app/router/types";
-import { PreferencesPage } from "@/modules/config/pages/PreferencesPage";
+import { PreferencesPage } from "@/modules/buyer/config/pages/PreferencesPage";
 
 export const configModule: AppModuleDefinition = {
   key: "config",
   basePath: "/config",
+  allowedPersonas: ["buyer"],
   titleKey: "modules.config.title",
   descriptionKey: "modules.config.description",
   icon: Settings2,
