@@ -4,12 +4,11 @@ import { analyticModule } from "@/modules/buyer/analytic";
 import { dashboardModule } from "@/modules/buyer/dashboard";
 import { quotationModule } from "@/modules/buyer/quotation";
 import { productModule } from "@/modules/product";
-import { supplierModule as buyerSupplierModule } from "@/modules/buyer/supplier";
+import { suppliersModule } from "@/modules/suppliers";
 import {
   adminBillingModule,
   adminDashboardModule,
   adminRestaurantsModule,
-  adminSuppliersModule,
   adminUsersModule,
 } from "@/modules/admin";
 import { preferencesModule } from "@/shared/preferences";
@@ -26,7 +25,7 @@ export const buyerModules: AppModuleDefinition[] = [
   dashboardModule,
   quotationModule,
   productModule,
-  buyerSupplierModule,
+  suppliersModule,
   analyticModule,
 ];
 
@@ -46,7 +45,7 @@ export const adminModules: AppModuleDefinition[] = [
   productModule,
   adminUsersModule,
   adminRestaurantsModule,
-  adminSuppliersModule,
+  suppliersModule,
   adminBillingModule,
 ];
 

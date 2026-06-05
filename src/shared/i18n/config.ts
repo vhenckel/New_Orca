@@ -8,8 +8,8 @@ import { productEnUS } from "@/modules/product/i18n/en-US";
 import { productPtBR } from "@/modules/product/i18n/pt-BR";
 import { quotationEnUS } from "@/modules/buyer/quotation/i18n/en-US";
 import { quotationPtBR } from "@/modules/buyer/quotation/i18n/pt-BR";
-import { supplierEnUS as buyerSupplierEnUS } from "@/modules/buyer/supplier/i18n/en-US";
-import { supplierPtBR as buyerSupplierPtBR } from "@/modules/buyer/supplier/i18n/pt-BR";
+import { suppliersEnUS } from "@/modules/suppliers/i18n/en-US";
+import { suppliersPtBR } from "@/modules/suppliers/i18n/pt-BR";
 import { adminEnUS } from "@/modules/admin/i18n/en-US";
 import { adminPtBR } from "@/modules/admin/i18n/pt-BR";
 import { supplierPortalEnUS } from "@/modules/supplier/i18n/en-US";
@@ -23,7 +23,7 @@ const ptBRMessages = {
   ...dashboardPtBR,
   ...quotationPtBR,
   ...productPtBR,
-  ...buyerSupplierPtBR,
+  ...suppliersPtBR,
   ...analyticPtBR,
   ...supplierPortalPtBR,
   ...adminPtBR,
@@ -34,7 +34,7 @@ const enUSMessages = {
   ...dashboardEnUS,
   ...quotationEnUS,
   ...productEnUS,
-  ...buyerSupplierEnUS,
+  ...suppliersEnUS,
   ...analyticEnUS,
   ...supplierPortalEnUS,
   ...adminEnUS,
