@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import type { UserPersona } from "@/shared/auth/types";
+import type { ApiUserRole, UserPersona } from "@/shared/auth/types";
 import type { TranslationKey } from "@/shared/i18n/config";
 
 export interface AppRouteDefinition {
@@ -16,6 +16,8 @@ export interface AppRouteDefinition {
   requiresAuth?: boolean;
   /** Nomes de permissão (qualquer uma habilitada). Se vazio/undefined, não checa permissão. */
   requiredPermissions?: string[];
+  /** Roles da API Orca (`admin`, `establishment`, `supplier`). Se definido, exige uma delas. */
+  allowedApiRoles?: ApiUserRole[];
   /** TopBar: período (datas) na URL para o módulo. */
   showDebtNegotiationDateRangeInTopBar?: boolean;
   /** TopBar: atalho importar dívidas. */

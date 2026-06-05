@@ -2,6 +2,7 @@ import { Bell, ChevronDown, LogOut, Settings2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
+import { DashboardDateRangePicker } from "@/modules/buyer/dashboard/components/DashboardDateRangePicker";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { getCompanyNameFromToken } from "@/shared/auth/jwt";
 import { getStoredToken } from "@/shared/auth/token-store";
@@ -14,6 +15,13 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { ScrollArea } from "@/shared/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 
 interface TopBarProps {
   currentModule: AppModuleDefinition;
@@ -41,10 +49,12 @@ export function TopBar({ currentModule: _currentModule, currentRoute }: TopBarPr
       ? `${parent.path}${parent.preserveSearch ? location.search : ""}`
       : null;
 
-  const preferencesPath = user?.persona === "supplier" ? "/supplier/config" : "/config";
+  const preferencesPath = "/preferences";
+  const isBuyerDashboard =
+    currentRoute.path === "/dashboard" || _currentModule.key === "dashboard";
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-card px-6">
+    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-border bg-card px-6 shadow-sm">
       <div className="min-w-0 flex-1">
         <nav aria-label={t("app.topbar.breadcrumbNav")} className="flex min-w-0 items-center gap-2">
           {parentTo != null && parent != null ? (
@@ -58,13 +68,26 @@ export function TopBar({ currentModule: _currentModule, currentRoute }: TopBarPr
             </>
           ) : null}
           <span className="hidden shrink-0 text-sm text-muted-foreground md:inline">/</span>
-          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+          <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
             {t(currentRoute.labelKey)}
           </h1>
         </nav>
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
+        {isBuyerDashboard && (
+          <div className="mr-2 hidden items-center gap-2 lg:flex">
+            <Select defaultValue="all">
+              <SelectTrigger className="h-9 w-[200px] border-border bg-background text-sm">
+                <SelectValue placeholder={t("app.topbar.allRestaurants")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("app.topbar.allRestaurants")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <DashboardDateRangePicker />
+          </div>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

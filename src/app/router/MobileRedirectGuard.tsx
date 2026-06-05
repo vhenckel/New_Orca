@@ -36,6 +36,9 @@ export function MobileRedirectGuard() {
         navigate(`${target}${search}`, { replace: true });
         return;
       }
+      if (pathname === "/supplier/dashboard") {
+        return;
+      }
       if (pathname.startsWith("/supplier")) {
         navigate(`/m/supplier/quotations${search}`, { replace: true });
         return;
@@ -47,7 +50,7 @@ export function MobileRedirectGuard() {
       const target = pathname.replace("/m/supplier/quotations", "/supplier/quotations");
       navigate(`${target}${search}`, { replace: true });
     }
-  }, [isMobile, user, loading, location.pathname, location.search, navigate]);
+  }, [isMobile, user, loading, location, navigate]);
 
   return null;
 }

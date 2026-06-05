@@ -7,18 +7,31 @@ import { AuthProvider, getLandingPathForPersona, useAuth } from "@/shared/auth/A
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useIsMobile } from "@/shared/hooks/useIsMobile";
-import { ChooseCompanyPage } from "@/app/pages/ChooseCompanyPage";
 import { ForgotPasswordPage } from "@/app/pages/ForgotPasswordPage";
 import { LoginPage } from "@/app/pages/LoginPage";
+import { LogoutPage } from "@/app/pages/LogoutPage";
+import { ResetPasswordPage } from "@/app/pages/ResetPasswordPage";
 import { NotFoundPage } from "@/app/router/NotFoundPage";
 import { MobileRedirectGuard } from "@/app/router/MobileRedirectGuard";
 import { ModuleShell } from "@/app/router/ModuleShell";
-import { buyerModules, supplierMobileModules, supplierModules } from "@/app/router/modules";
+import {
+  adminModules,
+  buyerModules,
+  sharedModules,
+  supplierMobileModules,
+  supplierModules,
+} from "@/app/router/modules";
 
 const APP_NAME = "Orca";
 
 /** União de todos os módulos conhecidos — registra todas as rotas no router. */
-const allModules = [...buyerModules, ...supplierModules, ...supplierMobileModules];
+const allModules = [
+  ...buyerModules,
+  ...supplierModules,
+  ...supplierMobileModules,
+  ...adminModules.filter((module) => !buyerModules.some((m) => m.key === module.key)),
+  ...sharedModules,
+];
 
 function DocumentTitleSync() {
   const location = useLocation();
@@ -42,6 +55,7 @@ function DocumentTitleSync() {
 
 function RootRedirect() {
   const { user, loading } = useAuth();
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
@@ -51,7 +65,6 @@ function RootRedirect() {
     );
   }
 
-  const isMobile = useIsMobile();
   const to = user ? getLandingPathForPersona(user.persona, { isMobile }) : "/login";
   return <Navigate to={to} replace />;
 }
@@ -60,9 +73,13 @@ function PersonaAppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/choose-company" element={<ChooseCompanyPage />} />
+      <Route path="/logout" element={<LogoutPage />} />
+      <Route path="/esqueci-minha-senha" element={<ForgotPasswordPage />} />
+      <Route path="/forgot-password" element={<Navigate to="/esqueci-minha-senha" replace />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/" element={<RootRedirect />} />
+      <Route path="/config" element={<Navigate to="/preferences" replace />} />
+      <Route path="/supplier/config" element={<Navigate to="/preferences" replace />} />
       {allModules.flatMap((module) =>
         module.routes.map((route) => (
           <Route

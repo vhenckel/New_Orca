@@ -28,7 +28,12 @@ function routePathMatches(routePath: string, pathname: string): boolean {
 
 /** Rota exata do item Dashboard na sidebar (comprador ou fornecedor). */
 function getDashboardPath(modules: AppModuleDefinition[]): string | null {
-  const dash = modules.find((m) => m.key === "dashboard" || m.key === "supplier-dashboard");
+  const dash = modules.find(
+    (m) =>
+      m.key === "dashboard" ||
+      m.key === "supplier-dashboard" ||
+      m.key === "admin-dashboard",
+  );
   return dash ? (dash.sidebarLinkTo ?? dash.basePath) : null;
 }
 

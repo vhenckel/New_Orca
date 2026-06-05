@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition } from "@/app/router/types";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { ORCA_LOGO_LIGHT } from "@/shared/theme/brand-assets";
 import { cn } from "@/shared/lib/utils";
 
 interface AppSidebarProps {
@@ -31,21 +32,23 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-30 flex h-screen flex-col border-r border-border bg-card transition-all duration-300",
+        "fixed left-0 top-0 z-30 flex h-screen flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300",
         collapsed ? "w-16" : "w-52",
       )}
     >
-      <div className="flex h-14 items-center border-b border-border bg-card px-4">
-        <div className={cn("flex items-center gap-2", collapsed && "justify-center w-full")}>
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
-            O
-          </div>
-          {!collapsed && <span className="text-lg font-semibold text-foreground">Orca</span>}
-        </div>
+      <div className="relative flex h-16 shrink-0 items-center justify-center border-b border-sidebar-border px-3 bg-sidebar-glow">
+        <img
+          src={ORCA_LOGO_LIGHT}
+          alt="Orca"
+          className={cn(
+            "h-auto max-h-9 w-auto object-contain transition-all duration-300",
+            collapsed ? "max-w-9" : "max-w-[140px]",
+          )}
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
-        <div className="space-y-1">
+        <div className="flex flex-col gap-1">
           {visibleModules.map((module) => {
             const to = module.sidebarLinkTo ?? module.basePath;
             const ModuleIcon = module.icon;
@@ -57,12 +60,18 @@ export function AppSidebar({
                 onClick={() => onSidebarItemClick(to)}
                 title={collapsed ? t(module.titleKey) : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   collapsed && "justify-center px-0",
-                  isActive && "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
+                  isActive &&
+                    "bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 )}
               >
-                <ModuleIcon className="h-4 w-4 shrink-0" />
+                <ModuleIcon
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    isActive ? "text-sidebar-primary" : "text-sidebar-foreground",
+                  )}
+                />
                 {!collapsed && <span className="truncate">{t(module.titleKey)}</span>}
               </NavLink>
             );
@@ -70,11 +79,11 @@ export function AppSidebar({
         </div>
       </div>
 
-      <div className="border-t border-border p-3">
+      <div className="border-t border-sidebar-border p-3">
         <button
           type="button"
           onClick={onToggle}
-          className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>

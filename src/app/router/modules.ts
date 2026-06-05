@@ -1,11 +1,18 @@
 import type { UserPersona } from "@/shared/auth/types";
 import type { AppModuleDefinition } from "@/app/router/types";
 import { analyticModule } from "@/modules/buyer/analytic";
-import { configModule } from "@/modules/buyer/config";
 import { dashboardModule } from "@/modules/buyer/dashboard";
-import { productModule } from "@/modules/buyer/product";
 import { quotationModule } from "@/modules/buyer/quotation";
+import { productModule } from "@/modules/product";
 import { supplierModule as buyerSupplierModule } from "@/modules/buyer/supplier";
+import {
+  adminBillingModule,
+  adminDashboardModule,
+  adminRestaurantsModule,
+  adminSuppliersModule,
+  adminUsersModule,
+} from "@/modules/admin";
+import { preferencesModule } from "@/shared/preferences";
 import {
   supplierCatalogModule,
   supplierCustomersModule,
@@ -14,14 +21,16 @@ import {
   supplierQuotationModule,
 } from "@/modules/supplier";
 
+/** Produtos: módulo em `@/modules/product` (admin + establishment; supplier não acessa). */
 export const buyerModules: AppModuleDefinition[] = [
   dashboardModule,
   quotationModule,
   productModule,
   buyerSupplierModule,
   analyticModule,
-  configModule,
 ];
+
+export const sharedModules: AppModuleDefinition[] = [preferencesModule];
 
 export const supplierModules: AppModuleDefinition[] = [
   supplierDashboardModule,
@@ -32,7 +41,17 @@ export const supplierModules: AppModuleDefinition[] = [
 
 export const supplierMobileModules: AppModuleDefinition[] = [supplierMobileQuotationModule];
 
+export const adminModules: AppModuleDefinition[] = [
+  adminDashboardModule,
+  productModule,
+  adminUsersModule,
+  adminRestaurantsModule,
+  adminSuppliersModule,
+  adminBillingModule,
+];
+
 export function getModulesForPersona(persona: UserPersona): AppModuleDefinition[] {
+  if (persona === "admin") return adminModules;
   return persona === "supplier" ? supplierModules : buyerModules;
 }
 
