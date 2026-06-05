@@ -1,20 +1,41 @@
 import {
   AlertTriangle,
   ArrowLeft,
-  Box,
-  CheckCircle2,
-  Clock,
+  CalendarClock,
   FileText,
-  ListChecks,
-  Sparkles,
-  TrendingDown,
-  Users,
+  Mail,
+  MessageSquare,
+  Package,
+  Truck,
+  X,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { getQuotationDetail } from "@/modules/buyer/quotation/data/quotationDetailMocks";
-import type { QuotationDetailSupplier, QuotationSupplierResponse } from "@/modules/buyer/quotation/types";
+import { sendBudget } from "@/modules/buyer/quotation/api/budgets-api";
+import { ViewBudgetGenerateOrderDialog } from "@/modules/buyer/quotation/components/ViewBudgetGenerateOrderDialog";
+import { ViewBudgetProductQuotationDialog } from "@/modules/buyer/quotation/components/ViewBudgetProductQuotationDialog";
+import {
+  useFinalizeBudget,
+  useSelectCheapestQuotations,
+  useViewBudget,
+} from "@/modules/buyer/quotation/hooks/useViewBudget";
+import {
+  calcResponseProgress,
+  formatViewBudgetCurrency,
+  formatViewBudgetDateTime,
+  formatViewBudgetPackaging,
+  formatViewBudgetProductBrands,
+  formatViewBudgetText,
+  sumProductQuantities,
+} from "@/modules/buyer/quotation/lib/view-budget-display";
+import type { BudgetStatus } from "@/modules/buyer/quotation/types/budget";
+import type { BudgetViewProduct } from "@/modules/buyer/quotation/types/view-budget";
+import { useApiUserRole } from "@/shared/auth/use-api-user";
+import { ApiError } from "@/shared/api/http-client";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
+import { useI18n } from "@/shared/i18n/useI18n";
+import { DESTRUCTIVE_BADGE, quotationBadgeClass } from "@/shared/lib/status-tones";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,11 +44,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/shared/ui/breadcrumb";
-import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
-import { useI18n } from "@/shared/i18n/useI18n";
+import { Progress } from "@/shared/ui/progress";
+import { Skeleton } from "@/shared/ui/skeleton";
 import { toast } from "@/shared/ui/sonner";
 import {
   Table,
@@ -38,30 +60,154 @@ import {
   TableRow,
 } from "@/shared/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { cn } from "@/shared/lib/utils";
+import { useMutation } from "@tanstack/react-query";
 
-function formatDateTime(iso: string, locale: string) {
-  const d = new Date(iso);
-  return d.toLocaleString(locale === "en-US" ? "en-US" : "pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function statusBadgeClass(status: QuotationSupplierResponse) {
-  if (status === "answered") return "border-emerald-200 bg-emerald-50 text-emerald-900";
-  if (status === "partial") return "border-amber-200 bg-amber-50 text-amber-900";
+function budgetStatusBadgeClass(status: BudgetStatus): string {
+  if (status === "open") return quotationBadgeClass("info");
+  if (status === "finished") return quotationBadgeClass("success");
+  if (status === "canceled") return DESTRUCTIVE_BADGE;
   return "border-border bg-muted text-muted-foreground";
 }
 
-export function QuotationDetailPage() {
-  const { t, locale } = useI18n();
-  const { id } = useParams<{ id: string }>();
-  const detail = getQuotationDetail(id, locale);
+function budgetStatusLabelKey(status: BudgetStatus): string {
+  if (status === "open") return "modules.quotation.quotations.status.open";
+  if (status === "finished") return "modules.quotation.quotations.status.finished";
+  if (status === "canceled") return "modules.quotation.quotations.status.canceled";
+  return "modules.quotation.quotations.status.saved";
+}
 
-  if (!detail) {
+function resolveBudgetTitle(
+  name: string | undefined,
+  establishmentName: string,
+  fallback: string,
+): string {
+  const trimmed = name?.trim();
+  if (trimmed) return trimmed;
+  return establishmentName || fallback;
+}
+
+export function QuotationDetailPage() {
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const role = useApiUserRole();
+  const [activeTab, setActiveTab] = useState("general");
+  const [selectedProduct, setSelectedProduct] = useState<BudgetViewProduct | null>(null);
+  const [quotationDialogOpen, setQuotationDialogOpen] = useState(false);
+  const [generateOrderDialogOpen, setGenerateOrderDialogOpen] = useState(false);
+
+  const { budget, summary, products, suppliers, isLoading, isError } = useViewBudget(id);
+  const finalizeMutation = useFinalizeBudget(id ?? "");
+  const cheapestMutation = useSelectCheapestQuotations(id ?? "");
+
+  const resendMutation = useMutation({
+    mutationFn: () => sendBudget(id!),
+    onSuccess: () => {
+      toast.success(t("modules.quotation.detail.toast.resendSuccess"));
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : t("modules.quotation.detail.toast.resendError");
+      toast.error(message);
+    },
+  });
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(t("modules.quotation.detail.toast.loadError"));
+    }
+  }, [isError, t]);
+
+  useEffect(() => {
+    if (!budget || !id) return;
+    if (budget.status === "saved") {
+      navigate(`/quotations/new?edit=${id}`, { replace: true });
+    }
+  }, [budget, id, navigate]);
+
+  const anyBrandLabel = t("modules.quotation.quotations.create.anyBrand");
+  const isEstablishment = role === "establishment";
+  const status = budget?.status;
+  const canFinalize = status === "open" && isEstablishment;
+  const canSelectCheapest = status === "finished";
+  const showResend = status === "open";
+
+  const title = resolveBudgetTitle(
+    budget?.name,
+    budget?.establishment.name ?? "",
+    t("modules.quotation.detail.defaultTitle"),
+  );
+
+  const createdLabel = formatViewBudgetDateTime(budget?.createdAt);
+  const deadlineLabel = formatViewBudgetDateTime(budget?.deadline);
+  const metaCreatedDeadline =
+    createdLabel !== "—"
+      ? t("modules.quotation.detail.header.metaCreated", {
+          created: createdLabel,
+          deadline: deadlineLabel,
+        })
+      : t("modules.quotation.detail.header.metaDeadlineOnly", { deadline: deadlineLabel });
+
+  const totalSuppliers = suppliers.length;
+  const responseProgress = useMemo(
+    () => calcResponseProgress(summary?.responseCount ?? 0, totalSuppliers),
+    [summary?.responseCount, totalSuppliers],
+  );
+
+  const totalUnits = useMemo(() => sumProductQuantities(products), [products]);
+  const hasDifferentFromRequest = products.some(
+    (p) => p.hasDifferentFromRequest || p.differentFromRequest,
+  );
+  const maxMissingValue = useMemo(
+    () => Math.max(0, ...products.map((p) => p.missingValue ?? 0)),
+    [products],
+  );
+
+  const openProductDialog = (product: BudgetViewProduct) => {
+    setSelectedProduct(product);
+    setQuotationDialogOpen(true);
+  };
+
+  const onFinalize = () => {
+    finalizeMutation.mutate(undefined, {
+      onSuccess: () => toast.success(t("modules.quotation.detail.toast.finishSuccess")),
+      onError: (error: unknown) => {
+        const message =
+          error instanceof ApiError
+            ? error.message
+            : t("modules.quotation.detail.toast.finishError");
+        toast.error(message);
+      },
+    });
+  };
+
+  const onSelectCheapest = () => {
+    cheapestMutation.mutate(undefined, {
+      onSuccess: () => toast.success(t("modules.quotation.detail.toast.cheapestSuccess")),
+      onError: (error: unknown) => {
+        const message =
+          error instanceof ApiError
+            ? error.message
+            : t("modules.quotation.detail.toast.cheapestError");
+        toast.error(message);
+      },
+    });
+  };
+
+  if (!id) {
+    return (
+      <DashboardPageLayout showPageHeader={false}>
+        <Alert variant="destructive">
+          <AlertDescription>{t("modules.quotation.detail.notFound")}</AlertDescription>
+        </Alert>
+      </DashboardPageLayout>
+    );
+  }
+
+  if (!isLoading && isError && !budget) {
     return (
       <DashboardPageLayout showPageHeader={false}>
         <div className="flex flex-col gap-4">
@@ -72,25 +218,12 @@ export function QuotationDetailPage() {
             </Link>
           </Button>
           <Alert variant="destructive">
-            <AlertTitle>{t("modules.quotation.detail.notFoundTitle")}</AlertTitle>
-            <AlertDescription className="flex flex-col gap-4 pt-2">
-              <p>{t("modules.quotation.detail.notFound")}</p>
-              <Button asChild variant="outline" className="w-fit">
-                <Link to="/quotations">{t("modules.quotation.detail.backToList")}</Link>
-              </Button>
-            </AlertDescription>
+            <AlertDescription>{t("modules.quotation.detail.notFound")}</AlertDescription>
           </Alert>
         </div>
       </DashboardPageLayout>
     );
   }
-
-  const onFinish = () => {
-    toast.success(t("modules.quotation.detail.toastFinish"));
-  };
-
-  const createdLabel = formatDateTime(detail.createdAt, locale);
-  const deadlineLabel = formatDateTime(detail.deadlineAt, locale);
 
   return (
     <DashboardPageLayout showPageHeader={false}>
@@ -104,234 +237,361 @@ export function QuotationDetailPage() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage className="font-mono">#{detail.id}</BreadcrumbPage>
+              <BreadcrumbPage>
+                {t("modules.quotation.detail.breadcrumbView", { id: id.slice(0, 8) })}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-6">
         <Card className="overflow-hidden rounded-2xl shadow-sm">
-          <CardContent className="flex flex-col gap-6 p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <CardContent className="flex flex-col gap-0 p-0">
+            <div className="flex flex-col gap-4 p-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-start">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-info/10 text-info">
                   <FileText className="size-6" />
                 </div>
-                <div className="min-w-0 flex flex-col gap-2">
+                <div className="flex min-w-0 flex-col gap-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-xl font-semibold tracking-tight text-foreground">{detail.title}</h2>
-                    <Badge
-                      variant="outline"
-                      className="border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-200"
-                    >
-                      {t(`modules.quotation.quotations.status.${detail.status}`)}
-                    </Badge>
+                    {isLoading ? (
+                      <Skeleton className="h-7 w-64" />
+                    ) : (
+                      <h1 className="text-xl font-semibold tracking-tight text-foreground">{title}</h1>
+                    )}
+                    {status ? (
+                      <Badge variant="outline" className={budgetStatusBadgeClass(status)}>
+                        {t(budgetStatusLabelKey(status))}
+                      </Badge>
+                    ) : null}
+                    <span className="font-mono text-sm text-muted-foreground">#{id.slice(0, 8)}</span>
                   </div>
-                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                    <p>{t("modules.quotation.detail.summary.created", { date: createdLabel })}</p>
-                    <p>{t("modules.quotation.detail.summary.deadline", { date: deadlineLabel })}</p>
-                  </div>
-                  <p className="text-sm text-foreground">{detail.note}</p>
+                  {isLoading ? (
+                    <Skeleton className="h-4 w-80" />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{metaCreatedDeadline}</p>
+                  )}
                 </div>
               </div>
-              <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
-                <Button variant="outline" className="gap-2" asChild>
+
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Button variant="ghost" className="gap-2" asChild>
                   <Link to="/quotations">
                     <ArrowLeft className="size-4" />
                     {t("modules.quotation.detail.back")}
                   </Link>
                 </Button>
-                <Button type="button" className="gap-2 text-white" onClick={onFinish}>
-                  <ListChecks className="size-4" />
-                  {t("modules.quotation.detail.finishBudget")}
-                </Button>
+                {showResend ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="gap-2"
+                    disabled={resendMutation.isPending}
+                    onClick={() => resendMutation.mutate()}
+                  >
+                    <Mail className="size-4" />
+                    {t("modules.quotation.detail.resendInvites")}
+                  </Button>
+                ) : null}
+                {canFinalize ? (
+                  <Button
+                    type="button"
+                    className="gap-2 text-white"
+                    disabled={finalizeMutation.isPending}
+                    onClick={onFinalize}
+                  >
+                    {t("modules.quotation.detail.finishQuotation")}
+                  </Button>
+                ) : null}
               </div>
+            </div>
+
+            <div className="border-t px-6">
+                <TabsList className="h-auto w-full justify-start rounded-none border-0 bg-transparent p-0">
+                  <TabsTrigger
+                    value="general"
+                    className="rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    {t("modules.quotation.detail.tabs.general")}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="suppliers"
+                    className="gap-2 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  >
+                    {t("modules.quotation.detail.tabs.suppliers")}
+                    <Badge variant="secondary" className="h-5 min-w-5 px-1.5 tabular-nums">
+                      {totalSuppliers}
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t("modules.quotation.detail.stats.responses")}
-              </CardTitle>
-              <Users className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="flex flex-col gap-0.5">
-              <p className="text-2xl font-bold tabular-nums">{detail.responsesFraction}</p>
-              <p className="text-xs text-muted-foreground">{detail.responsesSuppliersHint}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t("modules.quotation.detail.stats.items")}
-              </CardTitle>
-              <Box className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold tabular-nums">{detail.itemCount}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t("modules.quotation.detail.stats.bestTotal")}
-              </CardTitle>
-              <TrendingDown className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                {detail.bestTotalFormatted}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t("modules.quotation.detail.stats.gap")}
-              </CardTitle>
-              <AlertTriangle className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
-                {detail.gapFormatted}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="col-span-2 md:col-span-1 lg:col-span-1">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t("modules.quotation.detail.stats.savings")}
-              </CardTitle>
-              <Sparkles className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="flex flex-col gap-0.5">
-              <p className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                {detail.savingsVsHighestFormatted}
-              </p>
-              <p className="text-xs text-muted-foreground">{t("modules.quotation.detail.stats.vsHighest")}</p>
-            </CardContent>
-          </Card>
-        </div>
+          <TabsContent value="general" className="mt-0 flex flex-col gap-6">
+            {status === "open" ? (
+              <Alert className="border-info/30 bg-info/10">
+                <AlertDescription className="text-info">
+                  {t("modules.quotation.detail.alert.openReadOnly")}
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-        <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-2">
-              <Clock className="size-4 text-muted-foreground" />
-              <CardTitle className="text-base">{t("modules.quotation.detail.deadlines.title")}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground">{t("modules.quotation.detail.deadlines.limit")}</span>
-                <span className="font-medium">{deadlineLabel}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground">{t("modules.quotation.detail.deadlines.delivery")}</span>
-                <span className="font-medium">{detail.deliveryTerms}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground">{t("modules.quotation.detail.deadlines.responseStatus")}</span>
-                <span className="font-medium">{detail.responseProgressLabel}</span>
-              </div>
-            </CardContent>
-          </Card>
+            {status === "finished" && maxMissingValue > 0 ? (
+              <Alert className="border-warning/30 bg-warning/10">
+                <AlertTriangle className="text-warning" />
+                <AlertDescription>
+                  {t("modules.quotation.detail.alert.minimumOrder", {
+                    amount: formatViewBudgetCurrency(maxMissingValue),
+                  })}
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-          <Alert className="w-full border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40">
-            <AlertTriangle className="text-amber-600 dark:text-amber-400" />
-            <AlertTitle>{t("modules.quotation.detail.attention.title")}</AlertTitle>
-            <AlertDescription>{t("modules.quotation.detail.attention.body", { amount: detail.gapFormatted })}</AlertDescription>
-          </Alert>
-        </div>
+            {hasDifferentFromRequest ? (
+              <Alert className="border-warning/30 bg-warning/10">
+                <AlertTriangle className="text-warning" />
+                <AlertDescription>
+                  {t("modules.quotation.detail.alert.differentBrand")}
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-        <Card className="min-w-0">
-          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex flex-col gap-1">
-              <CardTitle>{t("modules.quotation.detail.compare.title")}</CardTitle>
-              <CardDescription>{t("modules.quotation.detail.compare.subtitle")}</CardDescription>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <Card>
+                <CardContent className="flex items-start gap-3 p-4">
+                  <CalendarClock className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      {t("modules.quotation.detail.meta.deadline")}
+                    </span>
+                    <span className="font-medium">{deadlineLabel}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex items-start gap-3 p-4">
+                  <Truck className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      {t("modules.quotation.detail.meta.deliveryTime")}
+                    </span>
+                    <span className="font-medium">
+                      {formatViewBudgetText(budget?.deliveryTime)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex items-start gap-3 p-4">
+                  <MessageSquare className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-muted-foreground">
+                      {t("modules.quotation.detail.meta.observation")}
+                    </span>
+                    <span className="font-medium">{formatViewBudgetText(budget?.observation)}</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <Badge
-              variant="outline"
-              className="w-fit shrink-0 border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
-            >
-              {detail.opportunitiesFormatted}
-            </Badge>
-          </CardHeader>
-          <CardContent className="px-0 pb-6 pt-0">
-            <div className="overflow-x-auto px-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[140px]">{t("modules.quotation.detail.compare.table.product")}</TableHead>
-                    <TableHead>{t("modules.quotation.detail.compare.table.brand")}</TableHead>
-                    <TableHead>{t("modules.quotation.detail.compare.table.qty")}</TableHead>
-                    <TableHead className="min-w-[160px]">{t("modules.quotation.detail.compare.table.chosenSupplier")}</TableHead>
-                    <TableHead className="text-right">{t("modules.quotation.detail.compare.table.total")}</TableHead>
-                    <TableHead className="text-right">{t("modules.quotation.detail.compare.table.bestTotal")}</TableHead>
-                    <TableHead>{t("modules.quotation.detail.compare.table.diff")}</TableHead>
-                    <TableHead>{t("modules.quotation.detail.compare.table.delivery")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {detail.lines.map((line) => (
-                    <TableRow key={line.productName}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {line.lineStatus === "best" ? (
-                            <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                          ) : (
-                            <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                          )}
-                          <span className="font-medium">{line.productName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{line.brandsLabel}</TableCell>
-                      <TableCell className="tabular-nums">{line.quantityLabel}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-medium">{line.chosenSupplier}</span>
-                          {line.bestSupplierName ? (
-                            <span className="text-xs text-muted-foreground">
-                              {t("modules.quotation.detail.compare.bestHint", { name: line.bestSupplierName })}
-                            </span>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">{line.totalFormatted}</TableCell>
-                      <TableCell className="text-right font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
-                        {line.bestTotalFormatted}
-                      </TableCell>
-                      <TableCell>
-                        {line.diff === "best" ? (
-                          <Badge
-                            variant="outline"
-                            className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100"
-                          >
-                            {t("modules.quotation.detail.compare.badgeBest")}
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
-                          >
-                            {line.diff.savingsFormatted}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="tabular-nums text-muted-foreground">{line.deliveryLabel}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Tabs defaultValue="suppliers" className="flex flex-col gap-4">
-          <TabsList className="w-fit">
-            <TabsTrigger value="suppliers">{t("modules.quotation.detail.tabs.suppliers")}</TabsTrigger>
-            <TabsTrigger value="finance">{t("modules.quotation.detail.tabs.finance")}</TabsTrigger>
-          </TabsList>
+            <Card>
+              <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex flex-col gap-1">
+                  <CardTitle>{t("modules.quotation.detail.orderSummary.title")}</CardTitle>
+                  <CardDescription>
+                    {t("modules.quotation.detail.orderSummary.subtitle")}
+                  </CardDescription>
+                </div>
+                <div className="flex w-full min-w-[200px] flex-col gap-2 sm:w-56">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {t("modules.quotation.detail.orderSummary.responsesProgress", {
+                        fraction: responseProgress.fraction,
+                      })}
+                    </span>
+                    <span className="font-medium tabular-nums">{responseProgress.percent}%</span>
+                  </div>
+                  <Progress value={responseProgress.percent} className="h-2" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-7">
+                  <SummaryMetric
+                    label={t("modules.quotation.detail.orderSummary.responses")}
+                    value={String(summary?.responseCount ?? 0)}
+                    loading={isLoading}
+                  />
+                  <SummaryMetric
+                    label={t("modules.quotation.detail.orderSummary.quotedItems")}
+                    value={String(products.length)}
+                    loading={isLoading}
+                  />
+                  <SummaryMetric
+                    label={t("modules.quotation.detail.orderSummary.orderTotal")}
+                    value={formatViewBudgetCurrency(summary?.orderTotal)}
+                    loading={isLoading}
+                  />
+                  <SummaryMetric
+                    label={t("modules.quotation.detail.orderSummary.cheaperTotal")}
+                    value={formatViewBudgetCurrency(summary?.cheaperTotal)}
+                    loading={isLoading}
+                    valueClassName="text-success"
+                  />
+                  <SummaryMetric
+                    label={t("modules.quotation.detail.orderSummary.totalDifference")}
+                    value={formatViewBudgetCurrency(summary?.totalDifference)}
+                    loading={isLoading}
+                    valueClassName="text-warning"
+                  />
+                  <SummaryMetric
+                    label={t("modules.quotation.detail.orderSummary.mostExpensiveTotal")}
+                    value={formatViewBudgetCurrency(summary?.mostExpensiveTotal)}
+                    loading={isLoading}
+                  />
+                  <SummaryMetric
+                    label={t("modules.quotation.detail.orderSummary.totalSavings")}
+                    value={formatViewBudgetCurrency(summary?.totalSavings)}
+                    loading={isLoading}
+                    valueClassName="text-success"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0">
+              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+                <CardTitle>{t("modules.quotation.detail.products.title")}</CardTitle>
+                <div className="flex flex-wrap items-center gap-2">
+                  {canSelectCheapest ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={cheapestMutation.isPending}
+                      onClick={onSelectCheapest}
+                    >
+                      {t("modules.quotation.detail.selectCheapest")}
+                    </Button>
+                  ) : null}
+                  <Badge variant="secondary" className="tabular-nums">
+                    {t("modules.quotation.detail.products.badge", {
+                      items: products.length,
+                      units: totalUnits,
+                    })}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="px-0 pb-6 pt-0">
+                <div className="overflow-x-auto px-6">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">#</TableHead>
+                        <TableHead className="min-w-[160px]">
+                          {t("modules.quotation.detail.products.table.product")}
+                        </TableHead>
+                        <TableHead>{t("modules.quotation.detail.products.table.brand")}</TableHead>
+                        <TableHead>{t("modules.quotation.detail.products.table.packaging")}</TableHead>
+                        <TableHead className="text-right">
+                          {t("modules.quotation.detail.products.table.qty")}
+                        </TableHead>
+                        <TableHead>{t("modules.quotation.detail.products.table.supplier")}</TableHead>
+                        <TableHead className="text-right">
+                          {t("modules.quotation.detail.products.table.price")}
+                        </TableHead>
+                        <TableHead className="text-right">
+                          {t("modules.quotation.detail.products.table.total")}
+                        </TableHead>
+                        <TableHead className="text-right">
+                          {t("modules.quotation.detail.products.table.cheapest")}
+                        </TableHead>
+                        <TableHead className="text-right">
+                          {t("modules.quotation.detail.products.table.diff")}
+                        </TableHead>
+                        <TableHead>{t("modules.quotation.detail.products.table.payment")}</TableHead>
+                        <TableHead>{t("modules.quotation.detail.products.table.delivery")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading
+                        ? Array.from({ length: 3 }).map((_, i) => (
+                            <TableRow key={i}>
+                              {Array.from({ length: 12 }).map((__, j) => (
+                                <TableCell key={j}>
+                                  <Skeleton className="h-4 w-full" />
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))
+                        : products.map((row, index) => (
+                            <TableRow
+                              key={row.id}
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => openProductDialog(row)}
+                            >
+                              <TableCell className="tabular-nums text-muted-foreground">
+                                {index + 1}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {row.missingValue > 0 ? (
+                                    <AlertTriangle
+                                      className="size-4 shrink-0 text-warning"
+                                      title={t("modules.quotation.detail.products.minimumOrderHint")}
+                                    />
+                                  ) : null}
+                                  {row.differentFromRequest ? (
+                                    <AlertTriangle
+                                      className="size-4 shrink-0 text-warning"
+                                      title={t("modules.quotation.detail.products.differentBrandHint")}
+                                    />
+                                  ) : null}
+                                  <span className="font-medium">{row.name}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {formatViewBudgetProductBrands(row, anyBrandLabel)}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {formatViewBudgetPackaging(row.packagingUnit)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">{row.quantity}</TableCell>
+                              <TableCell>{formatViewBudgetText(row.supplier)}</TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {formatViewBudgetCurrency(row.unitValue)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums font-medium">
+                                {formatViewBudgetCurrency(row.totalValue)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums text-success">
+                                {formatViewBudgetCurrency(row.lowestValue)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums text-warning">
+                                {formatViewBudgetCurrency(row.differenceValue)}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {formatViewBudgetText(row.paymentTerm)}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {formatViewBudgetText(row.deliveryDeadline)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      {!isLoading && products.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={12} className="py-10 text-center text-muted-foreground">
+                            {t("modules.quotation.detail.products.empty")}
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="suppliers" className="mt-0">
             <Card>
               <CardContent className="p-0">
@@ -339,65 +599,142 @@ export function QuotationDetailPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t("modules.quotation.detail.suppliers.table.supplier")}</TableHead>
-                        <TableHead>{t("modules.quotation.detail.suppliers.table.response")}</TableHead>
-                        <TableHead>{t("modules.quotation.detail.suppliers.table.time")}</TableHead>
-                        <TableHead className="text-right">{t("modules.quotation.detail.suppliers.table.total")}</TableHead>
+                        <TableHead className="w-10">#</TableHead>
+                        <TableHead>{t("modules.quotation.detail.suppliers.table.company")}</TableHead>
+                        <TableHead>{t("modules.quotation.detail.suppliers.table.representative")}</TableHead>
+                        <TableHead>{t("modules.quotation.detail.suppliers.table.phone")}</TableHead>
                         <TableHead className="text-right">
-                          {t("modules.quotation.detail.suppliers.table.competitiveness")}
+                          {t("modules.quotation.detail.suppliers.table.minimumOrder")}
                         </TableHead>
+                        <TableHead>{t("modules.quotation.detail.suppliers.table.responseDate")}</TableHead>
+                        <TableHead>{t("modules.quotation.detail.suppliers.table.observation")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {detail.suppliers.map((row: QuotationDetailSupplier) => (
-                        <TableRow key={row.name}>
-                          <TableCell className="font-medium">{row.name}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={statusBadgeClass(row.response)}>
-                              {t(`modules.quotation.detail.suppliers.status.${row.response}`)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="tabular-nums text-muted-foreground">{row.responseTimeLabel}</TableCell>
-                          <TableCell className="text-right font-medium tabular-nums">{row.totalFormatted}</TableCell>
-                          <TableCell className="text-right tabular-nums text-muted-foreground">
-                            {row.competitivenessLabel}
+                      {isLoading
+                        ? Array.from({ length: 3 }).map((_, i) => (
+                            <TableRow key={i}>
+                              {Array.from({ length: 7 }).map((__, j) => (
+                                <TableCell key={j}>
+                                  <Skeleton className="h-4 w-full" />
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))
+                        : suppliers.map((row, index) => (
+                            <TableRow key={row.id}>
+                              <TableCell className="tabular-nums text-muted-foreground">
+                                {index + 1}
+                              </TableCell>
+                              <TableCell className="font-medium">{row.name}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-col gap-0.5">
+                                  <span>{row.responsible.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {row.responsible.email}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">{row.phone}</TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {formatViewBudgetCurrency(row.minimumOrderValue)}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {row.responseDate
+                                  ? formatViewBudgetDateTime(row.responseDate)
+                                  : t("modules.quotation.detail.suppliers.noQuotations")}
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate text-muted-foreground">
+                                {formatViewBudgetText(row.observation)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      {!isLoading && suppliers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                            {t("modules.quotation.detail.suppliers.empty")}
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : null}
                     </TableBody>
                   </Table>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="finance" className="mt-0">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>{t("modules.quotation.detail.finance.chosen")}</CardDescription>
-                  <CardTitle className="text-2xl tabular-nums">{detail.financeChosenFormatted}</CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>{t("modules.quotation.detail.finance.best")}</CardDescription>
-                  <CardTitle className="text-2xl tabular-nums text-emerald-600 dark:text-emerald-400">
-                    {detail.financeBestFormatted}
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>{t("modules.quotation.detail.finance.worst")}</CardDescription>
-                  <CardTitle className="text-2xl tabular-nums text-amber-600 dark:text-amber-400">
-                    {detail.financeWorstFormatted}
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-            </div>
-          </TabsContent>
+
+        <div className="flex justify-end gap-2 border-t pt-4">
+          <Button variant="outline" className="gap-2" asChild>
+            <Link to="/quotations">
+              <X className="size-4" />
+              {t("modules.quotation.detail.close")}
+            </Link>
+          </Button>
+          {canFinalize ? (
+            <Button
+              type="button"
+              className="gap-2 text-white"
+              disabled={finalizeMutation.isPending}
+              onClick={onFinalize}
+            >
+              {t("modules.quotation.detail.finishQuotation")}
+            </Button>
+          ) : null}
+          {status === "finished" ? (
+            <Button
+              type="button"
+              className="gap-2 text-white"
+              onClick={() => setGenerateOrderDialogOpen(true)}
+            >
+              <Package className="size-4" />
+              {t("modules.quotation.detail.generateOrder")}
+            </Button>
+          ) : null}
+        </div>
         </Tabs>
       </div>
+
+      <ViewBudgetProductQuotationDialog
+        open={quotationDialogOpen}
+        onOpenChange={setQuotationDialogOpen}
+        budgetId={id}
+        product={selectedProduct}
+        budgetStatus={status}
+      />
+
+      <ViewBudgetGenerateOrderDialog
+        open={generateOrderDialogOpen}
+        onOpenChange={setGenerateOrderDialogOpen}
+        budgetId={id}
+        products={products}
+        buyerName={budget?.establishment.name}
+        deliveryTime={budget?.deliveryTime}
+        deadlineIso={budget?.deadline}
+        budgetObservation={budget?.observation ?? undefined}
+      />
     </DashboardPageLayout>
+  );
+}
+
+function SummaryMetric({
+  label,
+  value,
+  loading,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  loading?: boolean;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      {loading ? (
+        <Skeleton className="h-7 w-20" />
+      ) : (
+        <span className={cn("text-lg font-semibold tabular-nums", valueClassName)}>{value}</span>
+      )}
+    </div>
   );
 }

@@ -33,6 +33,18 @@ export const quotationModule: AppModuleDefinition = {
       },
     },
     {
+      path: "/quotations/new/products",
+      labelKey: "modules.quotation.routes.quotationsNew.label",
+      descriptionKey: "modules.quotation.routes.quotationsNew.description",
+      icon: ReceiptText,
+      element: <CreateQuotationPage />,
+      hideInSidebar: true,
+      topBarParent: {
+        labelKey: "modules.quotation.routes.quotations.label",
+        path: "/quotations",
+      },
+    },
+    {
       path: "/quotations/:id",
       labelKey: "modules.quotation.routes.quotationsDetail.label",
       descriptionKey: "modules.quotation.routes.quotationsDetail.description",

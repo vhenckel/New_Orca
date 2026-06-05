@@ -2,6 +2,15 @@ import type { QuotationListItem, QuotationStatus } from "@/modules/buyer/quotati
 
 export const MOCK_QUOTATIONS: QuotationListItem[] = [
   {
+    id: 143,
+    title: "Mercearia — Rascunho",
+    status: "saved",
+    createdAt: "2026-04-10T08:00:00",
+    deadlineAt: "2026-04-13T18:00:00",
+    responses: "0/0",
+    total: "—",
+  },
+  {
     id: 142,
     title: "Carnes — Semana 16",
     status: "open",

@@ -1,5 +1,5 @@
 /** Status exibido na lista e no filtro (UI). */
-export type QuotationStatus = "open" | "waiting" | "finished";
+export type QuotationStatus = "saved" | "open" | "waiting" | "finished";
 
 export type QuotationListItem = {
   id: number;
@@ -12,10 +12,15 @@ export type QuotationListItem = {
 };
 
 export type BudgetLineItem = {
+  /** Chave na UI — na API costuma ser `{productId}_{establishmentProductId}`. */
   productId: string;
+  baseProductId?: string;
+  establishmentProductId?: string;
+  budgetProductId?: string;
   quantity: number;
   anyBrand: boolean;
   brands: string[];
+  brandIds?: string[];
   note: string;
 };
 
