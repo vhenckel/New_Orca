@@ -117,10 +117,7 @@ export function ProductFormPage() {
     defaultValues: defaultProductFormValues,
   });
 
-  const establishmentId =
-    form.watch("establishmentId") ||
-    selectedExisting?.establishment?.id ||
-    "";
+  const watchedEstablishmentId = form.watch("establishmentId");
 
   const { segments } = useProductListSupportQueries(role);
 
@@ -153,6 +150,17 @@ export function ProductFormPage() {
     retry: false,
   });
 
+  const establishmentIdFromLoad = establishmentLoad.data?.establishment?.id ?? "";
+  const establishmentId =
+    mode === "edit" && establishmentIdFromLoad
+      ? establishmentIdFromLoad
+      : watchedEstablishmentId || selectedExisting?.establishment?.id || "";
+
+  const productIdForVariants =
+    mode === "edit" && establishmentLoad.data
+      ? establishmentLoad.data.productId
+      : selectedExisting?.productId;
+
   const withVariantsQuery = useQuery({
     queryKey: ["establishment-products", "with-variants", establishmentId, productSearch],
     queryFn: () =>
@@ -160,19 +168,22 @@ export function ProductFormPage() {
         establishmentId,
         name: productSearch || undefined,
       }),
-    enabled: isEstablishment && Boolean(establishmentId),
+    enabled: isEstablishment && mode === "create" && Boolean(establishmentId),
   });
 
+  const isApprovedForVariants =
+    mode === "edit"
+      ? establishmentLoad.data?.status?.toLowerCase() === "approved"
+      : selectedExisting?.status?.toLowerCase() === "approved";
+
   const variantsForEdit = useQuery({
-    queryKey: ["product-variants", selectedExisting?.productId, establishmentId],
+    queryKey: ["product-variants", productIdForVariants, establishmentId],
     queryFn: () =>
       fetchProductVariants({
-        productId: selectedExisting!.productId,
+        productId: productIdForVariants!,
         establishmentId,
       }),
-    enabled:
-      Boolean(selectedExisting?.productId && establishmentId) &&
-      selectedExisting?.status?.toLowerCase() === "approved",
+    enabled: Boolean(productIdForVariants && establishmentId) && isApprovedForVariants,
   });
 
   const variationProduct =
@@ -195,36 +206,39 @@ export function ProductFormPage() {
     }
   }, [apiUser?.id, mode, id, form]);
 
+  const hydratedProductKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (adminLoad.data && mode === "edit" && isAdmin) {
-      form.reset(mapAdminProductToForm(adminLoad.data));
-    }
+    hydratedProductKeyRef.current = null;
+  }, [id]);
+
+  useEffect(() => {
+    if (!adminLoad.data || mode !== "edit" || !isAdmin) return;
+    form.reset(mapAdminProductToForm(adminLoad.data));
   }, [adminLoad.data, mode, isAdmin, form]);
 
   useEffect(() => {
-    if (establishmentLoad.data && mode === "edit" && isEstablishment) {
-      const values = mapEstablishmentProductToForm(establishmentLoad.data);
-      form.reset(values);
+    if (!establishmentLoad.data || mode !== "edit" || !isEstablishment) return;
+
+    const productKey = establishmentLoad.data.establishmentProductId;
+    if (hydratedProductKeyRef.current === productKey) return;
+    hydratedProductKeyRef.current = productKey;
+
+    form.reset(mapEstablishmentProductToForm(establishmentLoad.data));
+    setSelectedLabel(establishmentLoad.data.name);
+
+    if (establishmentLoad.data.status?.toLowerCase() !== "approved") {
       setSelectedExisting({
         ...establishmentLoad.data,
         variants: [],
-        productId: establishmentLoad.data.productId,
-        establishmentProductId: establishmentLoad.data.establishmentProductId,
-        id: establishmentLoad.data.id,
       } as EstablishmentProductWithVariants);
-      setSelectedLabel(establishmentLoad.data.name);
-      if (establishmentLoad.data.status?.toLowerCase() === "approved") {
-        void variantsForEdit.refetch();
-      }
     }
-  }, [establishmentLoad.data, mode, isEstablishment, form, variantsForEdit]);
+  }, [establishmentLoad.data, mode, isEstablishment, form]);
 
   useEffect(() => {
-    if (mode !== "edit" || !establishmentLoad.data || !variantsForEdit.data) return;
-    if (establishmentLoad.data.status?.toLowerCase() === "approved") {
-      setSelectedExisting(variantsForEdit.data);
-    }
-  }, [variantsForEdit.data, establishmentLoad.data, mode]);
+    if (mode !== "edit" || !variantsForEdit.data) return;
+    setSelectedExisting(variantsForEdit.data);
+  }, [variantsForEdit.data, mode]);
 
   const autostoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
