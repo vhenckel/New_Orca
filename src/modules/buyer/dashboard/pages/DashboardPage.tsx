@@ -2,8 +2,6 @@ import {
   Bar,
   BarChart,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -11,39 +9,51 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Activity, CircleDollarSign, ShoppingCart, Users2 } from "lucide-react";
+import { useMemo } from "react";
+import { useQueryStates } from "nuqs";
 
-import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
+import { dashboardDateFilterParsers } from "@/modules/buyer/dashboard/lib/dashboard-date-filters";
+import { DashboardPageLayout, KpiCard } from "@/shared/components/dashboard-layout";
+import { getCurrentMonthToTodayRange } from "@/shared/lib/date-range";
+import { CHART_COLORS, OrcaLineChart, orcaTooltipContentStyle } from "@/shared/charts";
+import {
+  actionCardClass,
+  quotationBadgeClass,
+} from "@/shared/lib/status-tones";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { cn } from "@/shared/lib/utils";
 
 const kpis = [
   {
     label: "Total em compras",
     value: "R$ 87.450",
-    variation: "+ 12,6%",
-    variationTone: "positive" as const,
+    trend: "+ 12,6% vs mês anterior",
+    trendTone: "positive" as const,
     icon: CircleDollarSign,
   },
   {
     label: "Economia gerada",
     value: "R$ 8.320",
-    variation: "+ 28,1%",
-    variationTone: "positive" as const,
+    trend: "+ 28,1% vs mês anterior",
+    trendTone: "positive" as const,
     icon: Activity,
   },
   {
     label: "Pedidos este mês",
     value: "142",
-    variation: "+ 8%",
-    variationTone: "positive" as const,
+    trend: "+ 8% vs mês anterior",
+    trendTone: "positive" as const,
     icon: ShoppingCart,
   },
   {
     label: "Fornecedores ativos",
     value: "28",
-    variation: "- 2",
-    variationTone: "negative" as const,
+    trend: "- 2 vs mês anterior",
+    trendTone: "negative" as const,
     icon: Users2,
   },
 ];
@@ -58,11 +68,11 @@ const monthlyData = [
 ];
 
 const categoryData = [
-  { name: "Carnes", value: 35, color: "hsl(var(--chart-1))" },
-  { name: "Hortifruti", value: 25, color: "hsl(var(--chart-2))" },
-  { name: "Bebidas", value: 20, color: "hsl(var(--chart-3))" },
-  { name: "Secos", value: 12, color: "hsl(var(--chart-4))" },
-  { name: "Outros", value: 8, color: "hsl(var(--chart-5))" },
+  { name: "Carnes", value: 35, color: CHART_COLORS.primary },
+  { name: "Hortifruti", value: 25, color: CHART_COLORS.secondary },
+  { name: "Bebidas", value: 20, color: CHART_COLORS.tertiary },
+  { name: "Secos", value: 12, color: CHART_COLORS.quaternary },
+  { name: "Outros", value: 8, color: CHART_COLORS.muted },
 ];
 
 const topSuppliers = [
@@ -89,96 +99,63 @@ function formatCompactNumber(value: number) {
   return `${Math.round(value / 1000)}k`;
 }
 
-function toneBadgeClass(tone: "positive" | "negative") {
-  return tone === "positive"
-    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-    : "border-rose-200 bg-rose-50 text-rose-700";
-}
-
-function quotationBadgeClass(tone: "info" | "warning" | "success") {
-  if (tone === "success") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (tone === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-sky-200 bg-sky-50 text-sky-700";
-}
-
-function actionCardClass(tone: "warning" | "danger" | "info") {
-  if (tone === "danger") return "border-rose-200 bg-rose-50/70";
-  if (tone === "warning") return "border-amber-200 bg-amber-50/70";
-  return "border-sky-200 bg-sky-50/70";
-}
-
 export function DashboardPage() {
+  const [query] = useQueryStates(dashboardDateFilterParsers);
+  const periodLabel = useMemo(() => {
+    const defaults = getCurrentMonthToTodayRange();
+    const from = query.from ?? defaults.from;
+    const to = query.to ?? defaults.to;
+    if (!from || !to) return "Visão geral das suas compras e cotações";
+    return `Visão geral das suas compras e cotações · ${format(from, "dd/MM/yyyy", { locale: ptBR })} – ${format(to, "dd/MM/yyyy", { locale: ptBR })}`;
+  }, [query.from, query.to]);
+
   return (
-    <DashboardPageLayout showPageHeader title="Dashboard" subtitle="Visão geral das suas compras e cotações">
+    <DashboardPageLayout showPageHeader title="Dashboard" subtitle={periodLabel}>
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Card key={item.label}>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex flex-col gap-1">
-                    <CardDescription>{item.label}</CardDescription>
-                    <CardTitle className="text-3xl">{item.value}</CardTitle>
-                  </div>
-                  <div className="rounded-md border border-border p-2 text-muted-foreground">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Badge variant="outline" className={toneBadgeClass(item.variationTone)}>
-                  {item.variation}
-                </Badge>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {kpis.map((item) => (
+          <KpiCard
+            key={item.label}
+            label={item.label}
+            value={item.value}
+            trend={item.trend}
+            trendTone={item.trendTone}
+            icon={item.icon}
+          />
+        ))}
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Gastos e economia mensal</CardTitle>
+            <CardTitle className="text-base">Evolução da economia (R$)</CardTitle>
             <CardDescription>Últimos 6 meses</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={monthlyData}>
-                <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(value) => formatCompactNumber(Number(value))}
-                />
-                <Tooltip
-                  formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR")}`}
-                  contentStyle={{ borderRadius: 10 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="spend"
-                  name="Gastos"
-                  stroke="hsl(var(--chart-1))"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="saving"
-                  name="Economia"
-                  stroke="hsl(var(--chart-2))"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <OrcaLineChart
+              data={monthlyData}
+              xDataKey="month"
+              series={[
+                {
+                  dataKey: "saving",
+                  name: "Economia",
+                  withArea: true,
+                },
+                {
+                  dataKey: "spend",
+                  name: "Gastos",
+                  color: CHART_COLORS.muted,
+                  withArea: false,
+                },
+              ]}
+              yTickFormatter={formatCompactNumber}
+              tooltipFormatter={(value) => `R$ ${value.toLocaleString("pt-BR")}`}
+            />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Distribuição por categoria</CardTitle>
+            <CardTitle className="text-base">Economia por categoria</CardTitle>
             <CardDescription>Participação no gasto total</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
@@ -196,14 +173,16 @@ export function DashboardPage() {
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => `${value}%`} />
+                <Tooltip formatter={(value: number) => `${value}%`} contentStyle={orcaTooltipContentStyle()} />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               {categoryData.map((item) => (
                 <div key={item.name} className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span>{item.name} {item.value}%</span>
+                  <span className="size-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span>
+                    {item.name} {item.value}%
+                  </span>
                 </div>
               ))}
             </div>
@@ -212,9 +191,9 @@ export function DashboardPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Top fornecedores</CardTitle>
+            <CardTitle className="text-base">Ranking de fornecedores</CardTitle>
             <CardDescription>Por volume de compras</CardDescription>
           </CardHeader>
           <CardContent>
@@ -222,24 +201,37 @@ export function DashboardPage() {
               <BarChart data={topSuppliers} layout="vertical" margin={{ left: 10 }}>
                 <XAxis type="number" axisLine={false} tickLine={false} tickFormatter={formatCompactNumber} />
                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={120} fontSize={11} />
-                <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR")}`} />
-                <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={[4, 4, 4, 4]} />
+                <Tooltip
+                  formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR")}`}
+                  contentStyle={orcaTooltipContentStyle()}
+                />
+                <Bar dataKey="value" fill={CHART_COLORS.primary} radius={[4, 4, 4, 4]} />
               </BarChart>
             </ResponsiveContainer>
+            <button type="button" className="mt-3 text-sm font-medium text-primary hover:underline">
+              Ver todos
+            </button>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Cotações recentes</CardTitle>
             <CardDescription>Últimas atividades</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {quotations.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
+              >
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-medium text-foreground">Cotação #{item.id} - {item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.date} - {item.responses}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Cotação #{item.id} - {item.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.date} - {item.responses}
+                  </p>
                 </div>
                 <Badge variant="outline" className={quotationBadgeClass(item.statusTone)}>
                   {item.status}
@@ -251,7 +243,7 @@ export function DashboardPage() {
       </section>
 
       <section>
-        <Card>
+        <Card className="shadow-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Ações pendentes</CardTitle>
             <CardDescription>Itens que precisam de sua atenção</CardDescription>
@@ -260,7 +252,10 @@ export function DashboardPage() {
             {pendingActions.map((action) => (
               <div
                 key={action.id}
-                className={`rounded-md border px-3 py-2 text-sm text-foreground ${actionCardClass(action.tone)}`}
+                className={cn(
+                  "rounded-md border px-3 py-2 text-sm text-foreground",
+                  actionCardClass(action.tone),
+                )}
               >
                 {action.text}
               </div>
