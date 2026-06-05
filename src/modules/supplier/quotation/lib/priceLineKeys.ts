@@ -1,4 +1,4 @@
-import type { SupplierQuotationDetailItem } from "@/modules/supplier/quotation/data/supplierQuotationMocks";
+import type { SupplierQuotationDetailItem } from "@/modules/supplier/quotation/types/quotation-detail";
 
 type ResponseSlice = { unitPrice: string; customBrand?: string } | undefined;
 

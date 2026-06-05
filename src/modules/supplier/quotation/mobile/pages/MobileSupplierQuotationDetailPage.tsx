@@ -1,8 +1,11 @@
 import { ArrowLeft, Save, Send, StickyNote, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { getSupplierQuotationDetail, type SupplierQuotationDetailItem } from "@/modules/supplier/quotation/data/supplierQuotationMocks";
+import { buildSendQuotationPayload } from "@/modules/supplier/quotation/lib/build-send-quotation-payload";
+import { useQuotationDetailQuery } from "@/modules/supplier/quotation/hooks/useQuotationDetailQuery";
+import { useSendQuotationMutation } from "@/modules/supplier/quotation/hooks/useSendQuotationMutation";
+import type { SupplierQuotationDetailItem } from "@/modules/supplier/quotation/types/quotation-detail";
 import {
   createLineResponsesInitial,
   getFixedBrandLabelForLine,
@@ -42,7 +45,7 @@ import { Textarea } from "@/shared/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 import { toast } from "@/shared/ui/sonner";
 
-const SEGMENT_BADGE_CLASS = "border-sky-200 bg-sky-50 text-sky-800";
+const SEGMENT_BADGE_CLASS = "border-info/20 bg-info/10 text-info";
 const OVERFLOW_BADGE_CLASS = "min-w-7 justify-center border-muted bg-muted/60 px-2 text-muted-foreground";
 
 type ItemResponseState = Record<string, { unitPrice: string; customBrand?: string }>;
@@ -125,7 +128,7 @@ function SegmentBadges({ segments }: { segments: string[] }) {
 }
 
 function detailStatusLabelKey(status: string) {
-  if (status === "pending") return "modules.supplierPortal.quotation.detail.statusBadge.pendingQuote";
+  if (status === "open") return "modules.supplierPortal.quotation.detail.statusBadge.pendingQuote";
   return `modules.supplierPortal.quotation.list.status.${status}` as const;
 }
 
@@ -133,8 +136,10 @@ const LIST_HREF = "/m/supplier/quotations";
 
 export function MobileSupplierQuotationDetailPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const detail = useMemo(() => getSupplierQuotationDetail(id), [id]);
+  const { data: detail, isLoading, isError } = useQuotationDetailQuery(id);
+  const sendMutation = useSendQuotationMutation(id);
 
   const [responses, setResponses] = useState<ItemResponseState>({});
   const [generalNotes, setGeneralNotes] = useState("");
@@ -239,23 +244,50 @@ export function MobileSupplierQuotationDetailPage() {
     });
   };
 
-  const handleSendQuotation = () => {
-    if (!hasAnyQuotedPrice) {
+  const submitQuotation = async (status: "open" | "sent" | "no_offer") => {
+    if (!detail) return;
+    if (status === "sent" && !hasAnyQuotedPrice) {
       toast.error(t("modules.supplierPortal.quotation.detail.toastMissingItems"));
       return;
     }
-    toast.success(t("modules.supplierPortal.quotation.detail.toastSent"));
+
+    const payload = buildSendQuotationPayload({
+      status,
+      items: detail.items,
+      responses,
+      alternativeLines,
+      paymentMethod: commercialTerms.paymentMethod,
+      paymentTerm: commercialTerms.paymentDeadline,
+      deliveryDeadline: commercialTerms.delivery,
+      expirationDate: commercialTerms.quotationValidUntil,
+      observation: generalNotes,
+    });
+
+    try {
+      await sendMutation.mutateAsync(payload);
+      if (status === "sent") {
+        toast.success(t("modules.supplierPortal.quotation.detail.toastSent"));
+        navigate(LIST_HREF);
+      } else if (status === "open") {
+        toast.success(t("modules.supplierPortal.quotation.detail.toastDraft"));
+      } else {
+        toast.message(t("modules.supplierPortal.quotation.detail.toastNoItems"));
+        navigate(LIST_HREF);
+      }
+    } catch {
+      toast.error(t("modules.supplierPortal.quotation.detail.toastSendError"));
+    }
   };
 
-  const handleNoItems = () => {
-    toast.message(t("modules.supplierPortal.quotation.detail.toastNoItems"));
-  };
+  const handleSendQuotation = () => void submitQuotation("sent");
+  const handleNoItems = () => void submitQuotation("no_offer");
+  const handleSaveDraft = () => void submitQuotation("open");
 
-  const handleSaveDraft = () => {
-    toast.success(t("modules.supplierPortal.quotation.detail.toastDraft"));
-  };
+  if (isLoading) {
+    return <p className="p-4 text-sm text-muted-foreground">Carregando…</p>;
+  }
 
-  if (!detail) {
+  if (isError || !detail) {
     return (
       <div className="flex flex-col gap-4">
         <Alert variant="destructive">
@@ -278,7 +310,7 @@ export function MobileSupplierQuotationDetailPage() {
         <p className="text-sm text-muted-foreground">{detail.buyerContactEmail}</p>
         <Badge
           variant="outline"
-          className="w-fit border-amber-200 bg-amber-50 font-medium text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40"
+          className="w-fit border-warning/30 bg-warning/10 font-medium text-warning dark:border-warning/30/50 dark:bg-warning/10"
         >
           {t(detailStatusLabelKey(detail.status))}
         </Badge>
@@ -417,10 +449,10 @@ export function MobileSupplierQuotationDetailPage() {
             return (
               <Card
                 key={alt.id}
-                className="overflow-hidden border-l-4 border-sky-600 bg-sky-50/50 shadow-sm dark:bg-sky-950/20"
+                className="overflow-hidden border-l-4 border-info bg-info/10/50 shadow-sm dark:bg-info/10"
               >
                 <CardContent className="p-3 pl-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-800 dark:text-sky-300">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-info dark:text-info">
                     {t("modules.supplierPortal.quotation.detail.items.alternativeBadge")}
                   </p>
                   <p className="mt-1 font-semibold text-foreground">{item.productName}</p>
@@ -737,7 +769,7 @@ function ItemCard({
                       value={responses[lineKey]?.customBrand ?? ""}
                       onChange={(e) => onCustomBrand(lineKey, e.target.value)}
                       placeholder={t("modules.supplierPortal.quotation.detail.items.noBrandFromBuyer")}
-                      className="h-10 border-amber-500/70 bg-amber-50/40"
+                      className="h-10 border-amber-500/70 bg-warning/10/40"
                     />
                   )}
                   <div className="flex min-h-[44px] items-stretch">

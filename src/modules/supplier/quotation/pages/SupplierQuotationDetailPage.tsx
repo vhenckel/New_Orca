@@ -12,11 +12,11 @@ import {
   Truck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
-import {
-  getSupplierQuotationDetail,
-} from "@/modules/supplier/quotation/data/supplierQuotationMocks";
+import { buildSendQuotationPayload } from "@/modules/supplier/quotation/lib/build-send-quotation-payload";
+import { useQuotationDetailQuery } from "@/modules/supplier/quotation/hooks/useQuotationDetailQuery";
+import { useSendQuotationMutation } from "@/modules/supplier/quotation/hooks/useSendQuotationMutation";
 import {
   createLineResponsesInitial,
   getFixedBrandLabelForLine,
@@ -85,7 +85,7 @@ function formatPackagingDisplay(amount: string, unit: PackagingUnit): string {
   return `${amount} ${suffix}`;
 }
 
-const SEGMENT_BADGE_CLASS = "border-sky-200 bg-sky-50 text-sky-800";
+const SEGMENT_BADGE_CLASS = "border-info/20 bg-info/10 text-info";
 const OVERFLOW_BADGE_CLASS = "min-w-7 justify-center border-muted bg-muted/60 px-2 text-muted-foreground";
 
 function formatShortDateTime(value: string) {
@@ -153,14 +153,16 @@ function SegmentBadges({ segments }: { segments: string[] }) {
 }
 
 function detailStatusLabelKey(status: string) {
-  if (status === "pending") return "modules.supplierPortal.quotation.detail.statusBadge.pendingQuote";
+  if (status === "open") return "modules.supplierPortal.quotation.detail.statusBadge.pendingQuote";
   return `modules.supplierPortal.quotation.list.status.${status}`;
 }
 
 export function SupplierQuotationDetailPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const detail = useMemo(() => getSupplierQuotationDetail(id), [id]);
+  const { data: detail, isLoading, isError } = useQuotationDetailQuery(id);
+  const sendMutation = useSendQuotationMutation(id);
 
   const [responses, setResponses] = useState<ItemResponseState>({});
   const [generalNotes, setGeneralNotes] = useState("");
@@ -296,23 +298,54 @@ export function SupplierQuotationDetailPage() {
     });
   };
 
-  const handleSaveDraft = () => {
-    toast.success(t("modules.supplierPortal.quotation.detail.toastDraft"));
-  };
-
-  const handleSendQuotation = () => {
-    if (!hasAnyQuotedPrice) {
+  const submitQuotation = async (status: "open" | "sent" | "no_offer") => {
+    if (!detail) return;
+    if (status === "sent" && !hasAnyQuotedPrice) {
       toast.error(t("modules.supplierPortal.quotation.detail.toastMissingItems"));
       return;
     }
-    toast.success(t("modules.supplierPortal.quotation.detail.toastSent"));
+
+    const payload = buildSendQuotationPayload({
+      status,
+      items: detail.items,
+      responses,
+      alternativeLines,
+      paymentMethod: commercialTerms.paymentMethod,
+      paymentTerm: commercialTerms.paymentDeadline,
+      deliveryDeadline: commercialTerms.delivery,
+      expirationDate: commercialTerms.quotationValidUntil,
+      observation: generalNotes,
+    });
+
+    try {
+      await sendMutation.mutateAsync(payload);
+      if (status === "sent") {
+        toast.success(t("modules.supplierPortal.quotation.detail.toastSent"));
+        navigate("/supplier/quotations");
+      } else if (status === "open") {
+        toast.success(t("modules.supplierPortal.quotation.detail.toastDraft"));
+      } else {
+        toast.message(t("modules.supplierPortal.quotation.detail.toastNoItems"));
+        navigate("/supplier/quotations");
+      }
+    } catch {
+      toast.error(t("modules.supplierPortal.quotation.detail.toastSendError"));
+    }
   };
 
-  const handleNoItems = () => {
-    toast.message(t("modules.supplierPortal.quotation.detail.toastNoItems"));
-  };
+  const handleSaveDraft = () => void submitQuotation("open");
+  const handleSendQuotation = () => void submitQuotation("sent");
+  const handleNoItems = () => void submitQuotation("no_offer");
 
-  if (!detail) {
+  if (isLoading) {
+    return (
+      <DashboardPageLayout showPageHeader={false}>
+        <p className="text-sm text-muted-foreground">Carregando…</p>
+      </DashboardPageLayout>
+    );
+  }
+
+  if (isError || !detail) {
     return (
       <DashboardPageLayout showPageHeader={false}>
         <Alert variant="destructive">
@@ -347,7 +380,7 @@ export function SupplierQuotationDetailPage() {
 
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-start gap-4">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info dark:bg-info/10 dark:text-info">
               <FileText className="size-6" aria-hidden />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -355,7 +388,7 @@ export function SupplierQuotationDetailPage() {
                 <h1 className="text-2xl font-semibold tracking-tight">{detail.title}</h1>
                 <Badge
                   variant="outline"
-                  className="shrink-0 border-amber-200 bg-amber-50 font-medium text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
+                  className="shrink-0 border-warning/30 bg-warning/10 font-medium text-warning dark:border-warning/30/50 dark:bg-warning/10 dark:text-warning"
                 >
                   {t(detailStatusLabelKey(detail.status))}
                 </Badge>
@@ -542,7 +575,7 @@ export function SupplierQuotationDetailPage() {
             </div>
             <Badge
               variant="outline"
-              className="w-fit shrink-0 border-sky-300 bg-sky-50 font-medium text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100"
+              className="w-fit shrink-0 border-info/30 bg-info/10 font-medium text-info dark:border-info/30 dark:bg-info/10 dark:text-info"
             >
               {t("modules.supplierPortal.quotation.detail.items.estimatedTotal", { total: estimatedTotalLabel })}
             </Badge>
@@ -575,47 +608,59 @@ export function SupplierQuotationDetailPage() {
                     const altsForItem = alternativeLines.filter((a) => a.parentItemId === item.id);
                     const lineKeys = getItemPriceLineKeys(item);
                     const isLastMainLine = (lineIdx: number) => lineIdx === lineKeys.length - 1;
+                    const groupRowCount = lineKeys.length + altsForItem.length;
                     const mainRows = lineKeys.map((lineKey, lineIdx) => {
                       const brandFixed = getFixedBrandLabelForLine(item, lineKey);
+                      const shouldRenderGroupCells = lineIdx === 0;
                       return (
                         <TableRow key={lineKey}>
-                          <TableCell>
-                            {lineIdx === 0 ? (
-                              <span className="font-semibold">{item.productName}</span>
-                            ) : (
-                              <span className="pl-0.5 text-sm text-muted-foreground">↳</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {lineIdx === 0 ? (
-                              <SegmentBadges segments={item.segments} />
-                            ) : null}
-                          </TableCell>
-                          <TableCell className="tabular-nums">
-                            {lineIdx === 0 ? (
-                              <>
-                                {item.quantity} {item.unitLabel}
-                              </>
-                            ) : null}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {lineIdx === 0 ? item.requestedPackaging : null}
-                          </TableCell>
+                          {shouldRenderGroupCells ? (
+                            <>
+                              <TableCell rowSpan={groupRowCount} className="align-middle">
+                                <span className="font-semibold">{item.productName}</span>
+                              </TableCell>
+                              <TableCell rowSpan={groupRowCount} className="align-middle">
+                                <SegmentBadges segments={item.segments} />
+                              </TableCell>
+                              <TableCell rowSpan={groupRowCount} className="align-middle tabular-nums">
+                                <>
+                                  {item.quantity} {item.unitLabel}
+                                </>
+                              </TableCell>
+                              <TableCell rowSpan={groupRowCount} className="align-middle text-sm text-muted-foreground">
+                                {item.requestedPackaging}
+                              </TableCell>
+                            </>
+                          ) : null}
                           <TableCell>
                             {brandFixed ? (
-                              <Badge
-                                className="max-w-[200px] truncate bg-primary font-medium text-primary-foreground hover:bg-primary/90"
-                                title={brandFixed}
-                              >
-                                {brandFixed}
-                              </Badge>
+                              <div className="flex min-w-0 items-center gap-2">
+                                {!shouldRenderGroupCells ? (
+                                  <span className="shrink-0 text-sm text-muted-foreground" aria-hidden>
+                                    ↳
+                                  </span>
+                                ) : null}
+                                <Badge
+                                  className="max-w-[200px] truncate bg-primary font-medium text-primary-foreground hover:bg-primary/90"
+                                  title={brandFixed}
+                                >
+                                  {brandFixed}
+                                </Badge>
+                              </div>
                             ) : (
-                              <Input
-                                value={responses[lineKey]?.customBrand ?? ""}
-                                onChange={(event) => handleCustomBrandChange(lineKey, event.target.value)}
-                                placeholder={t("modules.supplierPortal.quotation.detail.items.noBrandFromBuyer")}
-                                className="h-9 border-amber-500/70 bg-amber-50/40 focus-visible:border-amber-500 focus-visible:ring-amber-500/20 dark:bg-amber-950/25"
-                              />
+                              <div className="flex min-w-0 items-center gap-2">
+                                {!shouldRenderGroupCells ? (
+                                  <span className="shrink-0 text-sm text-muted-foreground" aria-hidden>
+                                    ↳
+                                  </span>
+                                ) : null}
+                                <Input
+                                  value={responses[lineKey]?.customBrand ?? ""}
+                                  onChange={(event) => handleCustomBrandChange(lineKey, event.target.value)}
+                                  placeholder={t("modules.supplierPortal.quotation.detail.items.noBrandFromBuyer")}
+                                  className="h-9 min-w-0 flex-1 border-amber-500/70 bg-warning/10/40 focus-visible:border-amber-500 focus-visible:ring-amber-500/20 dark:bg-amber-950/25"
+                                />
+                              </div>
                             )}
                           </TableCell>
                           <TableCell>
@@ -652,27 +697,23 @@ export function SupplierQuotationDetailPage() {
                     const altRows = altsForItem.map((alt) => (
                       <TableRow
                         key={alt.id}
-                        className="bg-sky-50/60 dark:bg-sky-950/25"
+                        className="bg-info/10 dark:bg-info/10"
                       >
-                        <TableCell className="border-l-4 border-sky-600 pl-0 align-top">
-                          <div className="pl-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-800 dark:text-sky-300">
-                              {t("modules.supplierPortal.quotation.detail.items.alternativeBadge")}
+                        <TableCell className="border-l-4 border-info">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="shrink-0 text-sm text-muted-foreground" aria-hidden>
+                              ↳
                             </span>
-                            <p className="mt-1 font-semibold text-foreground">{item.productName}</p>
+                            <Badge
+                              variant="outline"
+                              className="shrink-0 border-info/30 bg-info/10 font-semibold text-info dark:border-info/30 dark:bg-info/10 dark:text-info"
+                            >
+                              {t("modules.supplierPortal.quotation.detail.items.alternativeBadge")}
+                            </Badge>
+                            <span className="min-w-0 truncate text-sm font-medium text-foreground" title={alt.brand}>
+                              {alt.brand}
+                            </span>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <SegmentBadges segments={item.segments} />
-                        </TableCell>
-                        <TableCell className="tabular-nums text-foreground">
-                          {item.quantity} {item.unitLabel}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {item.requestedPackaging}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm font-medium text-foreground">{alt.brand}</span>
                         </TableCell>
                         <TableCell>
                           <div className="flex h-9 min-w-[200px] items-center gap-2">
@@ -752,8 +793,8 @@ export function SupplierQuotationDetailPage() {
           </CardContent>
         </Card>
 
-        <Alert className="border-sky-200 bg-sky-50/80 dark:border-sky-900 dark:bg-sky-950/30">
-          <StickyNote className="size-4 shrink-0 text-sky-700 dark:text-sky-400" />
+        <Alert className="border-info/20 bg-info/10 dark:border-info/30 dark:bg-info/10">
+          <StickyNote className="size-4 shrink-0 text-info dark:text-info" />
           <AlertTitle>{t("modules.supplierPortal.quotation.detail.tip.title")}</AlertTitle>
           <AlertDescription>{t("modules.supplierPortal.quotation.detail.tip.body")}</AlertDescription>
         </Alert>
