@@ -2,8 +2,8 @@
 alwaysApply: true
 ---
 
-Ao trabalhar no projeto **o2obots-app-frontend** (este repositório), use sempre como referência o projeto **o2obots-frontend** (frontend atual/legado).
+Ao trabalhar no projeto **Orca_New** (este repositório), use como referência de **comportamento e API** o legado **Orca_Old** (`/Users/vitorhenckel/Projetos/Orca_Old`).
 
-- Consulte o2obots-frontend para ver como funcionalidades equivalentes estão implementadas (APIs, fluxos, componentes, nomes de rotas, formatadores).
-- Mantenha consistência com o comportamento e a estrutura do front atual quando migrar ou recriar features.
-- APIs e contratos usados no o2obots-frontend devem ser reutilizados no novo frontend (mesmos endpoints, query params e formato de resposta quando aplicável).
+- Consulte `Orca_Old` para APIs, fluxos, regras de negócio, rotas e formatadores.
+- Documentos de migração: gerados em `docs/`; guia canônico em `Orca_Old/docs/GUIA-documentacao-migracao.md`.
+- Reutilize os **mesmos endpoints, query params e formato de resposta**; a UI/UX é nova (stack e padrões do Orca_New).

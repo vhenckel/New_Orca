@@ -1,0 +1,53 @@
+---
+description: Como documentar telas/fluxos do Orca_Old para recriar no Orca_New
+globs: docs/**/*.md
+alwaysApply: false
+---
+
+# Documentação de migração Orca_Old → Orca_New
+
+Quando o usuário pedir para **documentar** uma tela, fluxo ou feature para recriar no novo frontend:
+
+## Fontes
+- **Legado (explorar + guia canônico):** `/Users/vitorhenckel/Projetos/Orca_Old` — guia em `Orca_Old/docs/GUIA-documentacao-migracao.md`
+- **Saída dos docs:** `/Users/vitorhenckel/Projetos/Orca_New/docs/{modulo}-{tela}.md`
+- Para **documentar**, abrir o workspace **Orca_Old**; esta pasta recebe os docs gerados
+
+## O que produzir
+Documentar **contrato e comportamento**, não copiar UI do legado:
+- Rotas, roles, navegação entrada/saída
+- Endpoints (GET no mount, lazy, mutações) com query/body/response JSON
+- Regras de negócio, validações, cálculos, diferenças por status/role
+- Estados loading/vazio/erro
+- Diagrama mermaid + checklist final acionável
+
+## O que NÃO colocar no doc
+- Layout/cores/espaçamento do app antigo
+- Obrigação de usar os mesmos componentes do legado (`DataTable`, etc.)
+
+## Exploração no Orca_Old (obrigatório)
+1. Página/rota em `web/src/pages/` e `web/src/routes/`
+2. Hooks e services em `web/src/pages/.../hooks/`, `web/src/services/`
+3. Controller, service, DTO e testes e2e em `api/src/module/...`
+4. Permissões em `web/src/config/permissions/`
+
+## Estrutura do arquivo (seguir template do guia)
+1. Resumo + observações para redesign
+2. Rota e acesso
+3. Carregamento de dados (mount + lazy) com JSON
+4. Comportamento exibido (seções, colunas, ações)
+5. Regras de negócio
+6. Mutações (tabela método/URL/body/quando)
+7. Role/status
+8. Estados de UI
+9. Diagrama mermaid
+10. Checklist para a nova web
+
+## Referências de nível de detalhe
+- `docs/auth-login.md`
+- `docs/orcamentos-listagem.md`
+- `docs/orcamentos-criar-restaurante.md`
+- `docs/orcamentos-visualizar.md`
+
+## Idioma
+Documentos em **português**. Respostas ao usuário em português.
