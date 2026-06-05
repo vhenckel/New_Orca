@@ -35,7 +35,7 @@ export interface Module {
  * Persona do usuário logado. Define qual "visão" do produto é exibida
  * (bar/restaurante = buyer; fornecedor = supplier).
  */
-export type UserPersona = "buyer" | "supplier";
+export type UserPersona = "buyer" | "supplier" | "admin";
 
 /** Perfil do usuário (vindo do /me). */
 export interface MeProfile {
@@ -84,26 +84,45 @@ export interface MeResponse {
   features?: Array<{ name: string }>;
 }
 
-/** Payload de login (fluxo atual: só e-mail; senha opcional quando houver API). */
+/** Role retornada pela API Orca (POST /auth/login). */
+export type ApiUserRole = "admin" | "establishment" | "supplier";
+
+/** Usuário retornado pela API Orca. */
+export interface ApiUser {
+  id: string;
+  name: string;
+  email: string;
+  role: ApiUserRole;
+  active: boolean;
+  phone?: string;
+}
+
+/** Payload de login. */
 export interface LoginRequest {
-  username: string;
-  password?: string;
-  tokenRecaptcha?: string;
+  email: string;
+  password: string;
 }
 
 /** Resposta do POST /auth/login. */
 export interface LoginResponse {
-  access_token: string;
-  status?: number;
-  message?: string;
+  user: ApiUser;
+  accessToken: string;
 }
 
-/** Item retornado por GET /auth/accounts: [companyId, companyName, companyExternalId]. */
-export type UserAccountItem = [number, string, string];
+/** Resposta genérica de forgot-password. */
+export interface ForgotPasswordResponse {
+  message: string;
+}
 
-/** Resposta do POST /auth/switch-company. */
-export interface SwitchCompanyResponse {
-  access_token: string;
+/** Payload de reset-password. */
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+/** Resposta do POST /auth/reset-password. */
+export interface ResetPasswordResponse {
+  message: string;
 }
 
 /** Claims úteis do JWT (decode client-side para companyId, etc.). Alinhado ao payload do spot-api (PayloadAccessToken). */

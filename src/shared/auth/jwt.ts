@@ -39,3 +39,18 @@ export function getCompanyNameFromToken(accessToken: string): string | null {
   const trimmed = name.trim();
   return trimmed.length ? trimmed : null;
 }
+
+/** Unix timestamp (segundos) de expiração do JWT, ou null se ausente/inválido. */
+export function getTokenExpiration(accessToken: string): number | null {
+  const payload = decodeTokenPayload(accessToken);
+  const exp = payload?.exp;
+  if (typeof exp !== "number" || !Number.isFinite(exp)) return null;
+  return exp;
+}
+
+export function isTokenExpired(accessToken: string, skewSeconds = 0): boolean {
+  const exp = getTokenExpiration(accessToken);
+  if (exp === null) return true;
+  const now = Math.floor(Date.now() / 1000);
+  return now >= exp - skewSeconds;
+}

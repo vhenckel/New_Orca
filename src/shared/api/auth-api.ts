@@ -1,31 +1,45 @@
-import type { SwitchCompanyResponse, UserAccountItem } from "@/shared/auth/types";
+import { apiRequest } from "@/shared/api/http-client";
+import type {
+  ForgotPasswordResponse,
+  LoginRequest,
+  LoginResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+} from "@/shared/auth/types";
 
-const MOCK_ACCOUNTS: UserAccountItem[] = [
-  [316, "Orca Matriz", "ORCA-MATRIZ"],
-  [481, "Orca Filial Centro", "ORCA-CENTRO"],
-  [902, "Orca Filial Sul", "ORCA-SUL"],
-];
-
-function createMockToken(companyId: number, companyName: string, companyExternalId: string): string {
-  const payload = {
-    cmpid: companyId,
-    companyName,
-    companyExternalId,
-    sub: "local-user",
-  };
-  return `mock.${btoa(JSON.stringify(payload))}.token`;
+export async function login(credentials: LoginRequest): Promise<LoginResponse> {
+  return apiRequest<LoginResponse>("/auth/login", {
+    method: "POST",
+    body: {
+      email: credentials.email.trim().toLowerCase(),
+      password: credentials.password,
+    },
+    skipAuth: true,
+  });
 }
 
-/** Mock local para seleção de empresa enquanto API não estiver disponível. */
-export async function fetchUserAccounts(): Promise<UserAccountItem[]> {
-  return Promise.resolve(MOCK_ACCOUNTS);
+export type ForgotPasswordMethod = "email" | "whatsapp";
+
+export async function forgotPassword(
+  identifier: string,
+  method: ForgotPasswordMethod = "whatsapp",
+): Promise<ForgotPasswordResponse> {
+  return apiRequest<ForgotPasswordResponse>("/auth/forgot-password", {
+    method: "POST",
+    body: {
+      identifier: identifier.trim().toLowerCase(),
+      method,
+    },
+    skipAuth: true,
+  });
 }
 
-/** Mock local para troca de empresa. Retorna token compatível com parser local. */
-export async function switchCompany(companyId: number): Promise<SwitchCompanyResponse> {
-  const account = MOCK_ACCOUNTS.find(([id]) => id === companyId) ?? MOCK_ACCOUNTS[0];
-  const [id, name, externalId] = account;
-  return Promise.resolve({
-    access_token: createMockToken(id, name, externalId),
+export async function resetPassword(
+  payload: ResetPasswordRequest,
+): Promise<ResetPasswordResponse> {
+  return apiRequest<ResetPasswordResponse>("/auth/reset-password", {
+    method: "POST",
+    body: payload,
+    skipAuth: true,
   });
 }

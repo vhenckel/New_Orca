@@ -1,11 +1,15 @@
 /**
- * Storage de token: memória + localStorage.
+ * Storage de token e usuário: memória + localStorage.
  * Fonte única para Authorization; fallback para env fica em getApiHeaders quando token vazio.
  */
 
+import type { ApiUser } from "@/shared/auth/types";
+
 const STORAGE_KEY = "orca_access_token";
+const USER_STORAGE_KEY = "orca_auth_user";
 
 let memoryToken: string | null = null;
+let memoryUser: ApiUser | null = null;
 
 export function getStoredToken(): string | null {
   if (memoryToken) return memoryToken;
@@ -27,11 +31,39 @@ export function setStoredToken(token: string): void {
   }
 }
 
-export function clearStoredToken(): void {
-  memoryToken = null;
+export function getStoredUser(): ApiUser | null {
+  if (memoryUser) return memoryUser;
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    const raw = localStorage.getItem(USER_STORAGE_KEY);
+    if (!raw) return null;
+    memoryUser = JSON.parse(raw) as ApiUser;
+    return memoryUser;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user: ApiUser): void {
+  memoryUser = user;
+  try {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
   } catch {
     // ignore
   }
+}
+
+export function clearStoredSession(): void {
+  memoryToken = null;
+  memoryUser = null;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/** @deprecated Preferir clearStoredSession */
+export function clearStoredToken(): void {
+  clearStoredSession();
 }

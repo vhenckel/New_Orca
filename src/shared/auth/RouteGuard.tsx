@@ -11,6 +11,8 @@ import { type PropsWithChildren } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 import { getLandingPathForPersona, useAuth } from "@/shared/auth/AuthContext";
+import { useApiUserRole } from "@/shared/auth/use-api-user";
+import { useIsMobile } from "@/shared/hooks/useIsMobile";
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
 
 interface RouteGuardProps extends PropsWithChildren {
@@ -21,6 +23,8 @@ interface RouteGuardProps extends PropsWithChildren {
 
 export function RouteGuard({ route, module, children }: RouteGuardProps) {
   const { isAuthenticated, loading, user } = useAuth();
+  const apiRole = useApiUserRole();
+  const isMobile = useIsMobile();
   const location = useLocation();
   const requiresAuth = route.requiresAuth !== false;
 
@@ -33,7 +37,14 @@ export function RouteGuard({ route, module, children }: RouteGuardProps) {
   }
 
   if (requiresAuth && !isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    const returnTo = `${location.pathname}${location.search}`;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: returnTo }}
+      />
+    );
   }
 
   if (user && location.pathname.startsWith("/m/") && user.persona === "buyer") {
@@ -42,7 +53,15 @@ export function RouteGuard({ route, module, children }: RouteGuardProps) {
 
   if (user && module?.allowedPersonas && module.allowedPersonas.length > 0) {
     if (!module.allowedPersonas.includes(user.persona)) {
-      return <Navigate to={getLandingPathForPersona(user.persona)} replace />;
+      return (
+        <Navigate to={getLandingPathForPersona(user.persona, { isMobile })} replace />
+      );
+    }
+  }
+
+  if (route.allowedApiRoles && route.allowedApiRoles.length > 0) {
+    if (!apiRole || !route.allowedApiRoles.includes(apiRole)) {
+      return <Navigate to="/404" replace />;
     }
   }
 

@@ -1,5 +1,5 @@
 /**
- * AuthProvider: sessão (token + /me), login, logout, e registro de onUnauthorized para 401.
+ * AuthProvider: sessão (token + usuário), login, logout e handler global de 401.
  */
 
 /* eslint-disable react-refresh/only-export-components */
@@ -13,47 +13,38 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { getDefaultCompanyId } from "@/shared/config/env";
-import { getCompanyIdFromToken } from "@/shared/auth/jwt";
+import * as authApi from "@/shared/api/auth-api";
+import { ApiError, registerUnauthorizedHandler } from "@/shared/api/http-client";
 import {
-  clearStoredToken,
-  getStoredToken,
-} from "@/shared/auth/token-store";
-import type { LoginRequest, MeResponse, UserPersona } from "@/shared/auth/types";
+  getLandingPathForPersona,
+  mapApiUserToMeResponse,
+  resolvePostLoginPath,
+} from "@/shared/auth/api-user";
 import { applyResolvedAccentColor } from "@/shared/auth/branding-accent";
+import {
+  getCompanyIdFromToken,
+  isTokenExpired,
+} from "@/shared/auth/jwt";
+import { hasValidSessionToken } from "@/shared/auth/session";
+import {
+  clearStoredSession,
+  getStoredToken,
+  getStoredUser,
+  setStoredToken,
+  setStoredUser,
+} from "@/shared/auth/token-store";
+import type { LoginRequest, MeResponse } from "@/shared/auth/types";
+import { getDefaultCompanyId } from "@/shared/config/env";
 import { getIsViewportMobile } from "@/shared/hooks/useIsMobile";
+import { toast } from "@/shared/ui/sonner";
 
-/**
- * Mapa hardcoded de email → persona, usado enquanto não temos a API do Orca.
- * Qualquer outro email cai no fallback `buyer`.
- */
-const PERSONA_BY_EMAIL: Record<string, UserPersona> = {
-  "restaurante@orca.com.br": "buyer",
-  "fornecedor@orca.com.br": "supplier",
-};
-
-function resolvePersonaFromEmail(email: string | undefined): UserPersona {
-  if (!email) return "buyer";
-  return PERSONA_BY_EMAIL[email.trim().toLowerCase()] ?? "buyer";
-}
-
-export interface GetLandingPathOptions {
-  /** Quando true, fornecedor cai em `/m/supplier/quotations` (fluxo mobile). */
-  isMobile?: boolean;
-}
-
-/** Landing pós-login por persona. */
-export function getLandingPathForPersona(
-  persona: UserPersona,
-  options?: GetLandingPathOptions,
-): string {
-  if (persona === "supplier" && options?.isMobile) {
-    return "/m/supplier/quotations";
-  }
-  return persona === "supplier" ? "/supplier/dashboard" : "/dashboard";
-}
+export {
+  getLandingPathForPersona,
+  resolvePostLoginPath,
+} from "@/shared/auth/api-user";
+export type { GetLandingPathOptions } from "@/shared/auth/api-user";
 
 export interface AuthState {
   user: MeResponse | null;
@@ -64,89 +55,72 @@ export interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest, redirectFrom?: string) => Promise<void>;
   logout: () => void;
   refetchMe: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const DEFAULT_BRANDING = {
-  image: "",
-  color: "#096dd9",
-};
-
-const LOCAL_USER: MeResponse = {
-  id: 1,
-  userId: 1,
-  persona: "buyer",
-  email: "usuario@orca.app",
-  username: "usuario@orca.app",
-  name: "Usuario ORCA",
-  businessArea: "Compras",
-  profile: {
-    id: "local-profile",
-    name: "Administrador",
-    mask: "admin",
-    isActive: true,
-    isSystem: false,
-    updatedByUserId: "local",
-    createdByUserId: "local",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    roleId: "local-role",
-    companyRoleId: "local-company-role",
-    companyUserId: "local-company-user",
-    profileId: "local-profile",
-    businessAreaId: "local-business",
-    modules: [],
-  },
-  lastAccess: new Date().toISOString(),
-  modules: [],
-  maxNumberOfClients: 0,
-  branding: DEFAULT_BRANDING,
-  features: [],
-};
-
-async function fetchMe(_companyId: number): Promise<MeResponse> {
-  return Promise.resolve(LOCAL_USER);
+function restoreUserFromStorage(): MeResponse | null {
+  const apiUser = getStoredUser();
+  if (!apiUser?.active) return null;
+  return mapApiUserToMeResponse(apiUser);
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const companyId = user
-    ? getCompanyIdFromToken(getStoredToken() ?? "") ?? getDefaultCompanyId()
+  const token = getStoredToken();
+  const companyId = token
+    ? getCompanyIdFromToken(token) ?? getDefaultCompanyId()
     : getDefaultCompanyId();
 
+  const isAuthenticated = hasValidSessionToken() && !!user;
+
   const logout = useCallback(() => {
-    clearStoredToken();
+    clearStoredSession();
     setUser(null);
     setError(null);
     navigate("/login", { replace: true });
   }, [navigate]);
-  const loadSession = useCallback(async () => {
-    const token = getStoredToken();
-    if (!token) {
+
+  const handleUnauthorized = useCallback(() => {
+    const returnTo = `${location.pathname}${location.search}`;
+    clearStoredSession();
+    setUser(null);
+    setError(null);
+    toast.error("Sessão expirada");
+    navigate("/login", { replace: true, state: { from: returnTo } });
+  }, [location.pathname, location.search, navigate]);
+
+  useEffect(() => {
+    registerUnauthorizedHandler(handleUnauthorized);
+    return () => registerUnauthorizedHandler(null);
+  }, [handleUnauthorized]);
+
+  const loadSession = useCallback(() => {
+    const storedToken = getStoredToken();
+    if (!storedToken || isTokenExpired(storedToken)) {
+      clearStoredSession();
+      setUser(null);
       setLoading(false);
       return;
     }
-    setLoading(true);
-    setError(null);
-    try {
-      const me = await fetchMe(getCompanyIdFromToken(token) ?? getDefaultCompanyId());
-      setUser(me);
-      applyResolvedAccentColor(me);
-    } catch (e) {
-      clearStoredToken();
+
+    const restored = restoreUserFromStorage();
+    if (restored) {
+      setUser(restored);
+      applyResolvedAccentColor(restored);
+    } else {
+      clearStoredSession();
       setUser(null);
-      setError(e instanceof Error ? e.message : "Failed to load session");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -154,48 +128,49 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [loadSession]);
 
   const login = useCallback(
-    async (credentials: LoginRequest) => {
-      const email = credentials.username.trim();
-      if (!email) {
-        setError("Informe um e-mail válido.");
-        return;
-      }
+    async (credentials: LoginRequest, redirectFrom?: string) => {
       setLoading(true);
       setError(null);
       try {
-        const persona = resolvePersonaFromEmail(email);
-        const sessionUser: MeResponse = {
-          ...LOCAL_USER,
-          persona,
-          email: email || LOCAL_USER.email,
-          username: email || LOCAL_USER.username,
-        };
+        const { user: apiUser, accessToken } = await authApi.login(credentials);
+        if (!apiUser.active) {
+          throw new ApiError("Usuário ou senha inválido", 401);
+        }
+        setStoredToken(accessToken);
+        setStoredUser(apiUser);
+        const sessionUser = mapApiUserToMeResponse(apiUser);
         setUser(sessionUser);
         applyResolvedAccentColor(sessionUser);
-        const landing = getLandingPathForPersona(persona, {
+
+        const from =
+          redirectFrom ??
+          (location.state as { from?: string } | null)?.from;
+        const landing = resolvePostLoginPath(sessionUser.persona, from, {
           isMobile: getIsViewportMobile(),
         });
         navigate(landing, { replace: true });
       } catch (e) {
-        setError(
-          e instanceof Error ? e.message : "Login failed"
-        );
+        const message =
+          e instanceof ApiError
+            ? e.message
+            : e instanceof Error
+              ? e.message
+              : "Falha no login";
+        setError(message);
         throw e;
       } finally {
         setLoading(false);
       }
     },
-    [navigate]
+    [location.state, navigate],
   );
 
   const refetchMe = useCallback(async () => {
-    const token = getStoredToken();
-    if (!token || !user) return;
-    const cid = getCompanyIdFromToken(token) ?? getDefaultCompanyId();
-    const me = await fetchMe(cid);
-    setUser(me);
-    applyResolvedAccentColor(me);
-  }, [user]);
+    const restored = restoreUserFromStorage();
+    if (!restored) return;
+    setUser(restored);
+    applyResolvedAccentColor(restored);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -203,12 +178,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
       loading,
       error,
       companyId,
-      isAuthenticated: !!user,
+      isAuthenticated,
       login,
       logout,
       refetchMe,
     }),
-    [user, loading, error, companyId, login, logout, refetchMe]
+    [user, loading, error, companyId, isAuthenticated, login, logout, refetchMe],
   );
 
   return (
