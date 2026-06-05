@@ -2,16 +2,16 @@ import { baseEnUS } from "@/shared/i18n/messages/base/en-US";
 import { basePtBR } from "@/shared/i18n/messages/base/pt-BR";
 import { analyticEnUS } from "@/modules/buyer/analytic/i18n/en-US";
 import { analyticPtBR } from "@/modules/buyer/analytic/i18n/pt-BR";
-import { configEnUS } from "@/modules/buyer/config/i18n/en-US";
-import { configPtBR } from "@/modules/buyer/config/i18n/pt-BR";
 import { dashboardEnUS } from "@/modules/buyer/dashboard/i18n/en-US";
 import { dashboardPtBR } from "@/modules/buyer/dashboard/i18n/pt-BR";
-import { productEnUS } from "@/modules/buyer/product/i18n/en-US";
-import { productPtBR } from "@/modules/buyer/product/i18n/pt-BR";
+import { productEnUS } from "@/modules/product/i18n/en-US";
+import { productPtBR } from "@/modules/product/i18n/pt-BR";
 import { quotationEnUS } from "@/modules/buyer/quotation/i18n/en-US";
 import { quotationPtBR } from "@/modules/buyer/quotation/i18n/pt-BR";
 import { supplierEnUS as buyerSupplierEnUS } from "@/modules/buyer/supplier/i18n/en-US";
 import { supplierPtBR as buyerSupplierPtBR } from "@/modules/buyer/supplier/i18n/pt-BR";
+import { adminEnUS } from "@/modules/admin/i18n/en-US";
+import { adminPtBR } from "@/modules/admin/i18n/pt-BR";
 import { supplierPortalEnUS } from "@/modules/supplier/i18n/en-US";
 import { supplierPortalPtBR } from "@/modules/supplier/i18n/pt-BR";
 
@@ -25,8 +25,8 @@ const ptBRMessages = {
   ...productPtBR,
   ...buyerSupplierPtBR,
   ...analyticPtBR,
-  ...configPtBR,
   ...supplierPortalPtBR,
+  ...adminPtBR,
 } as const;
 
 const enUSMessages = {
@@ -36,8 +36,8 @@ const enUSMessages = {
   ...productEnUS,
   ...buyerSupplierEnUS,
   ...analyticEnUS,
-  ...configEnUS,
   ...supplierPortalEnUS,
+  ...adminEnUS,
 } as const;
 
 export const appMessages = {
