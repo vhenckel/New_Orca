@@ -2,8 +2,8 @@
 FROM node:20-alpine AS builder
 
 # Vite bakes VITE_* at build time; pass via build-arg (e.g. from docker-compose env_file)
-ARG VITE_SPOT_API_BASE_URL
-ENV VITE_SPOT_API_BASE_URL=$VITE_SPOT_API_BASE_URL
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 WORKDIR /app
 

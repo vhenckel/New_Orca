@@ -1,11 +1,15 @@
 import type { PropsWithChildren } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import type { AppModuleDefinition, AppRouteDefinition } from "@/app/router/types";
 import { cn } from "@/shared/lib/utils";
 
 import { AppSidebar } from "./AppSidebar";
+import {
+  readSidebarCollapsedPreference,
+  writeSidebarCollapsedPreference,
+} from "./sidebar-preference";
 import { TopBar } from "./TopBar";
 
 interface AppShellProps extends PropsWithChildren {
@@ -26,52 +30,17 @@ function routePathMatches(routePath: string, pathname: string): boolean {
   );
 }
 
-/** Rota exata do item Dashboard na sidebar (comprador ou fornecedor). */
-function getDashboardPath(modules: AppModuleDefinition[]): string | null {
-  const dash = modules.find(
-    (m) =>
-      m.key === "dashboard" ||
-      m.key === "supplier-dashboard" ||
-      m.key === "admin-dashboard",
-  );
-  return dash ? (dash.sidebarLinkTo ?? dash.basePath) : null;
-}
-
 export function AppShell({ children, modules }: AppShellProps) {
   const location = useLocation();
-  const dashboardPath = useMemo(() => getDashboardPath(modules), [modules]);
-  const prevPathnameRef = useRef(location.pathname);
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const dp = getDashboardPath(modules);
-    if (!dp) return false;
-    return location.pathname !== dp;
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsedPreference);
 
-  useEffect(() => {
-    if (!dashboardPath) {
-      prevPathnameRef.current = location.pathname;
-      return;
-    }
-    const prev = prevPathnameRef.current;
-
-    if (location.pathname === dashboardPath) {
-      setSidebarCollapsed(false);
-      prevPathnameRef.current = location.pathname;
-      return;
-    }
-    if (prev === dashboardPath) {
-      setSidebarCollapsed(true);
-    }
-    prevPathnameRef.current = location.pathname;
-  }, [location.pathname, dashboardPath]);
-
-  const handleSidebarItemClick = (to: string) => {
-    if (dashboardPath && to === dashboardPath) {
-      setSidebarCollapsed(false);
-    } else {
-      setSidebarCollapsed(true);
-    }
+  const handleSidebarToggle = () => {
+    setSidebarCollapsed((currentValue) => {
+      const nextValue = !currentValue;
+      writeSidebarCollapsedPreference(nextValue);
+      return nextValue;
+    });
   };
 
   const currentModule = useMemo(
@@ -98,8 +67,7 @@ export function AppShell({ children, modules }: AppShellProps) {
       <AppSidebar
         collapsed={sidebarCollapsed}
         modules={modules}
-        onSidebarItemClick={handleSidebarItemClick}
-        onToggle={() => setSidebarCollapsed((currentValue) => !currentValue)}
+        onToggle={handleSidebarToggle}
       />
 
       <div

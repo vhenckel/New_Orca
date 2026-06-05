@@ -2,9 +2,8 @@
 alwaysApply: true
 ---
 
-analise o projeto @o2obots-app-frontend/ , ele vai ser a nossa nova aplicação web do O2OSPOT.
-Ele foi construído pelo Lovable como uma coisa só, analise bem como ele foi feito e como ele está estruturado.
-Quero refatorar a arquitetura do meu frontend React + Vite + TypeScript + shadcn/ui para um modelo modular por domínio, mantendo o projeto como um único app, mas com separação clara entre módulos de negócio.
+analise o projeto **Orca_New** e use **Orca_Old** como referência de API e regras de negócio.
+Quero manter e evoluir a arquitetura do frontend React + Vite + TypeScript + shadcn/ui em um modelo modular por domínio, mantendo o projeto como um único app, mas com separação clara entre módulos de negócio.
 
 Contexto atual
 

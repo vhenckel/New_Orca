@@ -4,6 +4,6 @@ services:
     build:
       context: .
       args:
-        VITE_SPOT_API_BASE_URL: https://spot-api-management.dev.o2obots.com
+        VITE_API_URL: http://localhost:3000
     ports:
       - "8081:80"

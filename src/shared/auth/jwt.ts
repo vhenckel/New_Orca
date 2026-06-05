@@ -31,7 +31,7 @@ export function getCompanyIdFromToken(accessToken: string): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
-/** Extrai companyName do token (companyName claim; spot-api usa camelCase). */
+/** Extrai companyName do token (companyName claim). */
 export function getCompanyNameFromToken(accessToken: string): string | null {
   const payload = decodeTokenPayload(accessToken);
   const name = payload?.companyName;

@@ -5,7 +5,6 @@ import path from "path";
 const apiTarget =
   process.env.VITE_API_URL ??
   process.env.VITE_ORCA_API_BASE_URL ??
-  process.env.VITE_SPOT_API_BASE_URL ??
   "http://localhost:3000";
 
 // https://vitejs.dev/config/

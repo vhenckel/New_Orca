@@ -1,6 +1,5 @@
 /**
- * Contratos de sessão, /me e árvore de permissões.
- * Alinhado ao management (OutputUserTeam, ProfileModel, Module/SubModule/UserPermission).
+ * Contratos de sessão e árvore de permissões.
  */
 
 /** Permissão no perfil (nome, label, enabled). */
@@ -68,7 +67,7 @@ export interface MeResponse {
   userId?: number;
   /** Persona do usuário — define qual visão do produto é carregada (buyer/supplier). */
   persona: UserPersona;
-  /** Email do usuário (ex.: superadmin@orca.app). Vem do /me (management/trinity). */
+  /** Email do usuário (ex.: superadmin@orca.app). */
   email?: string;
   /** Username do usuário (normalmente igual ao email). Vem do /me. */
   username?: string;
@@ -80,7 +79,7 @@ export interface MeResponse {
   maxNumberOfClients: number;
   branding?: BrandingConfig;
   userStatuses?: Array<{ statusId: number }>;
-  /** Features da conta (ex.: role "Super Admin"), quando retornadas pelo /me — alinhado ao management. */
+  /** Features da conta (ex.: role "Super Admin"), quando retornadas pelo /me. */
   features?: Array<{ name: string }>;
 }
 
@@ -125,7 +124,7 @@ export interface ResetPasswordResponse {
   message: string;
 }
 
-/** Claims úteis do JWT (decode client-side para companyId, etc.). Alinhado ao payload do spot-api (PayloadAccessToken). */
+/** Claims úteis do JWT (decode client-side para companyId, etc.). */
 export interface TokenClaims {
   sub?: string;
   cmpid?: number;

@@ -18,7 +18,7 @@
   - `/sales`, `/sales/contacts`, `/sales/pipeline`
   - `/config` (preferências: tema, idioma, etc.)
   - `/settings/agent`, `/settings/renegotiation`
-  - `/settings/channels` — **somente** usuário com email `superadmin@o2ospot.com` (demais são redirecionados para `/`; item oculto na sidebar)
+  - `/settings/channels` — **somente** usuário com email `superadmin@orca.app` (demais são redirecionados para `/`; item oculto na sidebar)
 - **Outras:** `*` → NotFoundPage
 
 ## Diferenças
