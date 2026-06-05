@@ -1,3 +1,5 @@
+export { KpiCard } from "./KpiCard";
+export type { KpiTrendTone } from "./KpiCard";
 export { DashboardPageLayout } from "./DashboardPageLayout";
 export type { DashboardPageLayoutProps } from "./DashboardPageLayout";
 export { KpiGrid } from "./KpiGrid";

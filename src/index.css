@@ -6,28 +6,29 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 215 25% 27%;
+    --background: 220 14% 97%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 239 84% 67%;
+    --primary: 22 100% 55%;
+    --primary-hover: 22 93% 49%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 215 25% 27%;
+    --secondary: 220 14% 95%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96%;
+    --muted: 220 14% 95%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 215 25% 27%;
+    --accent: 220 14% 95%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 71% 45%;
@@ -36,26 +37,31 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 239 84% 67%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 22 100% 55%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 25% 27%;
-    --sidebar-primary: 239 84% 67%;
+    /* Sidebar / marca: azul petróleo #0D1B2A (fixo) */
+    --sidebar-background: 213 52% 11%;
+    --brand-petroleum: 213 52% 11%;
+    --sidebar-foreground: 215 16% 65%;
+    --sidebar-primary: 22 100% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 215 25% 27%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-accent: 213 52% 11%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 20% 18%;
+    --sidebar-ring: 22 100% 55%;
 
-    --chart-1: 239 84% 67%;
-    --chart-2: 239 84% 80%;
-    --chart-3: 239 60% 90%;
-    --chart-4: 239 40% 95%;
-    --chart-5: 239 30% 98%;
+    --chart-1: 22 100% 55%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 0 72% 51%;
+    --chart-5: 215 16% 65%;
 
     /* Pipeline status badges (light) — tokens para substituir hex fixos */
     --stage-green-fg: 100 49% 35%;
@@ -91,7 +97,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 239 84% 67%;
+    --primary: 22 100% 55%;
+    --primary-hover: 22 93% 49%;
     --primary-foreground: 0 0% 100%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
@@ -99,24 +106,26 @@
     --muted-foreground: 215 20% 65%;
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 239 84% 67%;
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 239 84% 67%;
+    --ring: 22 100% 55%;
+    /* Sidebar permanece azul petróleo */
+    --sidebar-background: 213 52% 11%;
+    --brand-petroleum: 213 52% 11%;
+    --sidebar-foreground: 215 16% 65%;
+    --sidebar-primary: 22 100% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent: 213 52% 11%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 239 84% 67%;
-    --chart-1: 239 84% 67%;
-    --chart-2: 239 84% 80%;
-    --chart-3: 239 60% 90%;
-    --chart-4: 239 40% 95%;
-    --chart-5: 239 30% 98%;
+    --sidebar-border: 215 20% 18%;
+    --sidebar-ring: 22 100% 55%;
+    --chart-1: 22 100% 55%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 0 72% 51%;
+    --chart-5: 215 16% 65%;
 
     --stage-green-fg: 100 45% 65%;
     --stage-green-bg: 100 25% 12%;
@@ -185,33 +194,67 @@
   }
 
   .card-surface {
-    @apply bg-card border border-border rounded-xl;
+    @apply bg-card border border-border rounded-xl shadow-card;
+  }
+
+  .shadow-card {
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .bg-hero-gradient {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(247, 248, 250, 1) 100%);
+  }
+
+  .bg-sidebar-glow {
+    background: radial-gradient(circle at top right, rgba(255, 107, 26, 0.12), transparent 35%);
+  }
+
+  /* Auth: cores fixas — não herdam personalização de accent/tema */
+  .login-brand-panel {
+    background-color: #0d1b2a;
+    color: #ffffff;
+  }
+
+  .login-brand-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(255, 107, 26, 0.14), transparent 40%);
+    pointer-events: none;
+  }
+
+  .login-form-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
+  }
+
+  .login-cta {
+    background-color: #ff6b1a;
+    color: #ffffff;
+  }
+
+  .login-cta:hover:not(:disabled) {
+    background-color: #e85e12;
+    color: #ffffff;
+  }
+
+  .login-link-accent {
+    color: #ff6b1a;
+  }
+
+  .login-link-accent:hover {
+    color: #e85e12;
   }
 
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground;
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
   }
 
   .nav-item-active {
-    @apply bg-primary/10 text-primary;
+    @apply bg-sidebar-accent text-sidebar-accent-foreground;
   }
 
   .status-badge {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
-  }
-}
-
-/* Login/choose-company background: WebP when supported, PNG fallback */
-.login-bg-layer {
-  background-image: url('/images/login-bg.png');
-  background-position: center bottom;
-}
-@supports (background-image: image-set(url('/images/login-bg.webp') type('image/webp'))) {
-  .login-bg-layer {
-    background-image: image-set(
-      url('/images/login-bg.webp') type('image/webp'),
-      url('/images/login-bg.png') type('image/png')
-    );
   }
 }
 

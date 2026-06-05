@@ -1,5 +1,11 @@
+import { ORCA_ORANGE } from "@/shared/theme/brand-colors";
+
 export const accentColorStorageKey = "orca-accent-color";
-export const defaultAccentColor = "#6467f2";
+export const accentColorUserChoiceKey = "orca-accent-user-customized";
+export const defaultAccentColor = ORCA_ORANGE;
+
+/** Cores legadas aplicadas automaticamente (não são escolha do usuário). */
+const LEGACY_AUTO_COLORS = new Set(["#6467f2", "#096dd9", "#6366f1"]);
 
 interface RgbColor {
   r: number;
@@ -84,6 +90,34 @@ function getForegroundColor(color: HslColor) {
   return color.l >= 62 ? "222 47% 11%" : "0 0% 100%";
 }
 
+export function hasUserChosenAccentColor() {
+  return window.localStorage.getItem(accentColorUserChoiceKey) === "true";
+}
+
+/** Remove cores antigas salvas automaticamente (ex.: branding azul do mock). */
+export function migrateLegacyAccentStorage() {
+  if (hasUserChosenAccentColor()) return;
+
+  const stored = window.localStorage.getItem(accentColorStorageKey);
+  if (!stored) return;
+
+  if (LEGACY_AUTO_COLORS.has(normalizeHexColor(stored))) {
+    window.localStorage.removeItem(accentColorStorageKey);
+  }
+}
+
+/** Cor efetiva: laranja padrão, exceto se o usuário personalizou nas preferências. */
+export function getEffectiveAccentColor() {
+  migrateLegacyAccentStorage();
+
+  if (!hasUserChosenAccentColor()) {
+    return defaultAccentColor;
+  }
+
+  const stored = window.localStorage.getItem(accentColorStorageKey);
+  return stored ? normalizeHexColor(stored) : defaultAccentColor;
+}
+
 export function applyAccentColor(hexColor: string) {
   const root = document.documentElement;
   const accentColor = rgbToHsl(hexToRgb(hexColor));
@@ -92,7 +126,10 @@ export function applyAccentColor(hexColor: string) {
   const lighterTwo = withLightness(accentColor, accentColor.l + 22);
   const lighterThree = withLightness(accentColor, accentColor.l + 30);
 
+  const primaryHover = withLightness(accentColor, Math.max(accentColor.l - 6, 0));
+
   root.style.setProperty("--primary", toCssHsl(accentColor));
+  root.style.setProperty("--primary-hover", toCssHsl(primaryHover));
   root.style.setProperty("--primary-foreground", getForegroundColor(accentColor));
   root.style.setProperty("--ring", toCssHsl(accentColor));
   root.style.setProperty("--sidebar-primary", toCssHsl(accentColor));
@@ -104,11 +141,30 @@ export function applyAccentColor(hexColor: string) {
   root.style.setProperty("--chart-4", toCssHsl(lighterThree));
 }
 
+export function persistUserAccentColor(hexColor: string) {
+  const sanitized = normalizeHexColor(hexColor);
+  window.localStorage.setItem(accentColorUserChoiceKey, "true");
+  window.localStorage.setItem(accentColorStorageKey, sanitized);
+  applyAccentColor(sanitized);
+  return sanitized;
+}
+
+/** @deprecated Use getEffectiveAccentColor */
 export function getStoredAccentColor() {
-  const storedValue = window.localStorage.getItem(accentColorStorageKey);
-  return normalizeHexColor(storedValue ?? defaultAccentColor);
+  return getEffectiveAccentColor();
 }
 
 export function sanitizeAccentColor(value: string) {
   return normalizeHexColor(value);
+}
+
+export function resetAccentColor() {
+  window.localStorage.removeItem(accentColorUserChoiceKey);
+  window.localStorage.removeItem(accentColorStorageKey);
+  applyAccentColor(defaultAccentColor);
+  return defaultAccentColor;
+}
+
+export function isDefaultAccentColor(color: string) {
+  return !hasUserChosenAccentColor() || normalizeHexColor(color) === defaultAccentColor;
 }

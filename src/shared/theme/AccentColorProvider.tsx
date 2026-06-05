@@ -3,35 +3,46 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AccentColorContext } from "@/shared/theme/AccentColorContext";
 import {
-  accentColorStorageKey,
-  applyAccentColor,
   defaultAccentColor,
-  getStoredAccentColor,
+  getEffectiveAccentColor,
+  isDefaultAccentColor,
+  persistUserAccentColor,
+  resetAccentColor as resetAccentColorValue,
   sanitizeAccentColor,
 } from "@/shared/theme/accent-color";
 
 export function AccentColorProvider({ children }: PropsWithChildren) {
   const [accentColor, setAccentColorState] = useState(defaultAccentColor);
 
-  useEffect(() => {
-    const storedAccentColor = getStoredAccentColor();
-    setAccentColorState(storedAccentColor);
-    applyAccentColor(storedAccentColor);
+  const syncAccentFromStorage = useCallback(() => {
+    const effective = getEffectiveAccentColor();
+    setAccentColorState(effective);
+    return effective;
   }, []);
+
+  useEffect(() => {
+    syncAccentFromStorage();
+  }, [syncAccentFromStorage]);
 
   const setAccentColor = useCallback((nextColor: string) => {
     const sanitizedColor = sanitizeAccentColor(nextColor);
     setAccentColorState(sanitizedColor);
-    window.localStorage.setItem(accentColorStorageKey, sanitizedColor);
-    applyAccentColor(sanitizedColor);
+    persistUserAccentColor(sanitizedColor);
+  }, []);
+
+  const resetAccentColor = useCallback(() => {
+    const restored = resetAccentColorValue();
+    setAccentColorState(restored);
   }, []);
 
   const value = useMemo(
     () => ({
       accentColor,
       setAccentColor,
+      resetAccentColor,
+      isDefaultAccent: isDefaultAccentColor(accentColor),
     }),
-    [accentColor, setAccentColor],
+    [accentColor, setAccentColor, resetAccentColor],
   );
 
   return <AccentColorContext.Provider value={value}>{children}</AccentColorContext.Provider>;

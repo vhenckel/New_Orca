@@ -112,7 +112,7 @@ export function SuppliersPage() {
             </Badge>
           )}
           {row.isNew ? (
-            <Badge variant="outline" className="border-sky-200 bg-sky-50 font-normal text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100">
+            <Badge variant="outline" className="border-info/20 bg-info/10 font-normal text-info dark:border-info/30 dark:bg-info/10 dark:text-info">
               {t("modules.supplier.badge.new")}
             </Badge>
           ) : null}

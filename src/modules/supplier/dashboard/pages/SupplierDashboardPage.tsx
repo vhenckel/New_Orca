@@ -21,7 +21,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Secos: "bg-yellow-500",
   Carnes: "bg-red-500",
   Mercearia: "bg-purple-500",
-  Laticinios: "bg-sky-500",
+  Laticinios: "bg-info/100",
   Acucares: "bg-orange-400",
   Descartaveis: "bg-gray-400",
   Temperos: "bg-teal-500",
@@ -128,25 +128,25 @@ export function SupplierDashboardPage() {
             label={t("modules.supplierPortal.dashboard.kpi.openOrders")}
             hint={t("modules.supplierPortal.dashboard.kpi.openOrdersHint")}
             value={openOrders.length}
-            icon={<Clock className="size-4 text-orange-500" />}
+            icon={<Clock className="size-4 text-primary" />}
           />
           <KpiCard
             label={t("modules.supplierPortal.dashboard.kpi.highPriority")}
             hint={t("modules.supplierPortal.dashboard.kpi.highPriorityHint")}
             value={highPriorityCount}
-            icon={<TriangleAlert className="size-4 text-red-500" />}
+            icon={<TriangleAlert className="size-4 text-destructive" />}
           />
           <KpiCard
             label={t("modules.supplierPortal.dashboard.kpi.itemsRequested")}
             hint={t("modules.supplierPortal.dashboard.kpi.itemsRequestedHint")}
             value={totalItems}
-            icon={<BarChart3 className="size-4 text-blue-500" />}
+            icon={<BarChart3 className="size-4 text-info" />}
           />
           <KpiCard
             label={t("modules.supplierPortal.dashboard.kpi.avgProgress")}
             hint={t("modules.supplierPortal.dashboard.kpi.avgProgressHint")}
             value={`${avgProgress}%`}
-            icon={<TrendingUp className="size-4 text-green-500" />}
+            icon={<TrendingUp className="size-4 text-success" />}
           />
         </div>
 
@@ -182,14 +182,14 @@ export function SupplierDashboardPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                  <TrendingUp className="size-4 text-green-500" />
+                  <TrendingUp className="size-4 text-success" />
                   {t("modules.supplierPortal.dashboard.opportunities.title")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-3 pt-0">
                 {opportunities.map((opp, index) => (
                   <div key={index} className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-green-500" />
+                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
                     <p className="text-xs leading-relaxed text-muted-foreground">{opp.text}</p>
                   </div>
                 ))}
@@ -271,7 +271,7 @@ function QuotationQueueRow({
   return (
     <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-[minmax(0,1fr)_140px_170px_120px] md:items-center md:gap-4">
       <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-600">
+        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-info/10 text-info">
           <FileText className="size-4" />
         </span>
 

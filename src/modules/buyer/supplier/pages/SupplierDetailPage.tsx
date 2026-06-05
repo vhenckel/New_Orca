@@ -78,7 +78,7 @@ function RecentQuotationStatusBadge({ status }: { status: SupplierRecentQuotatio
     return (
       <Badge
         variant="outline"
-        className="border-emerald-200 bg-emerald-50 font-medium text-emerald-900 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100"
+        className="border-success/20 bg-success/10 font-medium text-success hover:bg-success/10 dark:border-success/30 dark:bg-success/10 dark:text-success"
       >
         {t("modules.supplier.detail.recent.status.answered")}
       </Badge>
@@ -159,7 +159,7 @@ export function SupplierDetailPage() {
       label: t("modules.supplier.detail.kpi.avgResponse"),
       value: formatResponseKpi(supplier.responseTimeMinutes),
       icon: Clock,
-      iconClass: "text-sky-600",
+      iconClass: "text-info",
     },
     {
       key: "quotes",
@@ -173,7 +173,7 @@ export function SupplierDetailPage() {
       label: t("modules.supplier.detail.kpi.winRate"),
       value: `${winRatePercent}%`,
       icon: LineChart,
-      iconClass: "text-emerald-600",
+      iconClass: "text-success",
     },
   ] as const;
 
@@ -218,15 +218,15 @@ export function SupplierDetailPage() {
           <CardContent className="flex flex-col gap-6 p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-start">
-                <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
+                <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info dark:bg-info/10 dark:text-info">
                   <Building2 className="size-7" aria-hidden />
                 </div>
                 <div className="flex min-w-0 flex-col gap-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className="text-xl font-semibold tracking-tight">{supplier.name}</h1>
                     {isActive ? (
-                      <Badge className="gap-1.5 border-emerald-200 bg-emerald-50 font-medium text-emerald-900 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100">
-                        <span className="text-[10px] leading-none text-emerald-600 dark:text-emerald-400" aria-hidden>
+                      <Badge className="gap-1.5 border-success/20 bg-success/10 font-medium text-success hover:bg-success/10 dark:border-success/30 dark:bg-success/10 dark:text-success">
+                        <span className="text-[10px] leading-none text-success dark:text-success" aria-hidden>
                           ●
                         </span>
                         {t("modules.supplier.detail.status.active")}

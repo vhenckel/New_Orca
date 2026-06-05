@@ -18,10 +18,10 @@ const INSIGHT_ICONS = {
 } as const;
 
 const INSIGHT_RING = {
-  amber: "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-200",
+  amber: "bg-amber-100 text-warning dark:bg-amber-950/60 dark:text-warning",
   rose: "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-200",
   yellow: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-100",
-  sky: "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-200",
+  sky: "bg-info/10 text-info dark:bg-info/10 dark:text-info",
 } as const;
 
 export function AnalyticsPage() {
@@ -127,7 +127,7 @@ export function AnalyticsPage() {
                     <span
                       className={cn(
                         "text-sm font-bold tabular-nums",
-                        row.impactVariant === "success" && "text-emerald-600",
+                        row.impactVariant === "success" && "text-success",
                         row.impactVariant === "danger" && "text-red-600",
                       )}
                     >

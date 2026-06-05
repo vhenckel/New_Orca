@@ -3,6 +3,8 @@ import { createContext } from "react";
 interface AccentColorContextValue {
   accentColor: string;
   setAccentColor: (color: string) => void;
+  resetAccentColor: () => void;
+  isDefaultAccent: boolean;
 }
 
 export const AccentColorContext = createContext<AccentColorContextValue | null>(null);

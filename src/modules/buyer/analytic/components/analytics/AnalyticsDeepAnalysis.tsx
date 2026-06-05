@@ -40,16 +40,16 @@ import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
 
 function scoreBadgeClass(score: number): string {
-  if (score >= 90) return "border-emerald-200 bg-emerald-50 text-emerald-900";
-  if (score >= 70) return "border-sky-200 bg-sky-50 text-sky-900";
-  return "border-amber-200 bg-amber-50 text-amber-950";
+  if (score >= 90) return "border-success/20 bg-success/10 text-success";
+  if (score >= 70) return "border-info/20 bg-info/10 text-info";
+  return "border-amber-200 bg-warning/10 text-amber-950";
 }
 
 function barToneClass(tone: (typeof DEPENDENCY_CONCENTRATION)[0]["tone"]): string {
   if (tone === "danger") return "bg-red-500";
-  if (tone === "primary") return "bg-sky-500";
-  if (tone === "success") return "bg-emerald-500";
-  if (tone === "warning") return "bg-amber-500";
+  if (tone === "primary") return "bg-info/100";
+  if (tone === "success") return "bg-success/100";
+  if (tone === "warning") return "bg-warning/100";
   return "bg-slate-500";
 }
 
@@ -130,21 +130,21 @@ export function AnalyticsDeepAnalysis() {
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                       <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
                         <div
-                          className={cn("h-full rounded-full", positive ? "bg-red-500" : "bg-emerald-500")}
+                          className={cn("h-full rounded-full", positive ? "bg-red-500" : "bg-success/100")}
                           style={{ width: `${width}%` }}
                         />
                       </div>
                       <span
                         className={cn(
                           "w-16 shrink-0 text-right text-sm font-semibold tabular-nums",
-                          positive ? "text-red-600" : "text-emerald-600",
+                          positive ? "text-red-600" : "text-success",
                         )}
                       >
                         {positive ? "+" : ""}
                         {row.pct}%
                       </span>
                       {row.attention ? (
-                        <Badge className="shrink-0 border-amber-200 bg-amber-50 text-amber-950">
+                        <Badge className="shrink-0 border-amber-200 bg-warning/10 text-amber-950">
                           {t("modules.analytic.prices.attention")}
                         </Badge>
                       ) : (
@@ -166,7 +166,7 @@ export function AnalyticsDeepAnalysis() {
                 <CardDescription>{t("modules.analytic.losses.subtitle")}</CardDescription>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-amber-600 tabular-nums">R$ 740</p>
+                <p className="text-2xl font-bold text-warning tabular-nums">R$ 740</p>
                 <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                   {t("modules.analytic.losses.totalLabel")}
                 </p>
@@ -189,9 +189,9 @@ export function AnalyticsDeepAnalysis() {
                       <TableRow key={row.productKey}>
                         <TableCell className="font-medium">{t(row.productKey)}</TableCell>
                         <TableCell className="text-right tabular-nums">{row.paid}</TableCell>
-                        <TableCell className="text-right font-medium text-emerald-600 tabular-nums">{row.cheapest}</TableCell>
+                        <TableCell className="text-right font-medium text-success tabular-nums">{row.cheapest}</TableCell>
                         <TableCell className="text-right tabular-nums">{row.qty}</TableCell>
-                        <TableCell className="text-right font-semibold text-amber-600 tabular-nums">{row.loss}</TableCell>
+                        <TableCell className="text-right font-semibold text-warning tabular-nums">{row.loss}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -234,7 +234,7 @@ export function AnalyticsDeepAnalysis() {
             <Card className="rounded-2xl shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <AlertTriangle className="size-4 text-red-500" aria-hidden />
+                  <AlertTriangle className="size-4 text-destructive" aria-hidden />
                   {t("modules.analytic.dependency.concentrationTitle")}
                 </CardTitle>
                 <CardDescription>{t("modules.analytic.dependency.concentrationHint")}</CardDescription>
@@ -289,13 +289,13 @@ export function AnalyticsDeepAnalysis() {
                         <TableCell className="tabular-nums text-muted-foreground">{row.rank}</TableCell>
                         <TableCell className="font-medium">{t(row.nameKey)}</TableCell>
                         <TableCell className="min-w-[120px]">
-                          <Progress value={row.preco} className="h-2 [&>div]:bg-sky-500" />
+                          <Progress value={row.preco} className="h-2 [&>div]:bg-info/100" />
                         </TableCell>
                         <TableCell className="min-w-[120px]">
-                          <Progress value={row.resposta} className="h-2 [&>div]:bg-sky-500" />
+                          <Progress value={row.resposta} className="h-2 [&>div]:bg-info/100" />
                         </TableCell>
                         <TableCell className="min-w-[120px]">
-                          <Progress value={row.participacao} className="h-2 [&>div]:bg-sky-500" />
+                          <Progress value={row.participacao} className="h-2 [&>div]:bg-info/100" />
                         </TableCell>
                         <TableCell className="text-right">
                           <Badge variant="outline" className={cn("tabular-nums", scoreBadgeClass(row.score))}>
@@ -338,16 +338,16 @@ export function AnalyticsDeepAnalysis() {
             {ABC_CLASSES.map((block) => {
               const accent =
                 block.clazz === "A"
-                  ? "border-rose-200 bg-rose-50/50 dark:border-rose-900 dark:bg-rose-950/30"
+                  ? "border-destructive/20 bg-destructive/10/50 dark:border-destructive900 dark:bg-destructive/10"
                   : block.clazz === "B"
-                    ? "border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/30"
-                    : "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/30";
+                    ? "border-amber-200 bg-warning/10/50 dark:border-warning/30 dark:bg-warning/10"
+                    : "border-emerald-200 bg-success/10/50 dark:border-success/30 dark:bg-success/10/30";
               const letterColor =
                 block.clazz === "A"
                   ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-200"
                   : block.clazz === "B"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200"
-                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200";
+                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-warning"
+                    : "bg-emerald-100 text-success dark:bg-success/10 dark:text-success";
               return (
                 <Card key={block.clazz} className={cn("rounded-2xl border-2 shadow-sm", accent)}>
                   <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
@@ -413,7 +413,7 @@ export function AnalyticsDeepAnalysis() {
             <Card className="rounded-2xl shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Clock className="size-4 text-amber-600" aria-hidden />
+                  <Clock className="size-4 text-warning" aria-hidden />
                   {t("modules.analytic.response.avgTitle")}
                 </CardTitle>
               </CardHeader>
@@ -430,7 +430,7 @@ export function AnalyticsDeepAnalysis() {
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                         <div
-                          className={cn("h-full rounded-full", row.warn ? "bg-red-500" : "bg-sky-500")}
+                          className={cn("h-full rounded-full", row.warn ? "bg-red-500" : "bg-info/100")}
                           style={{ width: `${width}%` }}
                         />
                       </div>
@@ -443,7 +443,7 @@ export function AnalyticsDeepAnalysis() {
             <Card className="rounded-2xl shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Zap className="size-4 text-emerald-600" aria-hidden />
+                  <Zap className="size-4 text-success" aria-hidden />
                   {t("modules.analytic.response.rateTitle")}
                 </CardTitle>
               </CardHeader>
