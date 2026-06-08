@@ -13,14 +13,14 @@ export function getCreateBudgetProductsPath(editId?: string | null): string {
 }
 
 export function getBudgetRowHref(budget: BudgetListItem): string {
-  if (budget.status === "saved") {
+  if (budget.status === "saved" || budget.status === "canceled") {
     return getCreateBudgetPath(budget.id);
   }
   return `/quotations/${budget.id}`;
 }
 
 export function canDeleteBudget(budget: BudgetListItem): boolean {
-  return budget.status === "saved";
+  return budget.status === "saved" || budget.status === "canceled";
 }
 
 export function saveBudgetListScroll(scrollTop: number): void {

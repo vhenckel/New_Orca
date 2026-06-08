@@ -4,9 +4,10 @@ import type {
   ProductsListPage,
 } from "@/modules/product/types/product-list";
 import type { ProductDetailView } from "@/modules/product/types/product-detail";
+import type { PendingProductModerationPayload } from "@/modules/product/types/pending-product";
 import { normalizeProductPayload } from "@/modules/product/lib/normalize-product-payload";
 import type { ProductApiPayload } from "@/modules/product/types/product-form";
-import { apiRequest } from "@/shared/api/http-client";
+import { apiRequest, apiRequestBlob } from "@/shared/api/http-client";
 import { DEFAULT_PAGE_SIZE } from "@/shared/api/pagination";
 
 export interface PlatformProductDetailResponse {
@@ -30,10 +31,10 @@ export interface CreateProductPayload {
   ncm?: string;
 }
 
-function buildProductsQuery(params: FetchProductsListParams): string {
-  const search = new URLSearchParams();
-  search.set("page", String(params.page));
-  search.set("totalPerPage", String(params.totalPerPage ?? DEFAULT_PAGE_SIZE));
+function appendProductsFilterParams(
+  search: URLSearchParams,
+  params: Omit<FetchProductsListParams, "page">,
+): void {
   search.set("status", params.status ?? "approved");
   if (params.sort) search.set("sort", params.sort);
   if (params.order) search.set("order", params.order);
@@ -43,7 +44,21 @@ function buildProductsQuery(params: FetchProductsListParams): string {
   if (params.weight != null && !Number.isNaN(params.weight)) {
     search.set("weight", String(params.weight));
   }
+}
+
+function buildProductsQuery(params: FetchProductsListParams): string {
+  const search = new URLSearchParams();
+  search.set("page", String(params.page));
+  search.set("totalPerPage", String(params.totalPerPage ?? DEFAULT_PAGE_SIZE));
+  appendProductsFilterParams(search, params);
   return search.toString();
+}
+
+function buildProductsCopyQuery(params: Omit<FetchProductsListParams, "page">): string {
+  const search = new URLSearchParams();
+  appendProductsFilterParams(search, params);
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
 }
 
 export async function fetchProductsPage(
@@ -86,6 +101,65 @@ export async function patchProductBrands(
   await apiRequest<void>(`/products/${id}/brands`, {
     method: "PATCH",
     body: { brands },
+  });
+}
+
+export async function copyProductsTsv(
+  params: Omit<FetchProductsListParams, "page" | "totalPerPage">,
+): Promise<string> {
+  const blob = await apiRequestBlob(`/products/copy${buildProductsCopyQuery(params)}`);
+  return blob.text();
+}
+
+export async function updatePendingProduct(
+  id: string,
+  payload: PendingProductModerationPayload,
+): Promise<void> {
+  await apiRequest<void>(`/products/${id}/pending`, {
+    method: "PUT",
+    body: normalizeProductPayload(payload),
+  });
+}
+
+export async function approveProduct(
+  id: string,
+  payload?: PendingProductModerationPayload,
+): Promise<void> {
+  await apiRequest<void>(`/products/${id}/approve`, {
+    method: "PUT",
+    body: payload ? normalizeProductPayload(payload) : undefined,
+  });
+}
+
+export async function rejectProduct(
+  id: string,
+  payload?: PendingProductModerationPayload,
+): Promise<void> {
+  await apiRequest<void>(`/products/${id}/reject`, {
+    method: "PUT",
+    body: payload ? normalizeProductPayload(payload) : undefined,
+  });
+}
+
+export async function approveProductBrand(
+  productId: string,
+  brandId: string,
+  payload?: PendingProductModerationPayload,
+): Promise<void> {
+  await apiRequest<void>(`/products/${productId}/brands/${brandId}/approve`, {
+    method: "PUT",
+    body: payload ? normalizeProductPayload(payload) : undefined,
+  });
+}
+
+export async function rejectProductBrand(
+  productId: string,
+  brandId: string,
+  payload?: PendingProductModerationPayload,
+): Promise<void> {
+  await apiRequest<void>(`/products/${productId}/brands/${brandId}/reject`, {
+    method: "PUT",
+    body: payload ? normalizeProductPayload(payload) : undefined,
   });
 }
 

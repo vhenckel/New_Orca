@@ -62,6 +62,7 @@ import {
 } from "@/modules/buyer/quotation/lib/create-budget-rules";
 import { resolveLinesForSubmit } from "@/modules/buyer/quotation/lib/create-budget-submit";
 import type { BudgetLineItem } from "@/modules/buyer/quotation/types";
+import { useApiUserRole } from "@/shared/auth/use-api-user";
 import { getStoredUser } from "@/shared/auth/token-store";
 import { ApiError } from "@/shared/api/http-client";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
@@ -153,6 +154,7 @@ export function CreateQuotationPage() {
   const [hydratedFromApi, setHydratedFromApi] = useState(false);
   const [hydratedFromStore, setHydratedFromStore] = useState(false);
 
+  const role = useApiUserRole();
   const { data: establishments = [] } = useMyEstablishments();
   const { data: budgetDetail, isSuccess: budgetDetailLoaded } = useBudgetDetail(sourceBudgetId);
 
@@ -175,6 +177,8 @@ export function CreateQuotationPage() {
   const isReadOnly = budgetStatus === "finished";
   const isOpenLimited = budgetStatus === "open";
   const canSend = !isReadOnly && !isOpenLimited;
+  const showEstablishmentField = role === "admin" || establishments.length > 1;
+  const isEstablishmentLocked = Boolean(editBudgetId && !isDuplicate);
 
   const productById = useMemo(
     () => new Map(catalogProducts.map((p) => [p.id, p])),
@@ -311,6 +315,16 @@ export function CreateQuotationPage() {
     setExpandedProductId(null);
     setLastAddedProductId(null);
     setShowLineValidation(false);
+  }
+
+  function handleEstablishmentChange(value: string) {
+    setEstablishmentId(value);
+    if (!isEstablishmentLocked) {
+      clearAll();
+      setSelectedProductId(null);
+      setProductQuery("");
+      setProductDropdownOpen(false);
+    }
   }
 
   function updateLine(productId: string, patch: Partial<BudgetLineItem>) {
@@ -883,6 +897,31 @@ export function CreateQuotationPage() {
             <CardTitle>{t("modules.quotation.quotations.create.step1Title")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {showEstablishmentField ? (
+              <div className="space-y-2">
+                <Label htmlFor="budget-establishment">
+                  {t("modules.quotation.quotations.create.establishment")}
+                </Label>
+                <Select
+                  value={establishmentId || undefined}
+                  onValueChange={handleEstablishmentChange}
+                  disabled={isEstablishmentLocked || isReadOnly}
+                >
+                  <SelectTrigger id="budget-establishment">
+                    <SelectValue
+                      placeholder={t("modules.quotation.quotations.create.establishmentPlaceholder")}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {establishments.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label>{t("modules.quotation.quotations.create.deadlineDate")}</Label>

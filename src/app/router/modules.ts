@@ -8,7 +8,7 @@ import { suppliersModule } from "@/modules/suppliers";
 import {
   adminBillingModule,
   adminDashboardModule,
-  adminRestaurantsModule,
+  adminEstablishmentsModule,
   adminUsersModule,
 } from "@/modules/admin";
 import { preferencesModule } from "@/shared/preferences";
@@ -42,9 +42,10 @@ export const supplierMobileModules: AppModuleDefinition[] = [supplierMobileQuota
 
 export const adminModules: AppModuleDefinition[] = [
   adminDashboardModule,
+  quotationModule,
+  adminEstablishmentsModule,
   productModule,
   adminUsersModule,
-  adminRestaurantsModule,
   suppliersModule,
   adminBillingModule,
 ];

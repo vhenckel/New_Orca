@@ -29,7 +29,7 @@ export function RecentRegistrationsCard() {
       subtitle="Últimos a entrar na plataforma"
       headerAction={
         <Link
-          to="/admin/restaurants"
+          to="/estabelecimentos"
           className="text-sm font-medium text-primary hover:underline"
         >
           Ver todos &gt;

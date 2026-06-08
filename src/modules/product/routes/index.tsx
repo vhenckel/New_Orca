@@ -3,6 +3,8 @@ import { Package } from "lucide-react";
 import type { AppModuleDefinition } from "@/app/router/types";
 import { ImportProductsPage } from "@/modules/product/pages/ImportProductsPage";
 import { ManageProductBrandsPage } from "@/modules/product/pages/ManageProductBrandsPage";
+import { PendingProductModerationPage } from "@/modules/product/pages/PendingProductModerationPage";
+import { PendingProductsPage } from "@/modules/product/pages/PendingProductsPage";
 import { ProductDetailRedirect } from "@/modules/product/pages/ProductDetailRedirect";
 import { ProductFormPage } from "@/modules/product/pages/ProductFormPage";
 import { ProductsPage } from "@/modules/product/pages/ProductsPage";
@@ -47,6 +49,32 @@ export const productModule: AppModuleDefinition = {
       topBarParent: {
         labelKey: "modules.product.routes.main.label",
         path: "/products",
+      },
+    },
+    {
+      path: "/products/pending",
+      labelKey: "modules.product.routes.pending.label",
+      descriptionKey: "modules.product.routes.pending.description",
+      icon: Package,
+      element: <PendingProductsPage />,
+      hideInSidebar: true,
+      allowedApiRoles: ["admin"],
+      topBarParent: {
+        labelKey: "modules.product.routes.main.label",
+        path: "/products",
+      },
+    },
+    {
+      path: "/products/pending/:solicitationId/edit",
+      labelKey: "modules.product.routes.pendingEdit.label",
+      descriptionKey: "modules.product.routes.pendingEdit.description",
+      icon: Package,
+      element: <PendingProductModerationPage />,
+      hideInSidebar: true,
+      allowedApiRoles: ["admin"],
+      topBarParent: {
+        labelKey: "modules.product.routes.pending.label",
+        path: "/products/pending",
       },
     },
     {

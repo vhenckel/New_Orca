@@ -180,10 +180,17 @@ export function ProductListTable({
                     moreLabel={(n) => t("modules.product.list.moreCount", { count: n })}
                   />
                 </TableCell>
-                <TableCell>
-                  <span className="font-medium tabular-nums text-foreground">
-                    {row.establishmentCount}
-                  </span>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  {row.establishmentCount > 0 ? (
+                    <Link
+                      to={`/estabelecimentos?productId=${row.id}`}
+                      className="font-medium tabular-nums text-primary underline-offset-4 hover:underline"
+                    >
+                      {row.establishmentCount}
+                    </Link>
+                  ) : (
+                    <span className="font-medium tabular-nums text-foreground">0</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <TooltipProvider delayDuration={300}>

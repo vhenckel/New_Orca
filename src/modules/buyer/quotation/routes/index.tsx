@@ -8,7 +8,7 @@ import { QuotationsPage } from "@/modules/buyer/quotation/pages/QuotationsPage";
 export const quotationModule: AppModuleDefinition = {
   key: "quotation",
   basePath: "/quotations",
-  allowedPersonas: ["buyer"],
+  allowedPersonas: ["buyer", "admin"],
   titleKey: "modules.quotation.title",
   descriptionKey: "modules.quotation.description",
   icon: ReceiptText,

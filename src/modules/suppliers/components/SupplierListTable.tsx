@@ -144,7 +144,7 @@ export function SupplierListTable({
                     <TableCell className="lowercase">{row.responsibleEmail}</TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Link
-                        to={`/admin/restaurants?supplierId=${row.id}`}
+                        to={`/estabelecimentos?supplierId=${row.id}`}
                         className="font-medium tabular-nums text-primary underline-offset-4 hover:underline"
                       >
                         {row.establishmentCount}

@@ -29,7 +29,7 @@ import {
 } from "@/shared/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 
-const TABLE_COL_SPAN = 7;
+const BASE_TABLE_COL_SPAN = 7;
 
 function statusBadgeClass(status: BudgetListItem["status"]) {
   if (status === "saved") return "border-border bg-muted text-muted-foreground";
@@ -42,6 +42,7 @@ interface BudgetListTableProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
+  showEstablishment?: boolean;
   onLoadMore: () => void;
   onDuplicate: (row: BudgetListItem) => void;
   onDelete: (row: BudgetListItem) => void;
@@ -52,6 +53,7 @@ export function BudgetListTable({
   scrollRef,
   hasNextPage,
   isFetchingNextPage,
+  showEstablishment = false,
   onLoadMore,
   onDuplicate,
   onDelete,
@@ -59,6 +61,7 @@ export function BudgetListTable({
   const { t } = useI18n();
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLTableRowElement>(null);
+  const tableColSpan = showEstablishment ? BASE_TABLE_COL_SPAN + 1 : BASE_TABLE_COL_SPAN;
 
   useInfiniteScrollSentinel(sentinelRef, {
     enabled: hasNextPage && !isFetchingNextPage,
@@ -77,6 +80,11 @@ export function BudgetListTable({
         <TableHeader className="sticky top-0 z-10 bg-card">
           <TableRow>
             <TableHead className="w-16">{t("modules.quotation.quotations.table.index")}</TableHead>
+            {showEstablishment ? (
+              <TableHead className="hidden sm:table-cell">
+                {t("modules.quotation.quotations.table.establishment")}
+              </TableHead>
+            ) : null}
             <TableHead className="hidden md:table-cell">
               {t("modules.quotation.quotations.table.createdAt")}
             </TableHead>
@@ -98,7 +106,7 @@ export function BudgetListTable({
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={TABLE_COL_SPAN} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={tableColSpan} className="h-24 text-center text-muted-foreground">
                 {t("modules.quotation.quotations.emptyResults")}
               </TableCell>
             </TableRow>
@@ -114,6 +122,9 @@ export function BudgetListTable({
                     {index + 1}
                   </Link>
                 </TableCell>
+                {showEstablishment ? (
+                  <TableCell className="hidden sm:table-cell">{row.establishment.name}</TableCell>
+                ) : null}
                 <TableCell className="hidden text-muted-foreground md:table-cell">
                   {formatDateTimePtBr(row.createdAt)}
                 </TableCell>
@@ -199,7 +210,7 @@ export function BudgetListTable({
           )}
           {hasNextPage ? (
             <TableRow ref={sentinelRef}>
-              <TableCell colSpan={TABLE_COL_SPAN} className="h-12 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={tableColSpan} className="h-12 text-center text-sm text-muted-foreground">
                 {isFetchingNextPage ? t("modules.quotation.quotations.loadingMore") : null}
               </TableCell>
             </TableRow>

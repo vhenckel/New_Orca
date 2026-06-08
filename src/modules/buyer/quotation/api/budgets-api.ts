@@ -1,4 +1,4 @@
-import { apiRequest } from "@/shared/api/http-client";
+import { apiRequest, apiRequestBlob } from "@/shared/api/http-client";
 import type { PaginatedResponse } from "@/shared/api/pagination";
 import type { BudgetListItem, FetchBudgetsParams } from "@/modules/buyer/quotation/types/budget";
 import type {
@@ -31,10 +31,27 @@ function buildBudgetsQuery(params: FetchBudgetsParams): string {
   return `/budgets?${search.toString()}`;
 }
 
+function buildBudgetsCopyQuery(params: Omit<FetchBudgetsParams, "page" | "totalPerPage">): string {
+  const search = new URLSearchParams();
+  if (params.sort) search.set("sort", params.sort);
+  if (params.order) search.set("order", params.order);
+  if (params.status) search.set("status", params.status);
+  if (params.establishmentId) search.set("establishmentId", params.establishmentId);
+  const qs = search.toString();
+  return `/budgets/copy${qs ? `?${qs}` : ""}`;
+}
+
 export async function fetchBudgets(
   params: FetchBudgetsParams,
 ): Promise<PaginatedResponse<BudgetListItem>> {
   return apiRequest<PaginatedResponse<BudgetListItem>>(buildBudgetsQuery(params));
+}
+
+export async function copyBudgetsTsv(
+  params: Omit<FetchBudgetsParams, "page" | "totalPerPage">,
+): Promise<string> {
+  const blob = await apiRequestBlob(buildBudgetsCopyQuery(params));
+  return blob.text();
 }
 
 export async function deleteBudget(id: string): Promise<void> {

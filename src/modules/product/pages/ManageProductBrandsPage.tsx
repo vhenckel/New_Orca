@@ -76,7 +76,7 @@ export function ManageProductBrandsPage() {
     <DashboardPageLayout showPageHeader={false}>
       <div className="flex flex-col gap-6">
         <Button variant="ghost" className="h-9 w-fit gap-2 px-2 text-muted-foreground" asChild>
-          <Link to={state.returnTo ?? "/admin/restaurants"}>
+          <Link to={state.returnTo ?? "/estabelecimentos"}>
             <ArrowLeft className="size-4" />
             {t("modules.product.manageBrands.back")}
           </Link>

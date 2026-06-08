@@ -1,10 +1,11 @@
-import { Plus, Search, Upload } from "lucide-react";
+import { Copy, Plus, Search, Upload } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
-import { deleteProduct } from "@/modules/product/api/products-api";
+import { copyProductsTsv, deleteProduct } from "@/modules/product/api/products-api";
+import { ProductModuleNav } from "@/modules/product/components/ProductModuleNav";
 import { ProductDeleteConfirmDialog } from "@/modules/product/components/ProductDeleteConfirmDialog";
 import { hasProductFormAutostore } from "@/modules/product/lib/product-autostore";
 import { ProductListFilters } from "@/modules/product/components/ProductListFilters";
@@ -58,6 +59,7 @@ export function ProductsPage() {
   const apiUser = useApiUser();
   const role = useApiUserRole();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [copying, setCopying] = useState(false);
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -212,6 +214,20 @@ export function ProductsPage() {
     navigate("/products/import");
   };
 
+  const handleCopy = async () => {
+    if (!isAdmin) return;
+    setCopying(true);
+    try {
+      const tsv = await copyProductsTsv(adminFetchParams);
+      await navigator.clipboard.writeText(tsv);
+      toast.success(t("modules.product.list.toast.copySuccess"));
+    } catch {
+      toast.error(t("modules.product.list.toast.copyError"));
+    } finally {
+      setCopying(false);
+    }
+  };
+
   if (role !== "admin" && role !== "establishment") {
     return null;
   }
@@ -219,10 +235,22 @@ export function ProductsPage() {
   const headerActions = (
     <div className="flex flex-wrap gap-2">
       {isAdmin ? (
-        <Button type="button" variant="outline" className="gap-2" onClick={onImportProducts}>
-          <Upload className="size-4" />
-          {t("modules.product.list.importProducts")}
-        </Button>
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2"
+            disabled={copying}
+            onClick={() => void handleCopy()}
+          >
+            <Copy className="size-4" />
+            {t("modules.product.list.copy")}
+          </Button>
+          <Button type="button" variant="outline" className="gap-2" onClick={onImportProducts}>
+            <Upload className="size-4" />
+            {t("modules.product.list.importProducts")}
+          </Button>
+        </>
       ) : null}
       <Button type="button" className="gap-2 text-white" onClick={onAddProduct}>
         <Plus className="size-4" />
@@ -239,6 +267,8 @@ export function ProductsPage() {
       headerActions={headerActions}
     >
       <div className="flex flex-col gap-4">
+        {isAdmin ? <ProductModuleNav /> : null}
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

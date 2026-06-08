@@ -28,6 +28,7 @@ interface BudgetListMobileCardsProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
+  showEstablishment?: boolean;
   onLoadMore: () => void;
 }
 
@@ -36,6 +37,7 @@ export function BudgetListMobileCards({
   scrollRef,
   hasNextPage,
   isFetchingNextPage,
+  showEstablishment = false,
   onLoadMore,
 }: BudgetListMobileCardsProps) {
   const { t } = useI18n();
@@ -83,6 +85,11 @@ export function BudgetListMobileCards({
               </Badge>
             </div>
             <div className="grid gap-1 text-sm text-muted-foreground">
+              {showEstablishment ? (
+                <p>
+                  {t("modules.quotation.quotations.table.establishment")}: {row.establishment.name}
+                </p>
+              ) : null}
               <p>
                 {t("modules.quotation.quotations.table.createdAt")}: {formatDateTimePtBr(row.createdAt)}
               </p>

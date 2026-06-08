@@ -1,7 +1,7 @@
 import { NuqsAdapter } from "nuqs/adapters/react-router/v6";
 import { useEffect, useMemo } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { matchPath, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { matchPath } from "react-router-dom";
 
 import { AuthProvider, getLandingPathForPersona, useAuth } from "@/shared/auth/AuthContext";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
@@ -21,6 +21,10 @@ import {
   supplierMobileModules,
   supplierModules,
 } from "@/app/router/modules";
+import {
+  buildPendingProductsSearchFromLegacy,
+  pendingProductListFilterUrlKeys,
+} from "@/modules/product/lib/pending-product-list-filters";
 
 const APP_NAME = "Orca";
 
@@ -53,6 +57,26 @@ function DocumentTitleSync() {
   return null;
 }
 
+function LegacyProductEditRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/products/${id}/edit`} replace />;
+}
+
+function LegacyPendingProductsRedirect() {
+  const location = useLocation();
+  const params = new URLSearchParams(buildPendingProductsSearchFromLegacy(location.search).replace(/^\?/, ""));
+  if (!params.get(pendingProductListFilterUrlKeys.status)) {
+    params.set(pendingProductListFilterUrlKeys.status, "pending");
+  }
+  const qs = params.toString();
+  return <Navigate to={`/products/pending${qs ? `?${qs}` : ""}`} replace />;
+}
+
+function LegacyPendingProductEditRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/products/pending/${id}/edit`} replace />;
+}
+
 function RootRedirect() {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
@@ -80,6 +104,19 @@ function PersonaAppRoutes() {
       <Route path="/" element={<RootRedirect />} />
       <Route path="/config" element={<Navigate to="/preferences" replace />} />
       <Route path="/supplier/config" element={<Navigate to="/preferences" replace />} />
+      <Route path="/admin/restaurants" element={<Navigate to="/estabelecimentos" replace />} />
+      <Route path="/produtos" element={<Navigate to="/products" replace />} />
+      <Route path="/produtos/criar-produto" element={<Navigate to="/products/create" replace />} />
+      <Route path="/produtos/importar-produtos" element={<Navigate to="/products/import" replace />} />
+      <Route
+        path="/produtos/editar-produto/:id"
+        element={<LegacyProductEditRedirect />}
+      />
+      <Route path="/produtos-pendentes" element={<LegacyPendingProductsRedirect />} />
+      <Route
+        path="/produtos-pendentes/editar-produto/:id"
+        element={<LegacyPendingProductEditRedirect />}
+      />
       {allModules.flatMap((module) =>
         module.routes.map((route) => (
           <Route

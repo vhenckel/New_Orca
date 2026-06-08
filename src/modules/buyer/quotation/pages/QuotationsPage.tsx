@@ -1,10 +1,10 @@
-import { Plus } from "lucide-react";
+import { Copy, Plus } from "lucide-react";
 import { useQueryStates } from "nuqs";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { deleteBudget } from "@/modules/buyer/quotation/api/budgets-api";
+import { copyBudgetsTsv, deleteBudget } from "@/modules/buyer/quotation/api/budgets-api";
 import { BudgetListFilters } from "@/modules/buyer/quotation/components/BudgetListFilters";
 import { BudgetListMobileCards } from "@/modules/buyer/quotation/components/BudgetListMobileCards";
 import { BudgetListSkeleton } from "@/modules/buyer/quotation/components/BudgetListSkeleton";
@@ -37,6 +37,7 @@ export function QuotationsPage() {
   const role = useApiUserRole();
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isCopying, setIsCopying] = useState(false);
 
   const [query, setQuery] = useQueryStates(budgetListFilterParsers, {
     urlKeys: budgetListFilterUrlKeys,
@@ -59,6 +60,7 @@ export function QuotationsPage() {
 
   const { data: establishments = [] } = useMyEstablishments();
   const showEstablishmentFilter = role === "admin" && establishments.length > 0;
+  const showEstablishmentColumn = role === "admin" || establishments.length > 1;
   const activeFilterCount = countActiveBudgetFilters(query, {
     includeEstablishment: showEstablishmentFilter,
   });
@@ -137,19 +139,48 @@ export function QuotationsPage() {
 
   const canCreateBudget = role === "admin" || role === "establishment";
 
+  const handleCopyTsv = useCallback(async () => {
+    setIsCopying(true);
+    try {
+      const tsv = await copyBudgetsTsv(fetchParams);
+      await navigator.clipboard.writeText(tsv);
+      toast.success(t("modules.quotation.quotations.toast.copySuccess"));
+    } catch {
+      toast.error(t("modules.quotation.quotations.toast.copyError"));
+    } finally {
+      setIsCopying(false);
+    }
+  }, [fetchParams, t]);
+
   return (
     <DashboardPageLayout
       showPageHeader
       title={t("modules.quotation.quotations.pageTitle")}
       subtitle={t("modules.quotation.quotations.pageSubtitle")}
       headerActions={
-        canCreateBudget ? (
-          <Button asChild className="gap-2 text-white">
-            <Link to="/quotations/new">
-              <Plus className="size-4" />
-              {t("modules.quotation.quotations.addButton")}
-            </Link>
-          </Button>
+        canCreateBudget || role === "admin" ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {role === "admin" ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                disabled={isCopying}
+                onClick={() => void handleCopyTsv()}
+              >
+                <Copy className="size-4" />
+                {t("modules.quotation.quotations.actions.copy")}
+              </Button>
+            ) : null}
+            {canCreateBudget ? (
+              <Button asChild className="gap-2 text-white">
+                <Link to="/quotations/new">
+                  <Plus className="size-4" />
+                  {t("modules.quotation.quotations.addButton")}
+                </Link>
+              </Button>
+            ) : null}
+          </div>
         ) : undefined
       }
     >
@@ -176,6 +207,7 @@ export function QuotationsPage() {
             scrollRef={scrollRef}
             hasNextPage={Boolean(hasNextPage)}
             isFetchingNextPage={isFetchingNextPage}
+            showEstablishment={showEstablishmentColumn}
             onLoadMore={() => void fetchNextPage()}
           />
         ) : (
@@ -184,6 +216,7 @@ export function QuotationsPage() {
             scrollRef={scrollRef}
             hasNextPage={Boolean(hasNextPage)}
             isFetchingNextPage={isFetchingNextPage}
+            showEstablishment={showEstablishmentColumn}
             onLoadMore={() => void fetchNextPage()}
             onDuplicate={handleDuplicate}
             onDelete={handleDelete}
