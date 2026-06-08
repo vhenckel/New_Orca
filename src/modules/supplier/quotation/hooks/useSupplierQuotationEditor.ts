@@ -25,6 +25,7 @@ import {
   type SupplierQuotationCommercialTerms,
   type SupplierQuotationLineResponse,
 } from "@/modules/supplier/quotation/lib/supplier-quotation-autostore";
+import { scrollToValidationField } from "@/modules/supplier/quotation/lib/scroll-to-validation-field";
 import { validateSendQuotation } from "@/modules/supplier/quotation/lib/validate-send-quotation";
 import { useQuotationDetailQuery } from "@/modules/supplier/quotation/hooks/useQuotationDetailQuery";
 import { useSendQuotationMutation } from "@/modules/supplier/quotation/hooks/useSendQuotationMutation";
@@ -51,13 +52,26 @@ function isHeaderEmpty(terms: SupplierQuotationCommercialTerms): boolean {
   );
 }
 
+const TERM_VALIDATION_FIELDS = new Set<SendQuotationValidationField>([
+  "paymentMethod",
+  "paymentDeadline",
+  "delivery",
+  "quotationValidUntil",
+]);
+
 export function useSupplierQuotationEditor(
   quotationId: string | undefined,
-  options?: { listPath?: string },
+  options?: {
+    listPath?: string;
+    /** Ex.: abrir seção colapsada no mobile antes do scroll. */
+    onValidationFailed?: (field: SendQuotationValidationField) => void;
+  },
 ) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const listPath = options?.listPath ?? "/supplier/quotations";
+  const onValidationFailedRef = useRef(options?.onValidationFailed);
+  onValidationFailedRef.current = options?.onValidationFailed;
 
   const { data: detail, isLoading, isError } = useQuotationDetailQuery(quotationId);
   const sendMutation = useSendQuotationMutation(quotationId);
@@ -202,6 +216,21 @@ export function useSupplierQuotationEditor(
       navigate("/404", { replace: true });
     }
   }, [isError, navigate]);
+
+  useEffect(() => {
+    if (!validationField) return;
+
+    onValidationFailedRef.current?.(validationField);
+
+    const needsPanelOpen = TERM_VALIDATION_FIELDS.has(validationField);
+    const delay = onValidationFailedRef.current && needsPanelOpen ? 350 : 150;
+
+    const timer = window.setTimeout(() => {
+      scrollToValidationField(validationField);
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [validationField]);
 
   const handleUnitPriceChange = useCallback((lineKey: string, value: string) => {
     setResponses((prev) => ({

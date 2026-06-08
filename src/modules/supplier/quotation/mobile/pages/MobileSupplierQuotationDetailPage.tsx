@@ -51,7 +51,6 @@ function formatShortDateTime(value: string) {
 export function MobileSupplierQuotationDetailPage() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
-  const editor = useSupplierQuotationEditor(id, { listPath: LIST_HREF });
 
   const [variationSheetOpen, setVariationSheetOpen] = useState(false);
   const [variationParentId, setVariationParentId] = useState<string | null>(null);
@@ -60,6 +59,13 @@ export function MobileSupplierQuotationDetailPage() {
   const [establishmentOpen, setEstablishmentOpen] = useState(false);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+
+  const editor = useSupplierQuotationEditor(id, {
+    listPath: LIST_HREF,
+    onValidationFailed: (field) => {
+      if (field !== "items") setTermsOpen(true);
+    },
+  });
 
   if (editor.isLoading || !editor.detail) {
     return <p className="p-4 text-sm text-muted-foreground">Carregando…</p>;
@@ -115,6 +121,7 @@ export function MobileSupplierQuotationDetailPage() {
             <FieldContent>
               <Input
                 id="m-payment"
+                data-validation-field="paymentMethod"
                 value={editor.commercialTerms.paymentMethod}
                 onChange={(e) => editor.setCommercialTerms((p) => ({ ...p, paymentMethod: e.target.value }))}
                 className={editor.validationField === "paymentMethod" ? fieldErrorClass : undefined}
@@ -126,6 +133,7 @@ export function MobileSupplierQuotationDetailPage() {
             <FieldContent>
               <Input
                 id="m-paydd"
+                data-validation-field="paymentDeadline"
                 value={editor.commercialTerms.paymentDeadline}
                 onChange={(e) => editor.setCommercialTerms((p) => ({ ...p, paymentDeadline: e.target.value }))}
                 className={editor.validationField === "paymentDeadline" ? fieldErrorClass : undefined}
@@ -137,6 +145,7 @@ export function MobileSupplierQuotationDetailPage() {
             <FieldContent>
               <Input
                 id="m-deliv"
+                data-validation-field="delivery"
                 value={editor.commercialTerms.delivery}
                 onChange={(e) => editor.setCommercialTerms((p) => ({ ...p, delivery: e.target.value }))}
                 className={editor.validationField === "delivery" ? fieldErrorClass : undefined}
@@ -149,6 +158,7 @@ export function MobileSupplierQuotationDetailPage() {
               <Input
                 id="m-val"
                 type="date"
+                data-validation-field="quotationValidUntil"
                 value={editor.commercialTerms.quotationValidUntil}
                 onChange={(e) => editor.setCommercialTerms((p) => ({ ...p, quotationValidUntil: e.target.value }))}
                 className={editor.validationField === "quotationValidUntil" ? fieldErrorClass : undefined}
@@ -171,7 +181,7 @@ export function MobileSupplierQuotationDetailPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2" data-validation-anchor="items">
         <h2 className="text-base font-semibold">{t("modules.supplierPortal.quotation.detail.items.title")}</h2>
         {editor.visibleItems.flatMap((item, itemIndex) => {
           const alts = editor.alternativeLines.filter((a) => a.parentItemId === item.id);

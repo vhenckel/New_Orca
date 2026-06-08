@@ -246,6 +246,7 @@ export function SupplierQuotationDetailPage() {
                   <FieldContent>
                     <Input
                       id="supplier-quote-payment-method"
+                      data-validation-field="paymentMethod"
                       value={editor.commercialTerms.paymentMethod}
                       onChange={(e) =>
                         editor.setCommercialTerms((prev) => ({ ...prev, paymentMethod: e.target.value }))
@@ -261,6 +262,7 @@ export function SupplierQuotationDetailPage() {
                   <FieldContent>
                     <Input
                       id="supplier-quote-payment-deadline"
+                      data-validation-field="paymentDeadline"
                       value={editor.commercialTerms.paymentDeadline}
                       onChange={(e) =>
                         editor.setCommercialTerms((prev) => ({ ...prev, paymentDeadline: e.target.value }))
@@ -275,6 +277,7 @@ export function SupplierQuotationDetailPage() {
                 <FieldContent>
                   <Input
                     id="supplier-quote-delivery"
+                    data-validation-field="delivery"
                     value={editor.commercialTerms.delivery}
                     onChange={(e) => editor.setCommercialTerms((prev) => ({ ...prev, delivery: e.target.value }))}
                     className={editor.validationField === "delivery" ? fieldErrorClass : undefined}
@@ -289,6 +292,7 @@ export function SupplierQuotationDetailPage() {
                   <Input
                     id="supplier-quote-valid-until"
                     type="date"
+                    data-validation-field="quotationValidUntil"
                     value={editor.commercialTerms.quotationValidUntil}
                     onChange={(e) =>
                       editor.setCommercialTerms((prev) => ({ ...prev, quotationValidUntil: e.target.value }))
@@ -301,7 +305,7 @@ export function SupplierQuotationDetailPage() {
           </Card>
         </div>
 
-        <Card className="shadow-sm">
+        <Card className="shadow-sm" data-validation-anchor="items">
           <CardHeader className="flex flex-col gap-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex flex-col gap-1">
