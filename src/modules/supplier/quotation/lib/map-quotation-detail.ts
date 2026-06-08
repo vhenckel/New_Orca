@@ -22,6 +22,16 @@ function formatEstablishmentAddress(
   return parts.join(", ");
 }
 
+function mapQuotationObservations(
+  product: QuotationDetailResponse["budgetProducts"][number],
+): Record<string, string> | undefined {
+  const entries = product.quotations
+    .filter((q) => q.observation?.trim())
+    .map((q) => [q.brand.name, q.observation.trim()] as const);
+  if (entries.length === 0) return undefined;
+  return Object.fromEntries(entries);
+}
+
 function mapBudgetProduct(product: QuotationDetailResponse["budgetProducts"][number]): SupplierQuotationDetailItem {
   const existingQuotation = product.quotations[0];
   const requestedPackaging = formatPackagingUnit(product.packagingUnit ?? null);
@@ -34,11 +44,18 @@ function mapBudgetProduct(product: QuotationDetailResponse["budgetProducts"][num
     segments: product.segments.map((s) => s.name),
     quantity: product.quantity,
     unitLabel: product.unitType,
+    isBlocked: product.isBlocked,
+    establishmentObservation: product.observation || null,
     unitPrice: existingQuotation?.value,
+    quotationObservations: mapQuotationObservations(product),
   };
 
   if (product.quoteAnyBrand) {
-    item.fallbackHint = "Produto sem marca definida";
+    item.brandPlaceholder = "any";
+    item.fallbackHint = "Qualquer Marca";
+  } else if (product.brands.length === 0) {
+    item.brandPlaceholder = "none";
+    item.fallbackHint = "Sem Marca";
   } else if (product.brands.length === 1) {
     item.requestedBrand = product.brands[0]?.name;
   } else if (product.brands.length > 1) {
@@ -56,6 +73,8 @@ export function mapQuotationApiToDetailView(
 
   return {
     id: quotation.id,
+    supplierId: quotation.supplierId,
+    establishmentId: establishment.id,
     title: establishment.name,
     status: quotation.status,
     buyerName: establishment.name,
@@ -76,6 +95,6 @@ export function mapQuotationApiToDetailView(
     paymentDeadlineLabel: quotation.paymentTerm ?? "",
     quotationValidUntilAt: quotation.expirationDate ?? "",
     generalNotes: quotation.observation ?? budget.observation ?? "",
-    items: budgetProducts.filter((p) => !p.isBlocked).map(mapBudgetProduct),
+    items: budgetProducts.map(mapBudgetProduct),
   };
 }

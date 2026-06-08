@@ -81,12 +81,33 @@ export interface SendQuotationItemPayload {
   packagingUnit?: QuotationPackagingUnit;
 }
 
+export type SendQuotationStatus = "sent" | "no_offer";
+
 export interface SendQuotationPayload {
-  status: OpenQuotationStatus;
+  status: SendQuotationStatus;
   paymentMethod?: string;
   paymentTerm?: string;
   deliveryDeadline?: string;
   expirationDate?: string;
   observation?: string | null;
   items?: SendQuotationItemPayload[];
+}
+
+export interface LastSummaryResponse {
+  paymentMethod?: string | null;
+  paymentTerm?: string | null;
+  deliveryDeadline?: string | null;
+}
+
+export interface LastProductValue {
+  budgetProductId: string;
+  brandName: string;
+  value: number;
+}
+
+export interface BlockStatusPayload {
+  budgetProductIds: string[];
+  supplierId: string;
+  establishmentId: string;
+  status: boolean;
 }

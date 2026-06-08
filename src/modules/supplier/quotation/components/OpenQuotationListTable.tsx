@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, PencilLine } from "lucide-react";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,12 +6,11 @@ import {
   getSupplierQuotationRowHref,
   saveSupplierQuotationListScroll,
 } from "@/modules/supplier/quotation/lib/open-quotation-navigation";
+import { hasDraft } from "@/modules/supplier/quotation/lib/supplier-quotation-autostore";
 import type { OpenQuotationListItem, OpenQuotationSortField } from "@/modules/supplier/quotation/types/open-quotation";
 import { useInfiniteScrollSentinel } from "@/shared/hooks/useInfiniteScrollSentinel";
 import { formatDateTimePtBr } from "@/shared/lib/format-datetime";
-import { INFO_BADGE, SUCCESS_BADGE, WARNING_BADGE } from "@/shared/lib/status-tones";
 import { useI18n } from "@/shared/i18n/useI18n";
-import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import {
   Table,
@@ -21,12 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
-
-function statusBadgeClass(status: OpenQuotationListItem["status"]) {
-  if (status === "open") return INFO_BADGE;
-  if (status === "sent") return SUCCESS_BADGE;
-  return WARNING_BADGE;
-}
 
 function SortIcon({
   field,
@@ -43,9 +36,9 @@ function SortIcon({
 }
 
 function rowActionKey(status: OpenQuotationListItem["status"]) {
-  return status === "open"
-    ? "modules.supplierPortal.quotation.list.actions.respond"
-    : "modules.supplierPortal.quotation.list.actions.edit";
+  return status === "sent"
+    ? "modules.supplierPortal.quotation.list.actions.edit"
+    : "modules.supplierPortal.quotation.list.actions.respond";
 }
 
 interface OpenQuotationListTableProps {
@@ -113,9 +106,7 @@ export function OpenQuotationListTable({
             <TableHead>{t("modules.supplierPortal.quotation.list.table.deliveryTime")}</TableHead>
             <TableHead>{t("modules.supplierPortal.quotation.list.table.observation")}</TableHead>
             <TableHead>{t("modules.supplierPortal.quotation.list.table.sentAt")}</TableHead>
-            <TableHead className="w-[120px] text-right">
-              {t("modules.supplierPortal.quotation.list.table.action")}
-            </TableHead>
+            <TableHead className="w-[120px] text-right" aria-hidden />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -139,14 +130,14 @@ export function OpenQuotationListTable({
                   {formatDateTimePtBr(row.sentAt) || "—"}
                 </TableCell>
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge variant="outline" className={statusBadgeClass(row.status)}>
-                      {t(`modules.supplierPortal.quotation.list.status.${row.status}`)}
-                    </Badge>
-                    <Button type="button" size="sm" variant="secondary" onClick={() => openRow(row)}>
-                      {t(rowActionKey(row.status))}
-                    </Button>
-                  </div>
+                  <Button type="button" size="sm" variant="secondary" onClick={() => openRow(row)}>
+                    {hasDraft(row.id) ? (
+                      <PencilLine className="size-4" data-icon="inline-start" />
+                    ) : (
+                      <Pencil className="size-4" data-icon="inline-start" />
+                    )}
+                    {t(rowActionKey(row.status))}
+                  </Button>
                 </TableCell>
               </TableRow>
             ))

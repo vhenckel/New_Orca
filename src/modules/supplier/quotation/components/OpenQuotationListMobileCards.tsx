@@ -1,3 +1,4 @@
+import { Pencil, PencilLine } from "lucide-react";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -5,20 +6,13 @@ import {
   getSupplierQuotationRowHref,
   saveSupplierQuotationListScroll,
 } from "@/modules/supplier/quotation/lib/open-quotation-navigation";
+import { hasDraft } from "@/modules/supplier/quotation/lib/supplier-quotation-autostore";
 import type { OpenQuotationListItem } from "@/modules/supplier/quotation/types/open-quotation";
 import { useInfiniteScrollSentinel } from "@/shared/hooks/useInfiniteScrollSentinel";
 import { formatDateTimePtBr } from "@/shared/lib/format-datetime";
-import { INFO_BADGE, SUCCESS_BADGE, WARNING_BADGE } from "@/shared/lib/status-tones";
 import { useI18n } from "@/shared/i18n/useI18n";
-import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
-
-function statusBadgeClass(status: OpenQuotationListItem["status"]) {
-  if (status === "open") return INFO_BADGE;
-  if (status === "sent") return SUCCESS_BADGE;
-  return WARNING_BADGE;
-}
 
 interface OpenQuotationListMobileCardsProps {
   rows: OpenQuotationListItem[];
@@ -69,14 +63,9 @@ export function OpenQuotationListMobileCards({
           onClick={() => openRow(row)}
         >
           <CardContent className="flex flex-col gap-3 p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs text-muted-foreground">#{index + 1}</p>
-                <p className="font-medium">{row.name}</p>
-              </div>
-              <Badge variant="outline" className={statusBadgeClass(row.status)}>
-                {t(`modules.supplierPortal.quotation.list.status.${row.status}`)}
-              </Badge>
+            <div>
+              <p className="text-xs text-muted-foreground">#{index + 1}</p>
+              <p className="font-medium">{row.name}</p>
             </div>
             <div className="grid gap-1 text-sm text-muted-foreground">
               <p>
@@ -93,10 +82,15 @@ export function OpenQuotationListMobileCards({
                 </p>
               ) : null}
             </div>
-            <Button type="button" size="sm" className="w-full">
-              {row.status === "open"
-                ? t("modules.supplierPortal.quotation.list.actions.respond")
-                : t("modules.supplierPortal.quotation.list.actions.edit")}
+            <Button type="button" size="sm" className="w-full gap-2">
+              {hasDraft(row.id) ? (
+                <PencilLine className="size-4" />
+              ) : (
+                <Pencil className="size-4" />
+              )}
+              {row.status === "sent"
+                ? t("modules.supplierPortal.quotation.list.actions.edit")
+                : t("modules.supplierPortal.quotation.list.actions.respond")}
             </Button>
           </CardContent>
         </Card>

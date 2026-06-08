@@ -1,18 +1,25 @@
-import { ArrowLeft, Save, Send, StickyNote, Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-
-import { buildSendQuotationPayload } from "@/modules/supplier/quotation/lib/build-send-quotation-payload";
-import { useQuotationDetailQuery } from "@/modules/supplier/quotation/hooks/useQuotationDetailQuery";
-import { useSendQuotationMutation } from "@/modules/supplier/quotation/hooks/useSendQuotationMutation";
-import type { SupplierQuotationDetailItem } from "@/modules/supplier/quotation/types/quotation-detail";
 import {
-  createLineResponsesInitial,
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  MessageSquarePlus,
+  RefreshCw,
+  Save,
+  Send,
+  StickyNote,
+  Trash2,
+} from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Link, useParams } from "react-router-dom";
+
+import { SupplierQuotationItemObservationDialog } from "@/modules/supplier/quotation/components/SupplierQuotationItemObservationDialog";
+import { SupplierQuotationVariationSheet } from "@/modules/supplier/quotation/components/SupplierQuotationVariationSheet";
+import { useSupplierQuotationEditor } from "@/modules/supplier/quotation/hooks/useSupplierQuotationEditor";
+import {
   getFixedBrandLabelForLine,
   getItemPriceLineKeys,
-  itemHasAnyPricedLine,
-  parseMoneyBRL,
 } from "@/modules/supplier/quotation/lib/priceLineKeys";
+import type { SupplierQuotationDetailItem } from "@/modules/supplier/quotation/types/quotation-detail";
 import type { TranslationKey } from "@/shared/i18n/config";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
@@ -20,49 +27,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/shared/ui/collapsible";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
 import { Field, FieldContent, FieldLabel } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/shared/ui/sheet";
+import { Switch } from "@/shared/ui/switch";
 import { Textarea } from "@/shared/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
-import { toast } from "@/shared/ui/sonner";
 
+const LIST_HREF = "/m/supplier/quotations";
 const SEGMENT_BADGE_CLASS = "border-info/20 bg-info/10 text-info";
-const OVERFLOW_BADGE_CLASS = "min-w-7 justify-center border-muted bg-muted/60 px-2 text-muted-foreground";
-
-type ItemResponseState = Record<string, { unitPrice: string; customBrand?: string }>;
-type PackagingUnit = "ml" | "l" | "g" | "kg" | "un";
-
-interface AlternativeQuotationLine {
-  id: string;
-  parentItemId: string;
-  brand: string;
-  packagingAmount: string;
-  packagingUnit: PackagingUnit;
-}
-
-function formatPackagingDisplay(amount: string, unit: PackagingUnit): string {
-  const suffix = { ml: "ml", l: "L", g: "g", kg: "kg", un: "un" }[unit];
-  return `${amount} ${suffix}`;
-}
 
 function formatShortDateTime(value: string) {
   const date = new Date(value);
@@ -74,251 +48,36 @@ function formatShortDateTime(value: string) {
   });
 }
 
-function toDateInputValue(iso: string) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function SegmentBadges({ segments }: { segments: string[] }) {
-  const shouldShowSingleBadge = (segments[0]?.length ?? 0) > 16;
-  const visibleCount = shouldShowSingleBadge ? 1 : 2;
-  const visible = segments.slice(0, visibleCount);
-  const hidden = segments.slice(visibleCount);
-  const overflow = segments.length - visible.length;
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {visible.map((segment, index) => (
-        <Badge
-          key={`${segment}-${index}`}
-          variant="outline"
-          className={cn(
-            "shrink-0 rounded-full text-xs font-medium",
-            !shouldShowSingleBadge && "max-w-[120px] truncate",
-            SEGMENT_BADGE_CLASS,
-          )}
-        >
-          {segment}
-        </Badge>
-      ))}
-      {overflow > 0 ? (
-        <TooltipProvider delayDuration={120}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Badge
-                  variant="outline"
-                  className={cn("cursor-default rounded-full font-semibold tabular-nums", OVERFLOW_BADGE_CLASS)}
-                >
-                  +{overflow}
-                </Badge>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{hidden.join(", ")}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ) : null}
-    </div>
-  );
-}
-
-function detailStatusLabelKey(status: string) {
-  if (status === "open") return "modules.supplierPortal.quotation.detail.statusBadge.pendingQuote";
-  return `modules.supplierPortal.quotation.list.status.${status}` as const;
-}
-
-const LIST_HREF = "/m/supplier/quotations";
-
 export function MobileSupplierQuotationDetailPage() {
   const { t } = useI18n();
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { data: detail, isLoading, isError } = useQuotationDetailQuery(id);
-  const sendMutation = useSendQuotationMutation(id);
+  const editor = useSupplierQuotationEditor(id, { listPath: LIST_HREF });
 
-  const [responses, setResponses] = useState<ItemResponseState>({});
-  const [generalNotes, setGeneralNotes] = useState("");
-  const [commercialTerms, setCommercialTerms] = useState({
-    paymentMethod: "",
-    paymentDeadline: "",
-    delivery: "",
-    quotationValidUntil: "",
-  });
-  const [alternativeLines, setAlternativeLines] = useState<AlternativeQuotationLine[]>([]);
   const [variationSheetOpen, setVariationSheetOpen] = useState(false);
   const [variationParentId, setVariationParentId] = useState<string | null>(null);
-  const [variationBrand, setVariationBrand] = useState("");
-  const [variationPackagingQty, setVariationPackagingQty] = useState("");
-  const [variationPackagingUnit, setVariationPackagingUnit] = useState<PackagingUnit>("ml");
+  const [observationDialogOpen, setObservationDialogOpen] = useState(false);
+  const [observationLineKey, setObservationLineKey] = useState<string | null>(null);
   const [establishmentOpen, setEstablishmentOpen] = useState(false);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
 
-  useEffect(() => {
-    if (!detail) return;
-    setResponses(createLineResponsesInitial(detail.items));
-    setGeneralNotes(detail.generalNotes);
-    setAlternativeLines([]);
-    setCommercialTerms({
-      paymentMethod: detail.paymentMethodLabel,
-      paymentDeadline: detail.paymentDeadlineLabel,
-      delivery: detail.deliveryWindowLabel,
-      quotationValidUntil: toDateInputValue(detail.quotationValidUntilAt),
-    });
-  }, [detail]);
-
-  const hasAnyQuotedPrice = useMemo(() => {
-    if (!detail) return false;
-    for (const item of detail.items) {
-      if (itemHasAnyPricedLine(item, responses)) return true;
-    }
-    for (const alt of alternativeLines) {
-      if (parseMoneyBRL(responses[alt.id]?.unitPrice ?? "") != null) return true;
-    }
-    return false;
-  }, [detail, responses, alternativeLines]);
-
-  const handleUnitPriceChange = (itemId: string, value: string) => {
-    setResponses((prev) => ({
-      ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        unitPrice: value,
-      },
-    }));
-  };
-
-  const handleCustomBrandChange = (itemId: string, value: string) => {
-    setResponses((prev) => ({
-      ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        customBrand: value,
-      },
-    }));
-  };
-
-  const openVariationSheet = (parentItemId: string) => {
-    setVariationParentId(parentItemId);
-    setVariationBrand("");
-    setVariationPackagingQty("");
-    setVariationPackagingUnit("ml");
-    setVariationSheetOpen(true);
-  };
-
-  const handleSaveVariation = () => {
-    if (!variationParentId || !variationBrand.trim() || !variationPackagingQty.trim()) {
-      toast.error(t("modules.supplierPortal.quotation.detail.items.sheetValidation"));
-      return;
-    }
-    const newId = `alt-${variationParentId}-${crypto.randomUUID()}`;
-    setAlternativeLines((prev) => [
-      ...prev,
-      {
-        id: newId,
-        parentItemId: variationParentId,
-        brand: variationBrand.trim(),
-        packagingAmount: variationPackagingQty.trim(),
-        packagingUnit: variationPackagingUnit,
-      },
-    ]);
-    setResponses((prev) => ({
-      ...prev,
-      [newId]: { unitPrice: "", customBrand: "" },
-    }));
-    setVariationSheetOpen(false);
-    setVariationParentId(null);
-  };
-
-  const handleRemoveVariation = (alternativeId: string) => {
-    setAlternativeLines((prev) => prev.filter((line) => line.id !== alternativeId));
-    setResponses((prev) => {
-      const next = { ...prev };
-      delete next[alternativeId];
-      return next;
-    });
-  };
-
-  const submitQuotation = async (status: "open" | "sent" | "no_offer") => {
-    if (!detail) return;
-    if (status === "sent" && !hasAnyQuotedPrice) {
-      toast.error(t("modules.supplierPortal.quotation.detail.toastMissingItems"));
-      return;
-    }
-
-    const payload = buildSendQuotationPayload({
-      status,
-      items: detail.items,
-      responses,
-      alternativeLines,
-      paymentMethod: commercialTerms.paymentMethod,
-      paymentTerm: commercialTerms.paymentDeadline,
-      deliveryDeadline: commercialTerms.delivery,
-      expirationDate: commercialTerms.quotationValidUntil,
-      observation: generalNotes,
-    });
-
-    try {
-      await sendMutation.mutateAsync(payload);
-      if (status === "sent") {
-        toast.success(t("modules.supplierPortal.quotation.detail.toastSent"));
-        navigate(LIST_HREF);
-      } else if (status === "open") {
-        toast.success(t("modules.supplierPortal.quotation.detail.toastDraft"));
-      } else {
-        toast.message(t("modules.supplierPortal.quotation.detail.toastNoItems"));
-        navigate(LIST_HREF);
-      }
-    } catch {
-      toast.error(t("modules.supplierPortal.quotation.detail.toastSendError"));
-    }
-  };
-
-  const handleSendQuotation = () => void submitQuotation("sent");
-  const handleNoItems = () => void submitQuotation("no_offer");
-  const handleSaveDraft = () => void submitQuotation("open");
-
-  if (isLoading) {
+  if (editor.isLoading || !editor.detail) {
     return <p className="p-4 text-sm text-muted-foreground">Carregando…</p>;
   }
 
-  if (isError || !detail) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Alert variant="destructive">
-          <AlertTitle>{t("modules.supplierPortal.quotation.detail.notFoundTitle")}</AlertTitle>
-          <AlertDescription className="flex flex-col gap-3">
-            <p>{t("modules.supplierPortal.quotation.detail.notFoundDescription")}</p>
-            <Button asChild variant="outline" className="w-fit">
-              <Link to={LIST_HREF}>{t("modules.supplierPortal.quotation.detail.backButton")}</Link>
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+  const detail = editor.detail;
+  const fieldErrorClass = "border-destructive ring-destructive/20";
 
   return (
     <div className="flex flex-col gap-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold leading-tight">{detail.buyerName}</h2>
         <p className="text-sm text-muted-foreground">{detail.buyerContactEmail}</p>
-        <Badge
-          variant="outline"
-          className="w-fit border-warning/30 bg-warning/10 font-medium text-warning dark:border-warning/30/50 dark:bg-warning/10"
-        >
-          {t(detailStatusLabelKey(detail.status))}
-        </Badge>
       </div>
 
-      <div className="flex flex-col gap-2 text-center text-xs text-muted-foreground">
-        <span>{t("modules.supplierPortal.quotation.detail.instruction")}</span>
-      </div>
+      <p className="text-center text-xs text-muted-foreground">
+        {t("modules.supplierPortal.quotation.detail.instruction")}
+      </p>
 
       <MobileCollapsibleCard
         titleKey="modules.supplierPortal.quotation.detail.restaurant.title"
@@ -326,27 +85,12 @@ export function MobileSupplierQuotationDetailPage() {
         open={establishmentOpen}
         onOpenChange={setEstablishmentOpen}
       >
-        <div className="flex flex-col divide-y divide-border px-4 py-0 text-xs">
-          <InfoLine
-            label={t("modules.supplierPortal.quotation.detail.restaurant.establishmentName")}
-            value={detail.buyerName}
-          />
-          <InfoLine
-            label={t("modules.supplierPortal.quotation.detail.restaurant.representativeName")}
-            value={detail.buyerRepresentativeName}
-          />
-          <InfoLine
-            label={t("modules.supplierPortal.quotation.detail.restaurant.email")}
-            value={detail.buyerContactEmail}
-          />
-          <InfoLine label={t("modules.supplierPortal.quotation.detail.restaurant.cnpj")} value={detail.buyerTaxId} />
-          <InfoLine label={t("modules.supplierPortal.quotation.detail.restaurant.phone")} value={detail.buyerPhone} />
-          <InfoLine
-            label={t("modules.supplierPortal.quotation.detail.restaurant.address")}
-            value={detail.buyerAddressLine}
-            last
-          />
-        </div>
+        <InfoLine label={t("modules.supplierPortal.quotation.detail.restaurant.establishmentName")} value={detail.buyerName} />
+        <InfoLine label={t("modules.supplierPortal.quotation.detail.restaurant.representativeName")} value={detail.buyerRepresentativeName} />
+        <InfoLine label={t("modules.supplierPortal.quotation.detail.restaurant.email")} value={detail.buyerContactEmail} />
+        <InfoLine label={t("modules.supplierPortal.quotation.detail.restaurant.cnpj")} value={detail.buyerTaxId} />
+        <InfoLine label={t("modules.supplierPortal.quotation.detail.restaurant.phone")} value={detail.buyerPhone} />
+        <InfoLine label={t("modules.supplierPortal.quotation.detail.restaurant.address")} value={detail.buyerAddressLine} last />
       </MobileCollapsibleCard>
 
       <MobileCollapsibleCard
@@ -355,18 +99,8 @@ export function MobileSupplierQuotationDetailPage() {
         open={deliveryOpen}
         onOpenChange={setDeliveryOpen}
       >
-        <div className="flex flex-col gap-0 divide-y divide-border px-4 py-0 text-xs">
-          <InfoLine
-            label={t("modules.supplierPortal.quotation.mobile.deliveryTimeLabel")}
-            value={detail.deliveryWindowLabel}
-          />
-          <InfoLine
-            label={t("modules.supplierPortal.quotation.mobile.deadlineLabel")}
-            value={formatShortDateTime(detail.deadlineAt)}
-            last
-            emphasize
-          />
-        </div>
+        <InfoLine label={t("modules.supplierPortal.quotation.mobile.deliveryTimeLabel")} value={detail.deliveryWindowLabel} />
+        <InfoLine label={t("modules.supplierPortal.quotation.mobile.deadlineLabel")} value={formatShortDateTime(detail.deadlineAt)} last emphasize />
       </MobileCollapsibleCard>
 
       <MobileCollapsibleCard
@@ -381,10 +115,9 @@ export function MobileSupplierQuotationDetailPage() {
             <FieldContent>
               <Input
                 id="m-payment"
-                value={commercialTerms.paymentMethod}
-                onChange={(e) =>
-                  setCommercialTerms((p) => ({ ...p, paymentMethod: e.target.value }))
-                }
+                value={editor.commercialTerms.paymentMethod}
+                onChange={(e) => editor.setCommercialTerms((p) => ({ ...p, paymentMethod: e.target.value }))}
+                className={editor.validationField === "paymentMethod" ? fieldErrorClass : undefined}
               />
             </FieldContent>
           </Field>
@@ -393,10 +126,9 @@ export function MobileSupplierQuotationDetailPage() {
             <FieldContent>
               <Input
                 id="m-paydd"
-                value={commercialTerms.paymentDeadline}
-                onChange={(e) =>
-                  setCommercialTerms((p) => ({ ...p, paymentDeadline: e.target.value }))
-                }
+                value={editor.commercialTerms.paymentDeadline}
+                onChange={(e) => editor.setCommercialTerms((p) => ({ ...p, paymentDeadline: e.target.value }))}
+                className={editor.validationField === "paymentDeadline" ? fieldErrorClass : undefined}
               />
             </FieldContent>
           </Field>
@@ -405,8 +137,9 @@ export function MobileSupplierQuotationDetailPage() {
             <FieldContent>
               <Input
                 id="m-deliv"
-                value={commercialTerms.delivery}
-                onChange={(e) => setCommercialTerms((p) => ({ ...p, delivery: e.target.value }))}
+                value={editor.commercialTerms.delivery}
+                onChange={(e) => editor.setCommercialTerms((p) => ({ ...p, delivery: e.target.value }))}
+                className={editor.validationField === "delivery" ? fieldErrorClass : undefined}
               />
             </FieldContent>
           </Field>
@@ -416,94 +149,84 @@ export function MobileSupplierQuotationDetailPage() {
               <Input
                 id="m-val"
                 type="date"
-                value={commercialTerms.quotationValidUntil}
-                onChange={(e) =>
-                  setCommercialTerms((p) => ({ ...p, quotationValidUntil: e.target.value }))
-                }
+                value={editor.commercialTerms.quotationValidUntil}
+                onChange={(e) => editor.setCommercialTerms((p) => ({ ...p, quotationValidUntil: e.target.value }))}
+                className={editor.validationField === "quotationValidUntil" ? fieldErrorClass : undefined}
               />
             </FieldContent>
           </Field>
         </div>
       </MobileCollapsibleCard>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => void editor.handleReusePricesOfDay()}>
+          <RefreshCw className="size-4" />
+          {t("modules.supplierPortal.quotation.mobile.reuseDayPrices")}
+        </Button>
+        <div className="flex flex-1 items-center gap-2 rounded-md border border-border px-3 py-2">
+          <Switch id="m-show-blocked" checked={editor.showBlocked} onCheckedChange={editor.setShowBlocked} />
+          <label htmlFor="m-show-blocked" className="text-xs text-muted-foreground">
+            {t("modules.supplierPortal.quotation.mobile.showBlocked")}
+          </label>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-2">
-        <h2 className="text-base font-semibold">
-          {t("modules.supplierPortal.quotation.detail.items.title")}
-        </h2>
-        {detail.items.flatMap((item, itemIndex) => {
-          const alts = alternativeLines.filter((a) => a.parentItemId === item.id);
+        <h2 className="text-base font-semibold">{t("modules.supplierPortal.quotation.detail.items.title")}</h2>
+        {editor.visibleItems.flatMap((item, itemIndex) => {
+          const alts = editor.alternativeLines.filter((a) => a.parentItemId === item.id);
           const productRow = (
             <ItemCard
               key={item.id}
               displayIndex={itemIndex + 1}
               item={item}
-              responses={responses}
-              onUnitPrice={handleUnitPriceChange}
-              onCustomBrand={handleCustomBrandChange}
-              onAddVariation={openVariationSheet}
+              responses={editor.responses}
+              onUnitPrice={editor.handleUnitPriceChange}
+              onCustomBrand={editor.handleCustomBrandChange}
+              onAddVariation={(parentId) => {
+                setVariationParentId(parentId);
+                setVariationSheetOpen(true);
+              }}
+              onToggleBlock={() => void editor.handleToggleBlock(item)}
+              onOpenObservation={(lineKey) => {
+                setObservationLineKey(lineKey);
+                setObservationDialogOpen(true);
+              }}
             />
           );
-          const altRows = alts.map((alt) => {
-            const altPack = formatPackagingDisplay(alt.packagingAmount, alt.packagingUnit);
-            const showAltPack = altPack.toLowerCase() !== item.requestedPackaging.toLowerCase();
-            return (
-              <Card
-                key={alt.id}
-                className="overflow-hidden border-l-4 border-info bg-info/10/50 shadow-sm dark:bg-info/10"
-              >
-                <CardContent className="p-3 pl-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-info dark:text-info">
-                    {t("modules.supplierPortal.quotation.detail.items.alternativeBadge")}
-                  </p>
-                  <p className="mt-1 font-semibold text-foreground">{item.productName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.quantity} {item.unitLabel} · {item.requestedPackaging}
-                  </p>
-                  <div className="mt-2">
-                    <p className="text-xs text-muted-foreground">
-                      {t("modules.supplierPortal.quotation.detail.items.colSegments")}
-                    </p>
-                    <div className="mt-1">
-                      <SegmentBadges segments={item.segments} />
-                    </div>
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {t("modules.supplierPortal.quotation.detail.items.brandLabel")}
-                  </p>
-                  <p className="text-sm font-medium text-foreground">{alt.brand}</p>
-                  {showAltPack ? (
-                    <p className="text-xs text-muted-foreground">
-                      {altPack}
-                    </p>
-                  ) : null}
-                  <div className="mt-2 flex min-h-11 items-stretch gap-2">
-                    <div className="flex min-h-11 min-w-0 flex-1 items-stretch overflow-hidden rounded-md border border-input bg-background">
-                      <span className="flex min-w-8 items-center border-r border-input bg-muted px-2 text-xs text-muted-foreground">
-                        R$
-                      </span>
-                      <Input
-                        value={responses[alt.id]?.unitPrice ?? ""}
-                        onChange={(e) => handleUnitPriceChange(alt.id, e.target.value)}
-                        placeholder="0,00"
-                        className="h-11 min-w-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
-                        inputMode="decimal"
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleRemoveVariation(alt.id)}
-                      className="shrink-0"
-                      aria-label="Remover"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          });
+          const altRows = alts.map((alt) => (
+            <Card key={alt.id} className="overflow-hidden border-l-4 border-info bg-info/10 shadow-sm">
+              <CardContent className="p-3 pl-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-info">
+                  {t("modules.supplierPortal.quotation.detail.items.alternativeBadge")}
+                </p>
+                <p className="mt-1 font-semibold">{item.productName}</p>
+                <p className="text-xs text-muted-foreground">
+                  {alt.brand} · {alt.packagingAmount} {alt.packagingUnit}
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <MoneyInput
+                    value={editor.responses[alt.id]?.unitPrice ?? ""}
+                    onChange={(v) => editor.handleUnitPriceChange(alt.id, v)}
+                  />
+                  <Button type="button" size="icon" variant="ghost" onClick={() => editor.removeAlternativeLine(alt.id)}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => {
+                      setObservationLineKey(alt.id);
+                      setObservationDialogOpen(true);
+                    }}
+                  >
+                    <MessageSquarePlus className="size-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ));
           return [productRow, ...altRows];
         })}
       </div>
@@ -513,8 +236,8 @@ export function MobileSupplierQuotationDetailPage() {
         <FieldContent>
           <Textarea
             id="m-notes"
-            value={generalNotes}
-            onChange={(e) => setGeneralNotes(e.target.value)}
+            value={editor.generalNotes}
+            onChange={(e) => editor.setGeneralNotes(e.target.value)}
             rows={3}
             placeholder={t("modules.supplierPortal.quotation.detail.items.generalNotesPlaceholder")}
             className="min-h-[88px] resize-y"
@@ -528,114 +251,52 @@ export function MobileSupplierQuotationDetailPage() {
         <AlertDescription>{t("modules.supplierPortal.quotation.detail.tip.body")}</AlertDescription>
       </Alert>
 
-      <Sheet
-        open={variationSheetOpen}
-        onOpenChange={(open) => {
-          setVariationSheetOpen(open);
-          if (!open) setVariationParentId(null);
-        }}
-      >
-        <SheetContent side="bottom" className="max-h-[90vh] rounded-t-2xl">
-          <SheetHeader className="text-left">
-            <SheetTitle>{t("modules.supplierPortal.quotation.detail.items.sheetTitle")}</SheetTitle>
-          </SheetHeader>
-          <div className="flex flex-col gap-3 py-2">
-            <Field className="gap-2">
-              <FieldLabel htmlFor="m-var-b">{t("modules.supplierPortal.quotation.detail.items.sheetBrand")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="m-var-b"
-                  value={variationBrand}
-                  onChange={(e) => setVariationBrand(e.target.value)}
-                  placeholder={t("modules.supplierPortal.quotation.detail.items.brandPlaceholder")}
-                />
-              </FieldContent>
-            </Field>
-            <Field className="gap-2">
-              <FieldLabel htmlFor="m-var-qty">{t("modules.supplierPortal.quotation.detail.items.sheetPackagingQty")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="m-var-qty"
-                  value={variationPackagingQty}
-                  onChange={(e) => setVariationPackagingQty(e.target.value)}
-                  inputMode="decimal"
-                />
-              </FieldContent>
-            </Field>
-            <Field className="gap-2">
-              <FieldLabel>{t("modules.supplierPortal.quotation.detail.items.sheetPackagingUnit")}</FieldLabel>
-              <FieldContent>
-                <Select
-                  value={variationPackagingUnit}
-                  onValueChange={(v) => setVariationPackagingUnit(v as PackagingUnit)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ml">{t("modules.supplierPortal.quotation.detail.items.packagingUnitMl")}</SelectItem>
-                    <SelectItem value="l">{t("modules.supplierPortal.quotation.detail.items.packagingUnitL")}</SelectItem>
-                    <SelectItem value="g">{t("modules.supplierPortal.quotation.detail.items.packagingUnitG")}</SelectItem>
-                    <SelectItem value="kg">{t("modules.supplierPortal.quotation.detail.items.packagingUnitKg")}</SelectItem>
-                    <SelectItem value="un">{t("modules.supplierPortal.quotation.detail.items.packagingUnitUn")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FieldContent>
-            </Field>
-          </div>
-          <SheetFooter className="flex flex-row gap-2 border-t border-border pt-6 sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => setVariationSheetOpen(false)}>
-              {t("modules.supplierPortal.quotation.detail.items.sheetCancel")}
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSaveVariation}
-              className="bg-primary text-white hover:bg-primary/90 hover:text-white"
-            >
-              {t("modules.supplierPortal.quotation.detail.items.sheetSave")}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
       <div className="mt-2 flex w-full flex-col gap-2 border-t border-border pt-4">
         <Button
           type="button"
-          className="h-12 w-full gap-2 bg-primary text-white hover:bg-primary/90 hover:text-white"
-          onClick={handleSendQuotation}
+          className="h-12 w-full gap-2"
+          disabled={editor.sendMutation.isPending}
+          onClick={() => void editor.handleSendQuotation()}
         >
-          <Send className="size-4" aria-hidden />
+          <Send className="size-4" />
           {t("modules.supplierPortal.quotation.detail.sendButton")}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-12 w-full gap-2"
-          onClick={handleSaveDraft}
-        >
-          <Save className="size-4" aria-hidden />
+        <Button type="button" variant="outline" className="h-12 w-full gap-2" onClick={editor.handleSaveDraft}>
+          <Save className="size-4" />
           {t("modules.supplierPortal.quotation.detail.saveDraftButton")}
         </Button>
         <Button
           type="button"
           variant="outline"
           className="h-12 w-full"
-          onClick={handleNoItems}
+          disabled={editor.sendMutation.isPending}
+          onClick={() => void editor.handleNoItems()}
         >
           {t("modules.supplierPortal.quotation.detail.noItemsButton")}
         </Button>
-        <Button
-          asChild
-          type="button"
-          variant="ghost"
-          className="h-11 w-full text-muted-foreground"
-        >
+        <Button asChild variant="ghost" className="h-11 w-full text-muted-foreground">
           <Link to={LIST_HREF}>
-            <ArrowLeft className="size-4" aria-hidden />
+            <ArrowLeft className="size-4" />
             {t("modules.supplierPortal.quotation.detail.cancelButton")}
           </Link>
         </Button>
       </div>
+
+      <SupplierQuotationVariationSheet
+        open={variationSheetOpen}
+        onOpenChange={setVariationSheetOpen}
+        side="bottom"
+        parentItemId={variationParentId}
+        onSave={editor.addAlternativeLine}
+      />
+
+      <SupplierQuotationItemObservationDialog
+        open={observationDialogOpen}
+        onOpenChange={setObservationDialogOpen}
+        lineKey={observationLineKey}
+        initialValue={observationLineKey ? (editor.responses[observationLineKey]?.observation ?? "") : ""}
+        onSave={editor.handleObservationChange}
+      />
     </div>
   );
 }
@@ -658,38 +319,23 @@ function MobileCollapsibleCard({
     <Card className="overflow-hidden border-border shadow-sm">
       <Collapsible open={open} onOpenChange={onOpenChange}>
         <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="flex w-full items-start justify-between gap-2 border-b border-border p-3 text-left"
-          >
-            <div className="min-w-0 flex flex-col gap-0.5">
+          <button type="button" className="flex w-full items-start justify-between gap-2 border-b border-border p-3 text-left">
+            <div className="flex min-w-0 flex-col gap-0.5">
               <span className="text-sm font-semibold">{t(titleKey)}</span>
               <span className="text-xs text-muted-foreground">{t(captionKey)}</span>
             </div>
-            {open ? (
-              <ChevronUp className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-            )}
+            {open ? <ChevronUp className="mt-0.5 size-5 shrink-0 text-muted-foreground" /> : <ChevronDown className="mt-0.5 size-5 shrink-0 text-muted-foreground" />}
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent>{children}</CollapsibleContent>
+        <CollapsibleContent>
+          <div className="flex flex-col divide-y divide-border px-4 py-0 text-xs">{children}</div>
+        </CollapsibleContent>
       </Collapsible>
     </Card>
   );
 }
 
-function InfoLine({
-  label,
-  value,
-  last,
-  emphasize,
-}: {
-  label: string;
-  value: string;
-  last?: boolean;
-  emphasize?: boolean;
-}) {
+function InfoLine({ label, value, last, emphasize }: { label: string; value: string; last?: boolean; emphasize?: boolean }) {
   return (
     <div className={cn("flex flex-col gap-0.5 py-2.5", last && "last:pb-0")}>
       <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
@@ -705,101 +351,133 @@ function ItemCard({
   onUnitPrice,
   onCustomBrand,
   onAddVariation,
+  onToggleBlock,
+  onOpenObservation,
 }: {
   displayIndex: number;
   item: SupplierQuotationDetailItem;
-  responses: ItemResponseState;
+  responses: Record<string, { unitPrice: string; customBrand?: string; observation?: string }>;
   onUnitPrice: (lineKey: string, v: string) => void;
   onCustomBrand: (lineKey: string, v: string) => void;
   onAddVariation: (id: string) => void;
+  onToggleBlock: () => void;
+  onOpenObservation: (lineKey: string) => void;
 }) {
   const { t } = useI18n();
-  const lineKeys = getItemPriceLineKeys(item);
+  const keys = getItemPriceLineKeys(item);
+
   return (
-    <Card className="shadow-sm">
+    <Card className={cn("shadow-sm", item.isBlocked && "opacity-60")}>
       <CardContent className="p-0">
-        <p className="bg-muted/40 py-1.5 text-center text-sm font-bold tabular-nums">
-          {displayIndex}
-        </p>
+        <p className="bg-muted/40 py-1.5 text-center text-sm font-bold tabular-nums">{displayIndex}</p>
         <div className="flex flex-col gap-3 p-3">
-          <div>
-            <p className="text-xs text-muted-foreground">
-              {t("modules.supplierPortal.quotation.detail.items.colProduct")}
-            </p>
-            <p className="text-sm font-semibold">
-              {item.productName} — {item.quantity} {item.unitLabel}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {item.requestedPackaging}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">
-              {t("modules.supplierPortal.quotation.detail.items.colSegments")}
-            </p>
-            <div className="mt-1">
-              <SegmentBadges segments={item.segments} />
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-semibold">{item.productName}</span>
+            <div className="flex items-center gap-2">
+              <Checkbox checked={item.isBlocked} onCheckedChange={onToggleBlock} />
+              <span className="text-xs text-muted-foreground">{t("modules.supplierPortal.quotation.mobile.block")}</span>
             </div>
           </div>
-          <div>
+          <p className="text-xs text-muted-foreground">
+            {item.quantity} {item.unitLabel} · {item.requestedPackaging}
+          </p>
+          {item.establishmentObservation ? (
             <p className="text-xs text-muted-foreground">
-              {t("modules.supplierPortal.quotation.mobile.establishmentNote")}
+              {t("modules.supplierPortal.quotation.mobile.establishmentNote")}: {item.establishmentObservation}
             </p>
-            <p className="text-sm">—</p>
-          </div>
+          ) : null}
+          <SegmentBadges segments={item.segments} />
           <div className="flex flex-col gap-3">
-            {lineKeys.map((lineKey) => {
+            {keys.map((lineKey) => {
               const brandFixed = getFixedBrandLabelForLine(item, lineKey);
               return (
-                <div
-                  key={lineKey}
-                  className="flex flex-col gap-2 border-b border-border pb-3 last:border-b-0 last:pb-0"
-                >
+                <div key={lineKey} className="flex flex-col gap-2 border-b border-border pb-3 last:border-b-0 last:pb-0">
                   {brandFixed ? (
-                    <div className="inline-flex w-fit max-w-full">
-                      <Badge
-                        className="max-w-full truncate bg-primary font-medium text-primary-foreground hover:bg-primary/90"
-                        title={brandFixed}
-                      >
-                        {brandFixed}
-                      </Badge>
-                    </div>
+                    <Badge className="w-fit max-w-full truncate bg-primary font-medium text-primary-foreground">{brandFixed}</Badge>
+                  ) : item.brandPlaceholder === "any" ? (
+                    <Badge variant="outline" className="w-fit italic text-muted-foreground">
+                      {t("modules.supplierPortal.quotation.detail.items.anyBrandPlaceholder")}
+                    </Badge>
+                  ) : item.brandPlaceholder === "none" ? (
+                    <Badge variant="outline" className="w-fit italic text-destructive">
+                      {t("modules.supplierPortal.quotation.detail.items.noBrandPlaceholder")}
+                    </Badge>
                   ) : (
                     <Input
                       value={responses[lineKey]?.customBrand ?? ""}
                       onChange={(e) => onCustomBrand(lineKey, e.target.value)}
                       placeholder={t("modules.supplierPortal.quotation.detail.items.noBrandFromBuyer")}
                       className="h-10 border-amber-500/70 bg-warning/10/40"
+                      disabled={item.isBlocked}
                     />
                   )}
-                  <div className="flex min-h-[44px] items-stretch">
-                    <div className="flex h-11 min-w-0 flex-1 items-stretch overflow-hidden rounded-md border border-input bg-background">
-                      <span className="flex min-w-8 items-center border-r border-input bg-muted px-2 text-xs text-muted-foreground">
-                        R$
-                      </span>
-                      <Input
-                        value={responses[lineKey]?.unitPrice ?? ""}
-                        onChange={(e) => onUnitPrice(lineKey, e.target.value)}
-                        placeholder="0,00"
-                        className="h-11 min-w-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
-                        inputMode="decimal"
-                      />
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <MoneyInput
+                      value={responses[lineKey]?.unitPrice ?? ""}
+                      onChange={(v) => onUnitPrice(lineKey, v)}
+                      disabled={item.isBlocked}
+                    />
+                    <Button type="button" size="icon" variant="ghost" onClick={() => onOpenObservation(lineKey)} disabled={item.isBlocked}>
+                      <MessageSquarePlus className={cn("size-4", responses[lineKey]?.observation?.trim() ? "text-primary" : "text-muted-foreground")} />
+                    </Button>
                   </div>
                 </div>
               );
             })}
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 w-full justify-center text-sm font-medium"
-              onClick={() => onAddVariation(item.id)}
-            >
+            <Button type="button" variant="outline" className="h-10 w-full" onClick={() => onAddVariation(item.id)} disabled={item.isBlocked}>
               {t("modules.supplierPortal.quotation.mobile.addAnotherBrand")}
             </Button>
           </div>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function SegmentBadges({ segments }: { segments: string[] }) {
+  const visible = segments.slice(0, 2);
+  const hidden = segments.slice(2);
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {visible.map((segment, index) => (
+        <Badge key={`${segment}-${index}`} variant="outline" className={cn("rounded-full text-xs font-medium", SEGMENT_BADGE_CLASS)}>
+          {segment}
+        </Badge>
+      ))}
+      {hidden.length > 0 ? (
+        <TooltipProvider delayDuration={120}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="cursor-default rounded-full px-2">+{hidden.length}</Badge>
+            </TooltipTrigger>
+            <TooltipContent><p>{hidden.join(", ")}</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : null}
+    </div>
+  );
+}
+
+function MoneyInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex h-11 min-w-0 flex-1 items-stretch overflow-hidden rounded-md border border-input bg-background">
+      <span className="flex min-w-8 items-center border-r border-input bg-muted px-2 text-xs text-muted-foreground">R$</span>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="0,00"
+        className="h-11 min-w-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
+        inputMode="decimal"
+        disabled={disabled}
+      />
+    </div>
   );
 }

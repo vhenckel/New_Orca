@@ -3,28 +3,23 @@ import {
   CalendarClock,
   Clock,
   FileText,
+  MessageSquarePlus,
   Package,
   Plus,
+  RefreshCw,
   Save,
   Send,
   StickyNote,
   Trash2,
   Truck,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
-import { buildSendQuotationPayload } from "@/modules/supplier/quotation/lib/build-send-quotation-payload";
-import { useQuotationDetailQuery } from "@/modules/supplier/quotation/hooks/useQuotationDetailQuery";
-import { useSendQuotationMutation } from "@/modules/supplier/quotation/hooks/useSendQuotationMutation";
-import {
-  createLineResponsesInitial,
-  getFixedBrandLabelForLine,
-  getItemMaxLineSubtotalBRL,
-  getItemPriceLineKeys,
-  itemHasAnyPricedLine,
-  parseMoneyBRL,
-} from "@/modules/supplier/quotation/lib/priceLineKeys";
+import { SupplierQuotationItemObservationDialog } from "@/modules/supplier/quotation/components/SupplierQuotationItemObservationDialog";
+import { SupplierQuotationVariationSheet } from "@/modules/supplier/quotation/components/SupplierQuotationVariationSheet";
+import { useSupplierQuotationEditor } from "@/modules/supplier/quotation/hooks/useSupplierQuotationEditor";
+import type { SupplierQuotationDetailItem } from "@/modules/supplier/quotation/types/quotation-detail";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
@@ -33,27 +28,13 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/shared/ui/breadcrumb";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Checkbox } from "@/shared/ui/checkbox";
 import { Field, FieldContent, FieldLabel } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/shared/ui/sheet";
+import { Switch } from "@/shared/ui/switch";
 import {
   Table,
   TableBody,
@@ -66,24 +47,6 @@ import { Textarea } from "@/shared/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { cn } from "@/shared/lib/utils";
-import { toast } from "@/shared/ui/sonner";
-
-type ItemResponseState = Record<string, { unitPrice: string; customBrand?: string }>;
-
-type PackagingUnit = "ml" | "l" | "g" | "kg" | "un";
-
-interface AlternativeQuotationLine {
-  id: string;
-  parentItemId: string;
-  brand: string;
-  packagingAmount: string;
-  packagingUnit: PackagingUnit;
-}
-
-function formatPackagingDisplay(amount: string, unit: PackagingUnit): string {
-  const suffix = { ml: "ml", l: "L", g: "g", kg: "kg", un: "un" }[unit];
-  return `${amount} ${suffix}`;
-}
 
 const SEGMENT_BADGE_CLASS = "border-info/20 bg-info/10 text-info";
 const OVERFLOW_BADGE_CLASS = "min-w-7 justify-center border-muted bg-muted/60 px-2 text-muted-foreground";
@@ -96,16 +59,6 @@ function formatShortDateTime(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-/** Valor para `input type="date"` no fuso local. */
-function toDateInputValue(iso: string) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
 
 function SegmentBadges({ segments }: { segments: string[] }) {
@@ -152,192 +105,48 @@ function SegmentBadges({ segments }: { segments: string[] }) {
   );
 }
 
-function detailStatusLabelKey(status: string) {
-  if (status === "open") return "modules.supplierPortal.quotation.detail.statusBadge.pendingQuote";
-  return `modules.supplierPortal.quotation.list.status.${status}`;
+function BrandPlaceholderBadge({ item }: { item: SupplierQuotationDetailItem }) {
+  const { t } = useI18n();
+  if (!item.brandPlaceholder) return null;
+  const isAny = item.brandPlaceholder === "any";
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "italic",
+        isAny
+          ? "border-muted-foreground/30 bg-muted/40 text-muted-foreground"
+          : "border-destructive/30 bg-destructive/10 text-destructive",
+      )}
+    >
+      {isAny
+        ? t("modules.supplierPortal.quotation.detail.items.anyBrandPlaceholder")
+        : t("modules.supplierPortal.quotation.detail.items.noBrandPlaceholder")}
+    </Badge>
+  );
 }
 
 export function SupplierQuotationDetailPage() {
   const { t } = useI18n();
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { data: detail, isLoading, isError } = useQuotationDetailQuery(id);
-  const sendMutation = useSendQuotationMutation(id);
+  const editor = useSupplierQuotationEditor(id);
 
-  const [responses, setResponses] = useState<ItemResponseState>({});
-  const [generalNotes, setGeneralNotes] = useState("");
-  const [commercialTerms, setCommercialTerms] = useState({
-    paymentMethod: "",
-    paymentDeadline: "",
-    delivery: "",
-    quotationValidUntil: "",
-  });
-  const [alternativeLines, setAlternativeLines] = useState<AlternativeQuotationLine[]>([]);
   const [variationSheetOpen, setVariationSheetOpen] = useState(false);
   const [variationParentId, setVariationParentId] = useState<string | null>(null);
-  const [variationBrand, setVariationBrand] = useState("");
-  const [variationPackagingQty, setVariationPackagingQty] = useState("");
-  const [variationPackagingUnit, setVariationPackagingUnit] = useState<PackagingUnit>("ml");
-
-  useEffect(() => {
-    if (!detail) return;
-    setResponses(createLineResponsesInitial(detail.items));
-    setGeneralNotes(detail.generalNotes);
-    setAlternativeLines([]);
-    setCommercialTerms({
-      paymentMethod: detail.paymentMethodLabel,
-      paymentDeadline: detail.paymentDeadlineLabel,
-      delivery: detail.deliveryWindowLabel,
-      quotationValidUntil: toDateInputValue(detail.quotationValidUntilAt),
-    });
-  }, [detail]);
-
-  const filledItems = useMemo(() => {
-    if (!detail) return 0;
-    return detail.items.filter((item) => itemHasAnyPricedLine(item, responses)).length;
-  }, [detail, responses]);
-
-  const hasAnyQuotedPrice = useMemo(() => {
-    if (!detail) return false;
-    for (const item of detail.items) {
-      if (itemHasAnyPricedLine(item, responses)) return true;
-    }
-    for (const alt of alternativeLines) {
-      if (parseMoneyBRL(responses[alt.id]?.unitPrice ?? "") != null) return true;
-    }
-    return false;
-  }, [detail, responses, alternativeLines]);
-
-  const completionPercent =
-    detail && detail.items.length > 0 ? Math.round((filledItems / detail.items.length) * 100) : 0;
-
-  const estimatedTotal = useMemo(() => {
-    if (!detail) return 0;
-    let acc = detail.items.reduce(
-      (sum, item) => sum + getItemMaxLineSubtotalBRL(item, responses),
-      0,
-    );
-    for (const alt of alternativeLines) {
-      const parent = detail.items.find((i) => i.id === alt.parentItemId);
-      if (!parent) continue;
-      const parsed = parseMoneyBRL(responses[alt.id]?.unitPrice ?? "");
-      if (parsed === null) continue;
-      acc += parsed * parent.quantity;
-    }
-    return acc;
-  }, [detail, responses, alternativeLines]);
-
-  const estimatedTotalLabel = estimatedTotal.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-
-  const handleUnitPriceChange = (lineKey: string, value: string) => {
-    setResponses((prev) => ({
-      ...prev,
-      [lineKey]: {
-        ...prev[lineKey],
-        unitPrice: value,
-      },
-    }));
-  };
-
-  const handleCustomBrandChange = (lineKey: string, value: string) => {
-    setResponses((prev) => ({
-      ...prev,
-      [lineKey]: {
-        ...prev[lineKey],
-        customBrand: value,
-      },
-    }));
-  };
+  const [observationDialogOpen, setObservationDialogOpen] = useState(false);
+  const [observationLineKey, setObservationLineKey] = useState<string | null>(null);
 
   const openVariationSheet = (parentItemId: string) => {
     setVariationParentId(parentItemId);
-    setVariationBrand("");
-    setVariationPackagingQty("");
-    setVariationPackagingUnit("ml");
     setVariationSheetOpen(true);
   };
 
-  const handleVariationSheetOpenChange = (open: boolean) => {
-    setVariationSheetOpen(open);
-    if (!open) setVariationParentId(null);
+  const openObservationDialog = (lineKey: string) => {
+    setObservationLineKey(lineKey);
+    setObservationDialogOpen(true);
   };
 
-  const handleSaveVariation = () => {
-    if (!variationParentId || !variationBrand.trim() || !variationPackagingQty.trim()) {
-      toast.error(t("modules.supplierPortal.quotation.detail.items.sheetValidation"));
-      return;
-    }
-    const id = `alt-${variationParentId}-${crypto.randomUUID()}`;
-    setAlternativeLines((prev) => [
-      ...prev,
-      {
-        id,
-        parentItemId: variationParentId,
-        brand: variationBrand.trim(),
-        packagingAmount: variationPackagingQty.trim(),
-        packagingUnit: variationPackagingUnit,
-      },
-    ]);
-    setResponses((prev) => ({
-      ...prev,
-      [id]: { unitPrice: "", customBrand: "" },
-    }));
-    setVariationSheetOpen(false);
-    setVariationParentId(null);
-  };
-
-  const handleRemoveVariation = (alternativeId: string) => {
-    setAlternativeLines((prev) => prev.filter((line) => line.id !== alternativeId));
-    setResponses((prev) => {
-      const next = { ...prev };
-      delete next[alternativeId];
-      return next;
-    });
-  };
-
-  const submitQuotation = async (status: "open" | "sent" | "no_offer") => {
-    if (!detail) return;
-    if (status === "sent" && !hasAnyQuotedPrice) {
-      toast.error(t("modules.supplierPortal.quotation.detail.toastMissingItems"));
-      return;
-    }
-
-    const payload = buildSendQuotationPayload({
-      status,
-      items: detail.items,
-      responses,
-      alternativeLines,
-      paymentMethod: commercialTerms.paymentMethod,
-      paymentTerm: commercialTerms.paymentDeadline,
-      deliveryDeadline: commercialTerms.delivery,
-      expirationDate: commercialTerms.quotationValidUntil,
-      observation: generalNotes,
-    });
-
-    try {
-      await sendMutation.mutateAsync(payload);
-      if (status === "sent") {
-        toast.success(t("modules.supplierPortal.quotation.detail.toastSent"));
-        navigate("/supplier/quotations");
-      } else if (status === "open") {
-        toast.success(t("modules.supplierPortal.quotation.detail.toastDraft"));
-      } else {
-        toast.message(t("modules.supplierPortal.quotation.detail.toastNoItems"));
-        navigate("/supplier/quotations");
-      }
-    } catch {
-      toast.error(t("modules.supplierPortal.quotation.detail.toastSendError"));
-    }
-  };
-
-  const handleSaveDraft = () => void submitQuotation("open");
-  const handleSendQuotation = () => void submitQuotation("sent");
-  const handleNoItems = () => void submitQuotation("no_offer");
-
-  if (isLoading) {
+  if (editor.isLoading || !editor.detail) {
     return (
       <DashboardPageLayout showPageHeader={false}>
         <p className="text-sm text-muted-foreground">Carregando…</p>
@@ -345,21 +154,8 @@ export function SupplierQuotationDetailPage() {
     );
   }
 
-  if (isError || !detail) {
-    return (
-      <DashboardPageLayout showPageHeader={false}>
-        <Alert variant="destructive">
-          <AlertTitle>{t("modules.supplierPortal.quotation.detail.notFoundTitle")}</AlertTitle>
-          <AlertDescription className="flex flex-col gap-3">
-            <p>{t("modules.supplierPortal.quotation.detail.notFoundDescription")}</p>
-            <Button asChild variant="outline" className="w-fit">
-              <Link to="/supplier/quotations">{t("modules.supplierPortal.quotation.detail.backButton")}</Link>
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </DashboardPageLayout>
-    );
-  }
+  const detail = editor.detail;
+  const fieldErrorClass = "border-destructive ring-destructive/20";
 
   return (
     <DashboardPageLayout showPageHeader={false}>
@@ -371,28 +167,16 @@ export function SupplierQuotationDetailPage() {
                 <Link to="/supplier/quotations">{t("modules.supplierPortal.quotation.detail.breadcrumb")}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="font-mono">#{detail.id}</BreadcrumbPage>
-            </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-start gap-4">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info dark:bg-info/10 dark:text-info">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info">
               <FileText className="size-6" aria-hidden />
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">{detail.title}</h1>
-                <Badge
-                  variant="outline"
-                  className="shrink-0 border-warning/30 bg-warning/10 font-medium text-warning dark:border-warning/30/50 dark:bg-warning/10 dark:text-warning"
-                >
-                  {t(detailStatusLabelKey(detail.status))}
-                </Badge>
-              </div>
+              <h1 className="text-2xl font-semibold tracking-tight">{detail.title}</h1>
               <p className="text-sm text-muted-foreground">{t("modules.supplierPortal.quotation.detail.instruction")}</p>
             </div>
           </div>
@@ -406,42 +190,12 @@ export function SupplierQuotationDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="divide-y divide-border px-6 pb-5 pt-0 text-xs">
-              <div className="flex flex-col gap-0.5 py-2.5 first:pt-0">
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  {t("modules.supplierPortal.quotation.detail.restaurant.establishmentName")}
-                </span>
-                <span className="text-xs font-medium text-foreground">{detail.buyerName}</span>
-              </div>
-              <div className="flex flex-col gap-0.5 py-2.5">
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  {t("modules.supplierPortal.quotation.detail.restaurant.representativeName")}
-                </span>
-                <span className="text-xs text-muted-foreground">{detail.buyerRepresentativeName}</span>
-              </div>
-              <div className="flex flex-col gap-0.5 py-2.5">
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  {t("modules.supplierPortal.quotation.detail.restaurant.email")}
-                </span>
-                <span className="text-xs text-muted-foreground">{detail.buyerContactEmail}</span>
-              </div>
-              <div className="flex flex-col gap-0.5 py-2.5">
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  {t("modules.supplierPortal.quotation.detail.restaurant.cnpj")}
-                </span>
-                <span className="text-xs text-muted-foreground">{detail.buyerTaxId}</span>
-              </div>
-              <div className="flex flex-col gap-0.5 py-2.5">
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  {t("modules.supplierPortal.quotation.detail.restaurant.phone")}
-                </span>
-                <span className="text-xs text-muted-foreground">{detail.buyerPhone}</span>
-              </div>
-              <div className="flex flex-col gap-0.5 py-2.5 last:pb-0">
-                <span className="text-[11px] font-semibold text-muted-foreground">
-                  {t("modules.supplierPortal.quotation.detail.restaurant.address")}
-                </span>
-                <span className="text-xs text-muted-foreground leading-snug">{detail.buyerAddressLine}</span>
-              </div>
+              <InfoRow label={t("modules.supplierPortal.quotation.detail.restaurant.establishmentName")} value={detail.buyerName} />
+              <InfoRow label={t("modules.supplierPortal.quotation.detail.restaurant.representativeName")} value={detail.buyerRepresentativeName} />
+              <InfoRow label={t("modules.supplierPortal.quotation.detail.restaurant.email")} value={detail.buyerContactEmail} />
+              <InfoRow label={t("modules.supplierPortal.quotation.detail.restaurant.cnpj")} value={detail.buyerTaxId} />
+              <InfoRow label={t("modules.supplierPortal.quotation.detail.restaurant.phone")} value={detail.buyerPhone} />
+              <InfoRow label={t("modules.supplierPortal.quotation.detail.restaurant.address")} value={detail.buyerAddressLine} last />
             </CardContent>
           </Card>
 
@@ -453,52 +207,28 @@ export function SupplierQuotationDetailPage() {
             </CardHeader>
             <CardContent className="flex flex-1 flex-col pt-0">
               <div className="flex flex-1 flex-col justify-between gap-3">
-                <div className="rounded-lg border bg-background px-3 py-2.5 shadow-sm">
-                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <Package className="size-4 shrink-0" aria-hidden />
-                    <span>{t("modules.supplierPortal.quotation.detail.stats.boxItems")}</span>
-                  </div>
-                  <div className="mt-1.5 flex items-baseline gap-2">
-                    <span className="text-lg font-semibold tabular-nums">{detail.items.length}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {t("modules.supplierPortal.quotation.detail.stats.itemsFilled", { count: filledItems })}
-                    </span>
-                  </div>
-                </div>
-                <div className="rounded-lg border bg-background px-3 py-2.5 shadow-sm">
-                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <Clock className="size-4 shrink-0" aria-hidden />
-                    <span>{t("modules.supplierPortal.quotation.detail.stats.progress")}</span>
-                  </div>
-                  <div className="mt-1.5 flex items-baseline gap-2">
-                    <span className="text-lg font-semibold tabular-nums">{completionPercent}%</span>
-                    <span className="text-xs text-muted-foreground">
-                      {t("modules.supplierPortal.quotation.detail.stats.progressOfQuote")}
-                    </span>
-                  </div>
-                </div>
-                <div className="rounded-lg border bg-background px-3 py-2.5 shadow-sm">
-                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <CalendarClock className="size-4 shrink-0" aria-hidden />
-                    <span>{t("modules.supplierPortal.quotation.detail.stats.deadline")}</span>
-                  </div>
-                  <div className="mt-1.5">
-                    <span className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-400">
-                      {formatShortDateTime(detail.deadlineAt)}
-                    </span>
-                  </div>
-                </div>
-                <div className="rounded-lg border bg-background px-3 py-2.5 shadow-sm">
-                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <Truck className="size-4 shrink-0" aria-hidden />
-                    <span>{t("modules.supplierPortal.quotation.detail.stats.delivery")}</span>
-                  </div>
-                  <div className="mt-1.5">
-                    <span className="block truncate text-sm font-medium text-foreground">
-                      {commercialTerms.delivery || detail.deliveryWindowLabel}
-                    </span>
-                  </div>
-                </div>
+                <StatBox icon={Package} label={t("modules.supplierPortal.quotation.detail.stats.boxItems")}>
+                  <span className="text-lg font-semibold tabular-nums">{editor.mergedItems.length}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("modules.supplierPortal.quotation.detail.stats.itemsFilled", { count: editor.filledItems })}
+                  </span>
+                </StatBox>
+                <StatBox icon={Clock} label={t("modules.supplierPortal.quotation.detail.stats.progress")}>
+                  <span className="text-lg font-semibold tabular-nums">{editor.completionPercent}%</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("modules.supplierPortal.quotation.detail.stats.progressOfQuote")}
+                  </span>
+                </StatBox>
+                <StatBox icon={CalendarClock} label={t("modules.supplierPortal.quotation.detail.stats.deadline")}>
+                  <span className="text-lg font-semibold tabular-nums text-orange-600 dark:text-orange-400">
+                    {formatShortDateTime(detail.deadlineAt)}
+                  </span>
+                </StatBox>
+                <StatBox icon={Truck} label={t("modules.supplierPortal.quotation.detail.stats.delivery")}>
+                  <span className="block truncate text-sm font-medium text-foreground">
+                    {editor.commercialTerms.delivery || detail.deliveryWindowLabel}
+                  </span>
+                </StatBox>
               </div>
             </CardContent>
           </Card>
@@ -516,10 +246,11 @@ export function SupplierQuotationDetailPage() {
                   <FieldContent>
                     <Input
                       id="supplier-quote-payment-method"
-                      value={commercialTerms.paymentMethod}
+                      value={editor.commercialTerms.paymentMethod}
                       onChange={(e) =>
-                        setCommercialTerms((prev) => ({ ...prev, paymentMethod: e.target.value }))
+                        editor.setCommercialTerms((prev) => ({ ...prev, paymentMethod: e.target.value }))
                       }
+                      className={editor.validationField === "paymentMethod" ? fieldErrorClass : undefined}
                     />
                   </FieldContent>
                 </Field>
@@ -530,10 +261,11 @@ export function SupplierQuotationDetailPage() {
                   <FieldContent>
                     <Input
                       id="supplier-quote-payment-deadline"
-                      value={commercialTerms.paymentDeadline}
+                      value={editor.commercialTerms.paymentDeadline}
                       onChange={(e) =>
-                        setCommercialTerms((prev) => ({ ...prev, paymentDeadline: e.target.value }))
+                        editor.setCommercialTerms((prev) => ({ ...prev, paymentDeadline: e.target.value }))
                       }
+                      className={editor.validationField === "paymentDeadline" ? fieldErrorClass : undefined}
                     />
                   </FieldContent>
                 </Field>
@@ -543,8 +275,9 @@ export function SupplierQuotationDetailPage() {
                 <FieldContent>
                   <Input
                     id="supplier-quote-delivery"
-                    value={commercialTerms.delivery}
-                    onChange={(e) => setCommercialTerms((prev) => ({ ...prev, delivery: e.target.value }))}
+                    value={editor.commercialTerms.delivery}
+                    onChange={(e) => editor.setCommercialTerms((prev) => ({ ...prev, delivery: e.target.value }))}
+                    className={editor.validationField === "delivery" ? fieldErrorClass : undefined}
                   />
                 </FieldContent>
               </Field>
@@ -556,10 +289,11 @@ export function SupplierQuotationDetailPage() {
                   <Input
                     id="supplier-quote-valid-until"
                     type="date"
-                    value={commercialTerms.quotationValidUntil}
+                    value={editor.commercialTerms.quotationValidUntil}
                     onChange={(e) =>
-                      setCommercialTerms((prev) => ({ ...prev, quotationValidUntil: e.target.value }))
+                      editor.setCommercialTerms((prev) => ({ ...prev, quotationValidUntil: e.target.value }))
                     }
+                    className={editor.validationField === "quotationValidUntil" ? fieldErrorClass : undefined}
                   />
                 </FieldContent>
               </Field>
@@ -568,52 +302,78 @@ export function SupplierQuotationDetailPage() {
         </div>
 
         <Card className="shadow-sm">
-          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex flex-col gap-1">
-              <CardTitle>{t("modules.supplierPortal.quotation.detail.items.title")}</CardTitle>
-              <CardDescription>{t("modules.supplierPortal.quotation.detail.items.subtitle")}</CardDescription>
+          <CardHeader className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <CardTitle>{t("modules.supplierPortal.quotation.detail.items.title")}</CardTitle>
+                <CardDescription>{t("modules.supplierPortal.quotation.detail.items.subtitle")}</CardDescription>
+              </div>
+              <Badge
+                variant="outline"
+                className="w-fit shrink-0 border-info/30 bg-info/10 font-medium text-info"
+              >
+                {t("modules.supplierPortal.quotation.detail.items.estimatedTotal", {
+                  total: editor.estimatedTotalLabel,
+                })}
+              </Badge>
             </div>
-            <Badge
-              variant="outline"
-              className="w-fit shrink-0 border-info/30 bg-info/10 font-medium text-info dark:border-info/30 dark:bg-info/10 dark:text-info"
-            >
-              {t("modules.supplierPortal.quotation.detail.items.estimatedTotal", { total: estimatedTotalLabel })}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="button" variant="outline" size="sm" onClick={() => void editor.handleReusePricesOfDay()}>
+                <RefreshCw data-icon="inline-start" />
+                {t("modules.supplierPortal.quotation.detail.items.reuseDayPrices")}
+              </Button>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="show-blocked-products"
+                  checked={editor.showBlocked}
+                  onCheckedChange={editor.setShowBlocked}
+                />
+                <label htmlFor="show-blocked-products" className="text-sm text-muted-foreground">
+                  {t("modules.supplierPortal.quotation.detail.items.showBlocked")}
+                </label>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-6 px-0 pb-6 pt-0">
-            <div className="overflow-x-auto px-6">
+            <div
+              className={cn("overflow-x-auto px-6", editor.validationField === "items" && "rounded-md ring-2 ring-destructive/40")}
+            >
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[200px]">
-                      {t("modules.supplierPortal.quotation.detail.items.colProduct")}
-                    </TableHead>
-                    <TableHead className="min-w-[140px]">
-                      {t("modules.supplierPortal.quotation.detail.items.colSegments")}
-                    </TableHead>
+                    <TableHead className="w-10">{t("modules.supplierPortal.quotation.detail.items.colBlock")}</TableHead>
+                    <TableHead className="min-w-[180px]">{t("modules.supplierPortal.quotation.detail.items.colProduct")}</TableHead>
+                    <TableHead className="min-w-[120px]">{t("modules.supplierPortal.quotation.detail.items.colSegments")}</TableHead>
                     <TableHead className="w-24">{t("modules.supplierPortal.quotation.detail.items.colQty")}</TableHead>
-                    <TableHead className="min-w-[130px]">
-                      {t("modules.supplierPortal.quotation.detail.items.colPackaging")}
-                    </TableHead>
-                    <TableHead className="min-w-[180px]">
-                      {t("modules.supplierPortal.quotation.detail.items.brandLabel")}
-                    </TableHead>
-                    <TableHead className="min-w-[130px]">
-                      {t("modules.supplierPortal.quotation.detail.items.unitPriceLabel")}
-                    </TableHead>
+                    <TableHead className="min-w-[120px]">{t("modules.supplierPortal.quotation.detail.items.colPackaging")}</TableHead>
+                    <TableHead className="min-w-[140px]">{t("modules.supplierPortal.quotation.detail.items.colEstablishmentNote")}</TableHead>
+                    <TableHead className="min-w-[160px]">{t("modules.supplierPortal.quotation.detail.items.brandLabel")}</TableHead>
+                    <TableHead className="min-w-[120px]">{t("modules.supplierPortal.quotation.detail.items.unitPriceLabel")}</TableHead>
+                    <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {detail.items.flatMap((item) => {
-                    const altsForItem = alternativeLines.filter((a) => a.parentItemId === item.id);
-                    const lineKeys = getItemPriceLineKeys(item);
-                    const isLastMainLine = (lineIdx: number) => lineIdx === lineKeys.length - 1;
+                  {editor.visibleItems.flatMap((item) => {
+                    const altsForItem = editor.alternativeLines.filter((a) => a.parentItemId === item.id);
+                    const lineKeys = editor.getItemPriceLineKeys(item);
                     const groupRowCount = lineKeys.length + altsForItem.length;
+
                     const mainRows = lineKeys.map((lineKey, lineIdx) => {
-                      const brandFixed = getFixedBrandLabelForLine(item, lineKey);
+                      const brandFixed = editor.getFixedBrandLabelForLine(item, lineKey);
                       const shouldRenderGroupCells = lineIdx === 0;
+                      const isLastMainLine = lineIdx === lineKeys.length - 1;
+
                       return (
-                        <TableRow key={lineKey}>
+                        <TableRow key={lineKey} className={item.isBlocked ? "opacity-60" : undefined}>
+                          {shouldRenderGroupCells ? (
+                            <TableCell rowSpan={groupRowCount} className="align-middle">
+                              <Checkbox
+                                checked={item.isBlocked}
+                                onCheckedChange={() => void editor.handleToggleBlock(item)}
+                                aria-label={t("modules.supplierPortal.quotation.detail.items.blockLabel")}
+                              />
+                            </TableCell>
+                          ) : null}
                           {shouldRenderGroupCells ? (
                             <>
                               <TableCell rowSpan={groupRowCount} className="align-middle">
@@ -623,126 +383,116 @@ export function SupplierQuotationDetailPage() {
                                 <SegmentBadges segments={item.segments} />
                               </TableCell>
                               <TableCell rowSpan={groupRowCount} className="align-middle tabular-nums">
-                                <>
-                                  {item.quantity} {item.unitLabel}
-                                </>
+                                {item.quantity} {item.unitLabel}
                               </TableCell>
                               <TableCell rowSpan={groupRowCount} className="align-middle text-sm text-muted-foreground">
                                 {item.requestedPackaging}
+                              </TableCell>
+                              <TableCell rowSpan={groupRowCount} className="align-middle text-sm text-muted-foreground">
+                                {item.establishmentObservation || "—"}
                               </TableCell>
                             </>
                           ) : null}
                           <TableCell>
                             {brandFixed ? (
-                              <div className="flex min-w-0 items-center gap-2">
-                                {!shouldRenderGroupCells ? (
-                                  <span className="shrink-0 text-sm text-muted-foreground" aria-hidden>
-                                    ↳
-                                  </span>
-                                ) : null}
-                                <Badge
-                                  className="max-w-[200px] truncate bg-primary font-medium text-primary-foreground hover:bg-primary/90"
-                                  title={brandFixed}
-                                >
-                                  {brandFixed}
-                                </Badge>
-                              </div>
+                              <Badge className="max-w-[200px] truncate bg-primary font-medium text-primary-foreground">
+                                {brandFixed}
+                              </Badge>
+                            ) : item.brandPlaceholder ? (
+                              <BrandPlaceholderBadge item={item} />
                             ) : (
-                              <div className="flex min-w-0 items-center gap-2">
-                                {!shouldRenderGroupCells ? (
-                                  <span className="shrink-0 text-sm text-muted-foreground" aria-hidden>
-                                    ↳
-                                  </span>
-                                ) : null}
-                                <Input
-                                  value={responses[lineKey]?.customBrand ?? ""}
-                                  onChange={(event) => handleCustomBrandChange(lineKey, event.target.value)}
-                                  placeholder={t("modules.supplierPortal.quotation.detail.items.noBrandFromBuyer")}
-                                  className="h-9 min-w-0 flex-1 border-amber-500/70 bg-warning/10/40 focus-visible:border-amber-500 focus-visible:ring-amber-500/20 dark:bg-amber-950/25"
-                                />
-                              </div>
+                              <Input
+                                value={editor.responses[lineKey]?.customBrand ?? ""}
+                                onChange={(e) => editor.handleCustomBrandChange(lineKey, e.target.value)}
+                                placeholder={t("modules.supplierPortal.quotation.detail.items.noBrandFromBuyer")}
+                                className="h-9 border-amber-500/70 bg-warning/10/40"
+                                disabled={item.isBlocked}
+                              />
                             )}
                           </TableCell>
                           <TableCell>
-                            <div className="flex min-w-[200px] items-center gap-2">
-                              <div className="flex h-9 min-w-0 flex-1 items-stretch overflow-hidden rounded-md border border-input bg-background">
-                                <span className="flex items-center border-r border-input bg-muted px-2 text-xs text-muted-foreground">
-                                  R$
-                                </span>
-                                <Input
-                                  value={responses[lineKey]?.unitPrice ?? ""}
-                                  onChange={(event) => handleUnitPriceChange(lineKey, event.target.value)}
-                                  placeholder="0,00"
-                                  className="h-9 min-w-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                                  inputMode="decimal"
-                                />
-                              </div>
-                              {isLastMainLine(lineIdx) ? (
+                            <div className="flex min-w-[180px] items-center gap-2">
+                              <MoneyInput
+                                value={editor.responses[lineKey]?.unitPrice ?? ""}
+                                onChange={(v) => editor.handleUnitPriceChange(lineKey, v)}
+                                disabled={item.isBlocked}
+                              />
+                              {isLastMainLine ? (
                                 <Button
                                   type="button"
                                   variant="outline"
-                                  className="h-9 shrink-0 gap-1.5"
-                                  title={t("modules.supplierPortal.quotation.detail.items.addVariationLabel")}
+                                  size="sm"
                                   onClick={() => openVariationSheet(item.id)}
+                                  disabled={item.isBlocked}
                                 >
-                                  <Plus className="size-4" aria-hidden />
+                                  <Plus className="size-4" />
                                   {t("modules.supplierPortal.quotation.detail.items.addVariationLabel")}
                                 </Button>
                               ) : null}
                             </div>
                           </TableCell>
-                        </TableRow>
-                      );
-                    });
-                    const altRows = altsForItem.map((alt) => (
-                      <TableRow
-                        key={alt.id}
-                        className="bg-info/10 dark:bg-info/10"
-                      >
-                        <TableCell className="border-l-4 border-info">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="shrink-0 text-sm text-muted-foreground" aria-hidden>
-                              ↳
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className="shrink-0 border-info/30 bg-info/10 font-semibold text-info dark:border-info/30 dark:bg-info/10 dark:text-info"
-                            >
-                              {t("modules.supplierPortal.quotation.detail.items.alternativeBadge")}
-                            </Badge>
-                            <span className="min-w-0 truncate text-sm font-medium text-foreground" title={alt.brand}>
-                              {alt.brand}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex h-9 min-w-[200px] items-center gap-2">
-                            <div className="flex h-9 min-w-0 flex-1 items-stretch overflow-hidden rounded-md border border-input bg-background">
-                              <span className="flex items-center border-r border-input bg-muted px-2 text-xs text-muted-foreground">
-                                R$
-                              </span>
-                              <Input
-                                value={responses[alt.id]?.unitPrice ?? ""}
-                                onChange={(event) => handleUnitPriceChange(alt.id, event.target.value)}
-                                placeholder="0,00"
-                                className="h-9 min-w-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                                inputMode="decimal"
-                              />
-                            </div>
+                          <TableCell>
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-                              onClick={() => handleRemoveVariation(alt.id)}
-                              title="Remover alternativa"
+                              onClick={() => openObservationDialog(lineKey)}
+                              disabled={item.isBlocked}
+                              title={t("modules.supplierPortal.quotation.detail.items.addObservation")}
                             >
-                              <Trash2 className="size-4" aria-hidden />
+                              <MessageSquarePlus
+                                className={cn(
+                                  "size-4",
+                                  editor.responses[lineKey]?.observation?.trim()
+                                    ? "text-primary"
+                                    : "text-muted-foreground",
+                                )}
+                              />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    });
+
+                    const altRows = altsForItem.map((alt) => (
+                      <TableRow key={alt.id} className="bg-info/10">
+                        <TableCell className="border-l-4 border-info">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="border-info/30 bg-info/10 font-semibold text-info">
+                              {t("modules.supplierPortal.quotation.detail.items.alternativeBadge")}
+                            </Badge>
+                            <span className="truncate text-sm font-medium">{alt.brand}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <MoneyInput
+                              value={editor.responses[alt.id]?.unitPrice ?? ""}
+                              onChange={(v) => editor.handleUnitPriceChange(alt.id, v)}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => editor.removeAlternativeLine(alt.id)}
+                            >
+                              <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
                             </Button>
                           </div>
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openObservationDialog(alt.id)}
+                          >
+                            <MessageSquarePlus className="size-4 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ));
+
                     return [...mainRows, ...altRows];
                   })}
                 </TableBody>
@@ -757,8 +507,8 @@ export function SupplierQuotationDetailPage() {
                 <FieldContent>
                   <Textarea
                     id="supplier-quote-general-notes"
-                    value={generalNotes}
-                    onChange={(e) => setGeneralNotes(e.target.value)}
+                    value={editor.generalNotes}
+                    onChange={(e) => editor.setGeneralNotes(e.target.value)}
                     placeholder={t("modules.supplierPortal.quotation.detail.items.generalNotesPlaceholder")}
                     rows={4}
                     className="min-h-[120px] resize-y"
@@ -774,16 +524,22 @@ export function SupplierQuotationDetailPage() {
                   {t("modules.supplierPortal.quotation.detail.cancelButton")}
                 </Link>
               </Button>
-              <Button type="button" variant="outline" onClick={handleNoItems}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={editor.sendMutation.isPending}
+                onClick={() => void editor.handleNoItems()}
+              >
                 {t("modules.supplierPortal.quotation.detail.noItemsButton")}
               </Button>
-              <Button type="button" variant="outline" onClick={handleSaveDraft}>
+              <Button type="button" variant="outline" onClick={editor.handleSaveDraft}>
                 <Save data-icon="inline-start" />
                 {t("modules.supplierPortal.quotation.detail.saveDraftButton")}
               </Button>
               <Button
                 type="button"
-                onClick={handleSendQuotation}
+                disabled={editor.sendMutation.isPending}
+                onClick={() => void editor.handleSendQuotation()}
                 className="bg-primary text-white hover:bg-primary/90 hover:text-white"
               >
                 <Send data-icon="inline-start" />
@@ -793,94 +549,82 @@ export function SupplierQuotationDetailPage() {
           </CardContent>
         </Card>
 
-        <Alert className="border-info/20 bg-info/10 dark:border-info/30 dark:bg-info/10">
-          <StickyNote className="size-4 shrink-0 text-info dark:text-info" />
+        <Alert className="border-info/20 bg-info/10">
+          <StickyNote className="size-4 shrink-0 text-info" />
           <AlertTitle>{t("modules.supplierPortal.quotation.detail.tip.title")}</AlertTitle>
           <AlertDescription>{t("modules.supplierPortal.quotation.detail.tip.body")}</AlertDescription>
         </Alert>
 
-        <Sheet open={variationSheetOpen} onOpenChange={handleVariationSheetOpenChange}>
-          <SheetContent side="right" className="flex w-full flex-col gap-0 sm:max-w-md">
-            <SheetHeader className="pr-8 text-left">
-              <SheetTitle>{t("modules.supplierPortal.quotation.detail.items.sheetTitle")}</SheetTitle>
-            </SheetHeader>
-            <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-1 py-6">
-              <Field className="gap-2">
-                <FieldLabel htmlFor="variation-brand">
-                  {t("modules.supplierPortal.quotation.detail.items.sheetBrand")}
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="variation-brand"
-                    value={variationBrand}
-                    onChange={(e) => setVariationBrand(e.target.value)}
-                    placeholder={t("modules.supplierPortal.quotation.detail.items.brandPlaceholder")}
-                  />
-                </FieldContent>
-              </Field>
-              <Field className="gap-2">
-                <FieldLabel htmlFor="variation-packaging-qty">
-                  {t("modules.supplierPortal.quotation.detail.items.sheetPackagingQty")}
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="variation-packaging-qty"
-                    value={variationPackagingQty}
-                    onChange={(e) => setVariationPackagingQty(e.target.value)}
-                    inputMode="decimal"
-                  />
-                </FieldContent>
-              </Field>
-              <Field className="gap-2">
-                <FieldLabel>{t("modules.supplierPortal.quotation.detail.items.sheetPackagingUnit")}</FieldLabel>
-                <FieldContent>
-                  <Select
-                    value={variationPackagingUnit}
-                    onValueChange={(v) => setVariationPackagingUnit(v as PackagingUnit)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ml">
-                        {t("modules.supplierPortal.quotation.detail.items.packagingUnitMl")}
-                      </SelectItem>
-                      <SelectItem value="l">
-                        {t("modules.supplierPortal.quotation.detail.items.packagingUnitL")}
-                      </SelectItem>
-                      <SelectItem value="g">
-                        {t("modules.supplierPortal.quotation.detail.items.packagingUnitG")}
-                      </SelectItem>
-                      <SelectItem value="kg">
-                        {t("modules.supplierPortal.quotation.detail.items.packagingUnitKg")}
-                      </SelectItem>
-                      <SelectItem value="un">
-                        {t("modules.supplierPortal.quotation.detail.items.packagingUnitUn")}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FieldContent>
-              </Field>
-            </div>
-            <SheetFooter className="flex flex-row gap-2 border-t border-border pt-6 sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleVariationSheetOpenChange(false)}
-              >
-                {t("modules.supplierPortal.quotation.detail.items.sheetCancel")}
-              </Button>
-              <Button
-                type="button"
-                onClick={handleSaveVariation}
-                className="bg-primary text-white hover:bg-primary/90 hover:text-white"
-              >
-                {t("modules.supplierPortal.quotation.detail.items.sheetSave")}
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+        <SupplierQuotationVariationSheet
+          open={variationSheetOpen}
+          onOpenChange={setVariationSheetOpen}
+          parentItemId={variationParentId}
+          onSave={editor.addAlternativeLine}
+        />
+
+        <SupplierQuotationItemObservationDialog
+          open={observationDialogOpen}
+          onOpenChange={setObservationDialogOpen}
+          lineKey={observationLineKey}
+          initialValue={
+            observationLineKey ? (editor.responses[observationLineKey]?.observation ?? "") : ""
+          }
+          onSave={editor.handleObservationChange}
+        />
       </div>
     </DashboardPageLayout>
+  );
+}
+
+function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  return (
+    <div className={cn("flex flex-col gap-0.5 py-2.5", last ? "last:pb-0" : "first:pt-0")}>
+      <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
+      <span className="text-xs font-medium text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function StatBox({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: typeof Package;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border bg-background px-3 py-2.5 shadow-sm">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <Icon className="size-4 shrink-0" aria-hidden />
+        <span>{label}</span>
+      </div>
+      <div className="mt-1.5 flex items-baseline gap-2">{children}</div>
+    </div>
+  );
+}
+
+function MoneyInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex h-9 min-w-0 flex-1 items-stretch overflow-hidden rounded-md border border-input bg-background">
+      <span className="flex items-center border-r border-input bg-muted px-2 text-xs text-muted-foreground">R$</span>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="0,00"
+        className="h-9 min-w-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
+        inputMode="decimal"
+        disabled={disabled}
+      />
+    </div>
   );
 }

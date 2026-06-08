@@ -1,6 +1,6 @@
 import type { SupplierQuotationDetailItem } from "@/modules/supplier/quotation/types/quotation-detail";
 
-type ResponseSlice = { unitPrice: string; customBrand?: string } | undefined;
+type ResponseSlice = { unitPrice: string; customBrand?: string; observation?: string } | undefined;
 
 export function parseMoneyBRL(input: string): number | null {
   const trimmed = input.trim();
@@ -51,16 +51,22 @@ function escapeRegExp(s: string) {
 
 export function createLineResponsesInitial(
   items: SupplierQuotationDetailItem[],
-): Record<string, { unitPrice: string; customBrand?: string }> {
-  const state: Record<string, { unitPrice: string; customBrand?: string }> = {};
+): Record<string, { unitPrice: string; customBrand?: string; observation?: string }> {
+  const state: Record<string, { unitPrice: string; customBrand?: string; observation?: string }> = {};
   for (const item of items) {
     const lineKeys = getItemPriceLineKeys(item);
     const defaultPrice =
       item.unitPrice != null ? item.unitPrice.toFixed(2).replace(".", ",") : "";
     lineKeys.forEach((key, i) => {
+      const brandLabel = getFixedBrandLabelForLine(item, key);
+      const savedObservation =
+        brandLabel && item.quotationObservations?.[brandLabel]
+          ? item.quotationObservations[brandLabel]
+          : "";
       state[key] = {
         unitPrice: i === 0 && defaultPrice ? defaultPrice : "",
         customBrand: "",
+        observation: savedObservation,
       };
     });
   }
@@ -71,8 +77,10 @@ export function itemHasAnyPricedLine(
   item: SupplierQuotationDetailItem,
   responses: Record<string, ResponseSlice>,
 ): boolean {
+  if (item.isBlocked) return false;
   for (const k of getItemPriceLineKeys(item)) {
-    if (parseMoneyBRL(responses[k]?.unitPrice ?? "") != null) return true;
+    const value = parseMoneyBRL(responses[k]?.unitPrice ?? "");
+    if (value !== null && value >= 0.01) return true;
   }
   return false;
 }

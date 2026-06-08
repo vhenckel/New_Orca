@@ -1,5 +1,8 @@
 import type { OpenQuotationListItem, FetchOpenQuotationsParams } from "@/modules/supplier/quotation/types/open-quotation";
 import type {
+  BlockStatusPayload,
+  LastProductValue,
+  LastSummaryResponse,
   QuotationDetailResponse,
   SendQuotationPayload,
 } from "@/modules/supplier/quotation/types/quotation-api";
@@ -32,6 +35,27 @@ export async function sendQuotation(
 ): Promise<void> {
   await apiRequest<void>(`/quotations/${id}/send`, {
     method: "PATCH",
+    body: payload,
+  });
+}
+
+export async function fetchLastSummary(
+  supplierId: string,
+  establishmentId: string,
+): Promise<LastSummaryResponse> {
+  const search = new URLSearchParams({ establishmentId });
+  return apiRequest<LastSummaryResponse>(
+    `/quotations/supplier/${supplierId}/last-summary?${search.toString()}`,
+  );
+}
+
+export async function fetchLastProductValues(quotationId: string): Promise<LastProductValue[]> {
+  return apiRequest<LastProductValue[]>(`/quotations/${quotationId}/last-product-values`);
+}
+
+export async function updateBlockStatus(payload: BlockStatusPayload): Promise<void> {
+  await apiRequest<void>("/quotations/budget-products/block-status", {
+    method: "PUT",
     body: payload,
   });
 }

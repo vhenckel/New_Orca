@@ -1,17 +1,18 @@
+import { localDateInputToIso } from "@/modules/supplier/quotation/lib/local-date-input";
 import {
   getFixedBrandLabelForLine,
   getItemPriceLineKeys,
   parseMoneyBRL,
 } from "@/modules/supplier/quotation/lib/priceLineKeys";
-import type { OpenQuotationStatus } from "@/modules/supplier/quotation/types/open-quotation";
 import type {
   SendQuotationItemPayload,
   SendQuotationPayload,
   QuotationPackagingUnit,
+  SendQuotationStatus,
 } from "@/modules/supplier/quotation/types/quotation-api";
 import type { SupplierQuotationDetailItem } from "@/modules/supplier/quotation/types/quotation-detail";
 
-type ResponseState = Record<string, { unitPrice: string; customBrand?: string }>;
+type ResponseState = Record<string, { unitPrice: string; customBrand?: string; observation?: string }>;
 
 interface AlternativeLine {
   id: string;
@@ -22,7 +23,7 @@ interface AlternativeLine {
 }
 
 interface BuildSendQuotationPayloadInput {
-  status: OpenQuotationStatus;
+  status: SendQuotationStatus;
   items: SupplierQuotationDetailItem[];
   responses: ResponseState;
   alternativeLines: AlternativeLine[];
@@ -48,7 +49,8 @@ function resolveBrandName(
   if (fixed) return fixed;
   const custom = responses[lineKey]?.customBrand?.trim();
   if (custom) return custom;
-  return "Qualquer Marca";
+  if (item.brandPlaceholder === "any") return "Qualquer Marca";
+  return "Sem Marca";
 }
 
 export function buildSendQuotationPayload(
@@ -57,29 +59,32 @@ export function buildSendQuotationPayload(
   const items: SendQuotationItemPayload[] = [];
 
   for (const item of input.items) {
+    if (item.isBlocked) continue;
     for (const lineKey of getItemPriceLineKeys(item)) {
       const value = parseMoneyBRL(input.responses[lineKey]?.unitPrice ?? "");
-      if (value === null || value <= 0) continue;
+      if (value === null || value < 0.01) continue;
+      const observation = input.responses[lineKey]?.observation?.trim();
       items.push({
-        productId: item.productId,
+        productId: item.id,
         brandName: resolveBrandName(item, lineKey, input.responses),
         value,
-        observation: null,
+        observation: observation || null,
       });
     }
   }
 
   for (const alt of input.alternativeLines) {
     const parent = input.items.find((i) => i.id === alt.parentItemId);
-    if (!parent) continue;
+    if (!parent || parent.isBlocked) continue;
     const value = parseMoneyBRL(input.responses[alt.id]?.unitPrice ?? "");
-    if (value === null || value <= 0) continue;
+    if (value === null || value < 0.01) continue;
+    const observation = input.responses[alt.id]?.observation?.trim();
     items.push({
-      productId: parent.productId,
+      productId: parent.id,
       brandName: alt.brand,
       value,
       packagingUnit: toPackagingUnit(alt.packagingAmount, alt.packagingUnit),
-      observation: null,
+      observation: observation || null,
     });
   }
 
@@ -92,10 +97,8 @@ export function buildSendQuotationPayload(
   if (input.paymentTerm.trim()) payload.paymentTerm = input.paymentTerm.trim();
   if (input.deliveryDeadline.trim()) payload.deliveryDeadline = input.deliveryDeadline.trim();
   if (input.expirationDate) {
-    const date = new Date(input.expirationDate);
-    if (!Number.isNaN(date.getTime())) {
-      payload.expirationDate = date.toISOString();
-    }
+    const expirationDate = localDateInputToIso(input.expirationDate);
+    if (expirationDate) payload.expirationDate = expirationDate;
   }
 
   if (items.length > 0) {
