@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
+import { copyEstablishmentProductsTsv } from "@/modules/product/api/establishment-products-api";
 import { copyProductsTsv, deleteProduct } from "@/modules/product/api/products-api";
 import { ProductModuleNav } from "@/modules/product/components/ProductModuleNav";
 import { ProductDeleteConfirmDialog } from "@/modules/product/components/ProductDeleteConfirmDialog";
@@ -215,10 +216,11 @@ export function ProductsPage() {
   };
 
   const handleCopy = async () => {
-    if (!isAdmin) return;
     setCopying(true);
     try {
-      const tsv = await copyProductsTsv(adminFetchParams);
+      const tsv = isAdmin
+        ? await copyProductsTsv(adminFetchParams)
+        : await copyEstablishmentProductsTsv(establishmentFetchParams);
       await navigator.clipboard.writeText(tsv);
       toast.success(t("modules.product.list.toast.copySuccess"));
     } catch {
@@ -234,23 +236,23 @@ export function ProductsPage() {
 
   const headerActions = (
     <div className="flex flex-wrap gap-2">
+      {isAdmin || isEstablishment ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="gap-2"
+          disabled={copying}
+          onClick={() => void handleCopy()}
+        >
+          <Copy className="size-4" />
+          {t("modules.product.list.copy")}
+        </Button>
+      ) : null}
       {isAdmin ? (
-        <>
-          <Button
-            type="button"
-            variant="outline"
-            className="gap-2"
-            disabled={copying}
-            onClick={() => void handleCopy()}
-          >
-            <Copy className="size-4" />
-            {t("modules.product.list.copy")}
-          </Button>
-          <Button type="button" variant="outline" className="gap-2" onClick={onImportProducts}>
-            <Upload className="size-4" />
-            {t("modules.product.list.importProducts")}
-          </Button>
-        </>
+        <Button type="button" variant="outline" className="gap-2" onClick={onImportProducts}>
+          <Upload className="size-4" />
+          {t("modules.product.list.importProducts")}
+        </Button>
       ) : null}
       <Button type="button" className="gap-2 text-white" onClick={onAddProduct}>
         <Plus className="size-4" />

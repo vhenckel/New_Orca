@@ -6,6 +6,7 @@ import { downloadImportTemplate } from "@/modules/product/api/import-api";
 import { useImportProducts } from "@/modules/product/hooks/useImportProducts";
 import { useProductListSupportQueries } from "@/modules/product/hooks/useProductListSupportQueries";
 import { DashboardPageLayout } from "@/shared/components/dashboard-layout";
+import { PageActionBar } from "@/shared/components/page-action-bar";
 import { useApiUserRole } from "@/shared/auth/use-api-user";
 import { useI18n } from "@/shared/i18n/useI18n";
 import {
@@ -152,7 +153,7 @@ export function ImportProductsPage() {
               <p className="text-xs text-muted-foreground">{t("modules.product.import.fileHint")}</p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <PageActionBar>
               <Button
                 type="button"
                 variant="outline"
@@ -171,7 +172,7 @@ export function ImportProductsPage() {
                 {isUploading ? <LoaderCircle className="size-4 animate-spin" /> : <Upload className="size-4" />}
                 {t("modules.product.import.submit")}
               </Button>
-            </div>
+            </PageActionBar>
           </CardContent>
         </Card>
       </div>

@@ -7,7 +7,7 @@ import { SupplierQuotationsPage } from "@/modules/supplier/quotation/pages/Suppl
 export const supplierQuotationModule: AppModuleDefinition = {
   key: "supplier-quotation",
   basePath: "/supplier/quotations",
-  allowedPersonas: ["supplier"],
+  allowedPersonas: ["supplier", "admin"],
   titleKey: "modules.supplierPortal.quotation.title",
   descriptionKey: "modules.supplierPortal.quotation.description",
   icon: Inbox,
@@ -18,6 +18,7 @@ export const supplierQuotationModule: AppModuleDefinition = {
       descriptionKey: "modules.supplierPortal.quotation.routes.list.description",
       icon: Inbox,
       element: <SupplierQuotationsPage />,
+      allowedApiRoles: ["supplier", "admin"],
     },
     {
       path: "/supplier/quotations/:id",

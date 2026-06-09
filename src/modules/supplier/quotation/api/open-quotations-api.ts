@@ -6,7 +6,7 @@ import type {
   QuotationDetailResponse,
   SendQuotationPayload,
 } from "@/modules/supplier/quotation/types/quotation-api";
-import { apiRequest } from "@/shared/api/http-client";
+import { apiRequest, apiRequestBlob } from "@/shared/api/http-client";
 import type { PaginatedResponse } from "@/shared/api/pagination";
 
 function buildQuery(params: FetchOpenQuotationsParams): string {
@@ -23,6 +23,24 @@ export async function fetchOpenQuotations(
   params: FetchOpenQuotationsParams,
 ): Promise<PaginatedResponse<OpenQuotationListItem>> {
   return apiRequest<PaginatedResponse<OpenQuotationListItem>>(buildQuery(params));
+}
+
+function buildQuotationsCopyQuery(
+  params: Omit<FetchOpenQuotationsParams, "page" | "totalPerPage">,
+): string {
+  const search = new URLSearchParams();
+  if (params.sort) search.set("sort", params.sort);
+  if (params.order) search.set("order", params.order);
+  if (params.status) search.set("status", params.status);
+  const qs = search.toString();
+  return `/quotations/copy${qs ? `?${qs}` : ""}`;
+}
+
+export async function copyQuotationsTsv(
+  params: Omit<FetchOpenQuotationsParams, "page" | "totalPerPage">,
+): Promise<string> {
+  const blob = await apiRequestBlob(buildQuotationsCopyQuery(params));
+  return blob.text();
 }
 
 export async function fetchQuotationById(id: string): Promise<QuotationDetailResponse> {

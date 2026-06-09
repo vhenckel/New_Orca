@@ -10,7 +10,7 @@ import type {
   EstablishmentProductsListPage,
   FetchEstablishmentProductsListParams,
 } from "@/modules/product/types/product-list";
-import { apiRequest } from "@/shared/api/http-client";
+import { apiRequest, apiRequestBlob } from "@/shared/api/http-client";
 import { DEFAULT_PAGE_SIZE } from "@/shared/api/pagination";
 
 function buildEstablishmentProductsQuery(params: FetchEstablishmentProductsListParams): string {
@@ -30,6 +30,19 @@ export async function fetchEstablishmentProductsPage(
   return apiRequest<EstablishmentProductsListPage>(
     `/establishment-products?${buildEstablishmentProductsQuery(params)}`,
   );
+}
+
+export async function copyEstablishmentProductsTsv(
+  params: Omit<FetchEstablishmentProductsListParams, "page" | "totalPerPage">,
+): Promise<string> {
+  const search = new URLSearchParams();
+  if (params.sort) search.set("sort", params.sort);
+  if (params.order) search.set("order", params.order);
+  if (params.name?.trim()) search.set("name", params.name.trim());
+  if (params.establishmentId) search.set("establishmentId", params.establishmentId);
+  const qs = search.toString();
+  const blob = await apiRequestBlob(`/establishment-products/copy${qs ? `?${qs}` : ""}`);
+  return blob.text();
 }
 
 /**
