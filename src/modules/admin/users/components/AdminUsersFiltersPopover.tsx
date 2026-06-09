@@ -4,42 +4,44 @@ import {
   ADMIN_USER_PROFILE_OPTIONS,
   ADMIN_USER_STATUS_OPTIONS,
 } from "@/modules/admin/users/lib/admin-users-filters";
-import type { AdminUserProfile, AdminUserStatus } from "@/modules/admin/users/types";
+import type { AdminUserProfile } from "@/modules/admin/users/types";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { Checkbox } from "@/shared/ui/checkbox";
+import { Input } from "@/shared/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 
 interface AdminUsersFiltersPopoverProps {
-  statusFilters: AdminUserStatus[];
-  profileFilters: AdminUserProfile[];
-  onStatusFiltersChange: (next: AdminUserStatus[]) => void;
-  onProfileFiltersChange: (next: AdminUserProfile[]) => void;
-}
-
-function toggleItem<T extends string>(list: T[], item: T): T[] {
-  return list.includes(item) ? list.filter((v) => v !== item) : [...list, item];
+  name: string;
+  email: string;
+  status: string;
+  profile: string;
+  activeFilterCount: number;
+  onNameChange: (value: string) => void;
+  onEmailChange: (value: string) => void;
+  onStatusChange: (value: string) => void;
+  onProfileChange: (value: string) => void;
 }
 
 export function AdminUsersFiltersPopover({
-  statusFilters,
-  profileFilters,
-  onStatusFiltersChange,
-  onProfileFiltersChange,
+  name,
+  email,
+  status,
+  profile,
+  activeFilterCount,
+  onNameChange,
+  onEmailChange,
+  onStatusChange,
+  onProfileChange,
 }: AdminUsersFiltersPopoverProps) {
   const { t } = useI18n();
-  const activeCount = statusFilters.length + profileFilters.length;
-
-  const statusSummary =
-    statusFilters.length === 0
-      ? t("modules.admin.users.filters.statusAll")
-      : t("modules.admin.users.filters.statusSelected", { count: statusFilters.length });
-
-  const profileSummary =
-    profileFilters.length === 0
-      ? t("modules.admin.users.filters.profileAll")
-      : t("modules.admin.users.filters.profileSelected", { count: profileFilters.length });
 
   return (
     <Popover>
@@ -47,9 +49,9 @@ export function AdminUsersFiltersPopover({
         <Button type="button" variant="outline" className="gap-2">
           <Filter className="size-4" />
           {t("modules.admin.users.filters.advanced")}
-          {activeCount > 0 ? (
+          {activeFilterCount > 0 ? (
             <Badge variant="secondary" className="rounded-full px-1.5 py-0 text-[10px]">
-              {activeCount}
+              {activeFilterCount}
             </Badge>
           ) : null}
         </Button>
@@ -61,53 +63,55 @@ export function AdminUsersFiltersPopover({
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">{t("modules.admin.users.filters.statusLabel")}</p>
-          {ADMIN_USER_STATUS_OPTIONS.map((status) => (
-            <label key={status} className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1">
-              <Checkbox
-                checked={statusFilters.includes(status)}
-                onCheckedChange={() => onStatusFiltersChange(toggleItem(statusFilters, status))}
-                aria-label={t(`modules.admin.users.status.${status}`)}
-              />
-              <span className="text-sm">{t(`modules.admin.users.status.${status}`)}</span>
-            </label>
-          ))}
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-muted-foreground">{statusSummary}</span>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => onStatusFiltersChange([])}
-            >
-              {t("modules.admin.users.filters.clearStatus")}
-            </Button>
-          </div>
+          <p className="text-xs text-muted-foreground">{t("modules.admin.users.form.name")}</p>
+          <Input
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            placeholder={t("modules.admin.users.filters.nameAll")}
+          />
         </div>
 
-        <div className="space-y-2 border-t border-border pt-3">
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">{t("modules.admin.users.form.email")}</p>
+          <Input
+            value={email}
+            onChange={(e) => onEmailChange(e.target.value)}
+            placeholder={t("modules.admin.users.filters.emailAll")}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">{t("modules.admin.users.filters.statusLabel")}</p>
+          <Select value={status || "all"} onValueChange={(value) => onStatusChange(value === "all" ? "" : value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("modules.admin.users.filters.statusAll")}</SelectItem>
+              {ADMIN_USER_STATUS_OPTIONS.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {t(`modules.admin.users.status.${item}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
           <p className="text-xs text-muted-foreground">{t("modules.admin.users.filters.profileLabel")}</p>
-          {ADMIN_USER_PROFILE_OPTIONS.map((profile) => (
-            <label key={profile} className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1">
-              <Checkbox
-                checked={profileFilters.includes(profile)}
-                onCheckedChange={() => onProfileFiltersChange(toggleItem(profileFilters, profile))}
-                aria-label={t(`modules.admin.users.profile.${profile}`)}
-              />
-              <span className="text-sm">{t(`modules.admin.users.profile.${profile}`)}</span>
-            </label>
-          ))}
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-muted-foreground">{profileSummary}</span>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => onProfileFiltersChange([])}
-            >
-              {t("modules.admin.users.filters.clearProfile")}
-            </Button>
-          </div>
+          <Select value={profile || "all"} onValueChange={(value) => onProfileChange(value === "all" ? "" : value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("modules.admin.users.filters.profileAll")}</SelectItem>
+              {ADMIN_USER_PROFILE_OPTIONS.map((item: AdminUserProfile) => (
+                <SelectItem key={item} value={item}>
+                  {t(`modules.admin.users.profile.${item}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </PopoverContent>
     </Popover>

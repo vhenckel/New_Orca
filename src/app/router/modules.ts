@@ -9,6 +9,9 @@ import {
   adminBillingModule,
   adminDashboardModule,
   adminEstablishmentsModule,
+  adminNfeModule,
+  adminSegmentsModule,
+  adminSupplierCompaniesModule,
   adminUsersModule,
 } from "@/modules/admin";
 import { preferencesModule } from "@/shared/preferences";
@@ -44,10 +47,14 @@ export const adminModules: AppModuleDefinition[] = [
   adminDashboardModule,
   quotationModule,
   adminEstablishmentsModule,
+  adminSegmentsModule,
   productModule,
   adminUsersModule,
   suppliersModule,
+  adminSupplierCompaniesModule,
   adminBillingModule,
+  adminNfeModule,
+  supplierQuotationModule,
 ];
 
 export function getModulesForPersona(persona: UserPersona): AppModuleDefinition[] {

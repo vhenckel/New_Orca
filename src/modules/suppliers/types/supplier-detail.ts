@@ -23,6 +23,13 @@ export interface SupplierLinkedEstablishment {
   };
 }
 
+export interface SupplierSearchResult {
+  id: string;
+  name: string;
+  phone: string;
+  responsibleName: string;
+}
+
 export interface SupplierDetail {
   id: string;
   name: string;

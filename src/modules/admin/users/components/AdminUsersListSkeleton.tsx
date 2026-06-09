@@ -1,0 +1,10 @@
+import { Skeleton } from "@/shared/ui/skeleton";
+
+export function AdminUsersListSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      <Skeleton className="h-10 w-full max-w-md" />
+      <Skeleton className="h-[400px] w-full rounded-xl" />
+    </div>
+  );
+}

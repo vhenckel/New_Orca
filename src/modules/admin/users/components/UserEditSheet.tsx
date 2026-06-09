@@ -1,17 +1,13 @@
+import { LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import type { AdminUser, AdminUserFormValues, AdminUserProfile, AdminUserStatus } from "@/modules/admin/users/types";
+import { isUserNameEditable, roleToProfile } from "@/modules/admin/users/lib/admin-user-mappers";
+import type { AdminUser, AdminUserEditFormValues } from "@/modules/admin/users/types";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { Button } from "@/shared/ui/button";
 import { Field, FieldContent, FieldGroup, FieldLabel } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
+import { Switch } from "@/shared/ui/switch";
 import {
   Sheet,
   SheetContent,
@@ -20,29 +16,33 @@ import {
   SheetTitle,
 } from "@/shared/ui/sheet";
 
-const PROFILE_OPTIONS: AdminUserProfile[] = ["establishment", "supplier", "administrative"];
-const STATUS_OPTIONS: AdminUserStatus[] = ["active", "inactive"];
-
 interface UserEditSheetProps {
   user: AdminUser | null;
   open: boolean;
+  isLoading?: boolean;
+  isSaving?: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (id: string, values: AdminUserFormValues) => void;
+  onSave: (id: string, values: AdminUserEditFormValues) => void;
 }
 
-function toFormValues(user: AdminUser): AdminUserFormValues {
+function toFormValues(user: AdminUser): AdminUserEditFormValues {
   return {
     name: user.name,
-    email: user.email,
     phone: user.phone,
-    profile: user.profile,
-    status: user.status,
+    active: user.status === "active",
   };
 }
 
-export function UserEditSheet({ user, open, onOpenChange, onSave }: UserEditSheetProps) {
+export function UserEditSheet({
+  user,
+  open,
+  isLoading,
+  isSaving,
+  onOpenChange,
+  onSave,
+}: UserEditSheetProps) {
   const { t } = useI18n();
-  const [form, setForm] = useState<AdminUserFormValues | null>(null);
+  const [form, setForm] = useState<AdminUserEditFormValues | null>(null);
 
   useEffect(() => {
     if (user && open) {
@@ -53,8 +53,9 @@ export function UserEditSheet({ user, open, onOpenChange, onSave }: UserEditShee
   const handleSave = () => {
     if (!user || !form) return;
     onSave(user.id, form);
-    onOpenChange(false);
   };
+
+  const nameEditable = user ? isUserNameEditable(user.role) : false;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -63,7 +64,11 @@ export function UserEditSheet({ user, open, onOpenChange, onSave }: UserEditShee
           <SheetTitle>{t("modules.admin.users.edit.title")}</SheetTitle>
         </SheetHeader>
 
-        {form ? (
+        {isLoading ? (
+          <div className="flex flex-1 items-center justify-center py-12">
+            <LoaderCircle className="size-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : form && user ? (
           <FieldGroup className="flex-1 overflow-y-auto py-4">
             <Field>
               <FieldLabel htmlFor="user-name">{t("modules.admin.users.form.name")}</FieldLabel>
@@ -71,6 +76,7 @@ export function UserEditSheet({ user, open, onOpenChange, onSave }: UserEditShee
                 <Input
                   id="user-name"
                   value={form.name}
+                  disabled={!nameEditable}
                   onChange={(e) => setForm((prev) => (prev ? { ...prev, name: e.target.value } : prev))}
                 />
               </FieldContent>
@@ -79,12 +85,7 @@ export function UserEditSheet({ user, open, onOpenChange, onSave }: UserEditShee
             <Field>
               <FieldLabel htmlFor="user-email">{t("modules.admin.users.form.email")}</FieldLabel>
               <FieldContent>
-                <Input
-                  id="user-email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm((prev) => (prev ? { ...prev, email: e.target.value } : prev))}
-                />
+                <Input id="user-email" type="email" value={user.email} disabled readOnly />
               </FieldContent>
             </Field>
 
@@ -102,50 +103,31 @@ export function UserEditSheet({ user, open, onOpenChange, onSave }: UserEditShee
             <Field>
               <FieldLabel>{t("modules.admin.users.form.profile")}</FieldLabel>
               <FieldContent>
-                <Select
-                  value={form.profile}
-                  onValueChange={(value) =>
-                    setForm((prev) =>
-                      prev ? { ...prev, profile: value as AdminUserProfile } : prev,
-                    )
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROFILE_OPTIONS.map((profile) => (
-                      <SelectItem key={profile} value={profile}>
-                        {t(`modules.admin.users.profile.${profile}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  value={t(`modules.admin.users.profile.${roleToProfile(user.role)}`)}
+                  disabled
+                  readOnly
+                />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>{t("modules.admin.users.form.status")}</FieldLabel>
+              <FieldLabel htmlFor="user-active">{t("modules.admin.users.form.status")}</FieldLabel>
               <FieldContent>
-                <Select
-                  value={form.status}
-                  onValueChange={(value) =>
-                    setForm((prev) =>
-                      prev ? { ...prev, status: value as AdminUserStatus } : prev,
-                    )
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {t(`modules.admin.users.status.${status}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id="user-active"
+                    checked={form.active}
+                    onCheckedChange={(checked) =>
+                      setForm((prev) => (prev ? { ...prev, active: checked } : prev))
+                    }
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {form.active
+                      ? t("modules.admin.users.status.active")
+                      : t("modules.admin.users.status.inactive")}
+                  </span>
+                </div>
               </FieldContent>
             </Field>
           </FieldGroup>
@@ -155,7 +137,8 @@ export function UserEditSheet({ user, open, onOpenChange, onSave }: UserEditShee
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.actions.cancel")}
           </Button>
-          <Button type="button" onClick={handleSave} disabled={!form}>
+          <Button type="button" onClick={handleSave} disabled={!form || isSaving}>
+            {isSaving ? <LoaderCircle className="size-4 animate-spin" /> : null}
             {t("modules.admin.users.edit.save")}
           </Button>
         </SheetFooter>

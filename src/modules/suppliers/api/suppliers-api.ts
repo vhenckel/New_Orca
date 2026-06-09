@@ -1,6 +1,7 @@
 import type {
   CreateSupplierPayload,
   SupplierDetail,
+  SupplierSearchResult,
   UpdateSupplierPayload,
 } from "@/modules/suppliers/types/supplier-detail";
 import type {
@@ -108,6 +109,13 @@ export interface EstablishmentSearchItem {
 export interface EstablishmentsSearchPage {
   data: EstablishmentSearchItem[];
   total: number;
+}
+
+export async function searchSuppliers(q?: string): Promise<SupplierSearchResult[]> {
+  const search = new URLSearchParams();
+  if (q?.trim()) search.set("q", q.trim());
+  const qs = search.toString();
+  return apiRequest<SupplierSearchResult[]>(`/suppliers/search${qs ? `?${qs}` : ""}`);
 }
 
 export async function searchEstablishments(name?: string): Promise<EstablishmentSearchItem[]> {

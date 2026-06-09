@@ -1,6 +1,7 @@
 import { Users } from "lucide-react";
 
 import type { AppModuleDefinition } from "@/app/router/types";
+import { AdminUserFormPage } from "@/modules/admin/users/pages/AdminUserFormPage";
 import { AdminUsersPage } from "@/modules/admin/users/pages/AdminUsersPage";
 
 export const adminUsersModule: AppModuleDefinition = {
@@ -17,6 +18,20 @@ export const adminUsersModule: AppModuleDefinition = {
       descriptionKey: "modules.admin.users.routes.main.description",
       icon: Users,
       element: <AdminUsersPage />,
+      allowedApiRoles: ["admin"],
+    },
+    {
+      path: "/admin/users/create",
+      labelKey: "modules.admin.users.routes.create.label",
+      descriptionKey: "modules.admin.users.routes.create.description",
+      icon: Users,
+      element: <AdminUserFormPage />,
+      hideInSidebar: true,
+      allowedApiRoles: ["admin"],
+      topBarParent: {
+        labelKey: "modules.admin.users.routes.main.label",
+        path: "/admin/users",
+      },
     },
   ],
 };
