@@ -4,6 +4,8 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "
 import { matchPath } from "react-router-dom";
 
 import { AuthProvider, getLandingPathForPersona, useAuth } from "@/shared/auth/AuthContext";
+import { SentryRouteTracker } from "@/shared/observability/SentryRouteTracker";
+import { SentryTestButton } from "@/shared/observability/SentryTestButton";
 import { RouteGuard } from "@/shared/auth/RouteGuard";
 import { useI18n } from "@/shared/i18n/useI18n";
 import { useIsMobile } from "@/shared/hooks/useIsMobile";
@@ -140,9 +142,11 @@ export function AppRouter() {
     <BrowserRouter>
       <AuthProvider>
         <NuqsAdapter>
+          <SentryRouteTracker />
           <DocumentTitleSync />
           <MobileRedirectGuard />
           <PersonaAppRoutes />
+          <SentryTestButton />
         </NuqsAdapter>
       </AuthProvider>
     </BrowserRouter>

@@ -1,5 +1,6 @@
 import { apiBaseUrl } from "@/shared/config/env";
 import { getStoredToken } from "@/shared/auth/token-store";
+import { captureHttpError, Sentry } from "@/shared/observability/sentry";
 
 export class ApiError extends Error {
   constructor(
@@ -49,6 +50,29 @@ function resolveRequestBody(body: unknown): BodyInit | undefined {
   return JSON.stringify(body);
 }
 
+function applySentryTraceHeaders(headers: Headers): void {
+  const traceData = Sentry.getTraceData();
+  if (traceData["sentry-trace"]) {
+    headers.set("sentry-trace", traceData["sentry-trace"]);
+  }
+  if (traceData.baggage) {
+    headers.set("baggage", traceData.baggage);
+  }
+}
+
+function reportHttpFailure(
+  error: ApiError,
+  context: { url: string; method: string; responseMessage: string },
+): void {
+  captureHttpError(error, {
+    url: context.url,
+    method: context.method,
+    status: error.status,
+    responseMessage: context.responseMessage,
+    subsystem: "http",
+  });
+}
+
 export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {},
@@ -67,11 +91,30 @@ export async function apiRequest<T>(
     }
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...rest,
-    headers,
-    body: resolveRequestBody(body),
-  });
+  applySentryTraceHeaders(headers);
+
+  const requestUrl = `${apiBaseUrl}${path}`;
+  const method = (rest.method ?? "GET").toUpperCase();
+
+  let response: Response;
+  try {
+    response = await fetch(requestUrl, {
+      ...rest,
+      headers,
+      body: resolveRequestBody(body),
+    });
+  } catch (networkError) {
+    const err =
+      networkError instanceof Error
+        ? networkError
+        : new Error("Falha de rede na requisição");
+    captureHttpError(err, {
+      url: path,
+      method,
+      subsystem: "http",
+    });
+    throw err;
+  }
 
   if (response.status === 204) {
     return undefined as T;
@@ -95,7 +138,13 @@ export async function apiRequest<T>(
       }
     }
 
-    throw new ApiError(message, response.status, parsedBody);
+    const apiError = new ApiError(message, response.status, parsedBody);
+    reportHttpFailure(apiError, {
+      url: path,
+      method,
+      responseMessage: message,
+    });
+    throw apiError;
   }
 
   const contentType = response.headers.get("Content-Type") ?? "";
@@ -121,14 +170,38 @@ export async function apiRequestBlob(
     }
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...rest,
-    headers,
-  });
+  applySentryTraceHeaders(headers);
+
+  const method = (rest.method ?? "GET").toUpperCase();
+
+  let response: Response;
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      ...rest,
+      headers,
+    });
+  } catch (networkError) {
+    const err =
+      networkError instanceof Error
+        ? networkError
+        : new Error("Falha de rede na requisição");
+    captureHttpError(err, {
+      url: path,
+      method,
+      subsystem: "http",
+    });
+    throw err;
+  }
 
   if (!response.ok) {
     const message = await parseErrorMessage(response);
-    throw new ApiError(message, response.status);
+    const apiError = new ApiError(message, response.status);
+    reportHttpFailure(apiError, {
+      url: path,
+      method,
+      responseMessage: message,
+    });
+    throw apiError;
   }
 
   return response.blob();

@@ -38,6 +38,7 @@ import {
 import type { LoginRequest, MeResponse } from "@/shared/auth/types";
 import { getDefaultCompanyId } from "@/shared/config/env";
 import { getIsViewportMobile } from "@/shared/hooks/useIsMobile";
+import { clearSentryUser, setSentryUser } from "@/shared/observability/sentry";
 import { toast } from "@/shared/ui/sonner";
 
 export {
@@ -83,6 +84,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const isAuthenticated = hasValidSessionToken() && !!user;
 
   const logout = useCallback(() => {
+    clearSentryUser();
     clearStoredSession();
     setUser(null);
     setError(null);
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const handleUnauthorized = useCallback(() => {
     const returnTo = `${location.pathname}${location.search}`;
+    clearSentryUser();
     clearStoredSession();
     setUser(null);
     setError(null);
@@ -115,8 +118,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const restored = restoreUserFromStorage();
     if (restored) {
       setUser(restored);
+      setSentryUser(restored);
       applyResolvedAccentColor(restored);
     } else {
+      clearSentryUser();
       clearStoredSession();
       setUser(null);
     }
@@ -140,6 +145,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setStoredUser(apiUser);
         const sessionUser = mapApiUserToMeResponse(apiUser);
         setUser(sessionUser);
+        setSentryUser(sessionUser);
         applyResolvedAccentColor(sessionUser);
 
         const from =
@@ -169,6 +175,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const restored = restoreUserFromStorage();
     if (!restored) return;
     setUser(restored);
+    setSentryUser(restored);
     applyResolvedAccentColor(restored);
   }, []);
 

@@ -8,6 +8,7 @@ import {
 } from "@/modules/product/api/import-api";
 import { ApiError } from "@/shared/api/http-client";
 import { useI18n } from "@/shared/i18n/useI18n";
+import { captureError } from "@/shared/observability/sentry";
 import { toast } from "@/shared/ui/sonner";
 
 function handleImportFinished(
@@ -74,8 +75,20 @@ export function useImportProducts() {
           });
           return;
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
+          const err =
+            error instanceof Error
+              ? error
+              : new Error("Falha ao consultar progresso da importação");
+          captureError(err, {
+            tags: {
+              subsystem: "import-polling",
+              handled: "true",
+            },
+            extra: { processId },
+            fingerprint: ["import-polling", processId],
+          });
           toast.error(t("modules.product.import.toast.progressError"));
           setProcessId(undefined);
         }
